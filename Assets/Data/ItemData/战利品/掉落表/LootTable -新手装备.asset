@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e51cd789fe2e2604a9400079ede8b2bb, type: 3}
+  m_Name: "LootTable -\u65B0\u624B\u88C5\u5907"
+  m_EditorClassIdentifier: 
+  lootItems:
+  - itemData: {fileID: 11400000, guid: e510f8cc2cdcf294d98a575ecd13b601, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 100
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: c58d3924dda8b7947b57c9c404fc29ef, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 100
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: d40b6567a33409e4e959ae399464f127, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 100
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: 70cdf52d3eb7d994b9f71075bf112a50, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 100
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: 96088e7422306c348a7010f7eea5ff71, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 100
+    minDropCount: 1
+    maxDropCount: 1
+  minDropCount: 5
+  maxDropCount: 5
+  allowDuplicates: 0
+  extraRarityDropChanceBonus: 0

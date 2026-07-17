@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63fb0a1814489f842afb1d8ce9029021, type: 3}
+  m_Name: "\u6280\u80FD\u6570\u636E-\u4E8C\u6BB5\u8DF3"
+  m_EditorClassIdentifier: 
+  displayName: "\u4E8C\u6BB5\u8DF3"
+  description: "\u4E8C\u6BB5\u8DF3"
+  icon: {fileID: 555502141, guid: 102d5f6d3278db248a47f32c4b3b8ac5, type: 3}
+  isUnlocked: 1
+  skillType: 9
+  upgradeType: 26
+  conflictSkillTypes: 
+  usageType: 1
+  preSkillRequirements: []
+  maxLevel: 1
+  currentLevel: 1
+  levelDatas:
+  - levelUpCost: 5
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: 

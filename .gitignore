@@ -1,0 +1,47 @@
+# Unity
+Library/
+Logs/
+UserSettings/
+Tile Palette/
+LocalPackages/
+[Ll]ogs/
+MemoryCaptures/
+
+# Visual Studio
+.vs/
+.vscode/
+.trae/
+*.csproj
+*.sln
+*.userprefs
+
+# Build
+Build/
+build/
+[Bb]uilds/
+[Dd]ebug/
+[Rr]elease/
+[Pp]ublish/
+
+# Asset Store tools
+Assets/AssetStoreTools*
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# JetBrains Rider
+.idea/
+*.sln.DotSettings.user
+
+# GitHub
+*.unitypackage
+
+# Misc
+*.zip
+*.rar
+*.7z
+*.log
+*.tmp

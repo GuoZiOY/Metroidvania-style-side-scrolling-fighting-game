@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63fb0a1814489f842afb1d8ce9029021, type: 3}
+  m_Name: "\u6280\u80FD\u6570\u636E-\u56DE\u54CD\u6062\u590D"
+  m_EditorClassIdentifier: 
+  displayName: "\u56DE\u54CD\u6062\u590D"
+  description: "\u56DE\u54CD\u6D88\u5931\u65F6\u4F1A\u751F\u6210\u4E00\u4E2A\u6CBB\u7597\u7CBE\u7075\n\u6309\u53D7\u4F24\u5BB3\u6BD4\u4F8B\u6062\u590D\u751F\u547D"
+  icon: {fileID: 1149885413, guid: 834155993dc690a4ab900bb9cbf80cc0, type: 3}
+  isUnlocked: 1
+  skillType: 3
+  upgradeType: 17
+  conflictSkillTypes: 0e000000
+  preSkillRequirements:
+  - preSkillType: 13
+    preSkillLevel: 3
+  maxLevel: 5
+  currentLevel: 4
+  levelDatas:
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 1
+      elemental: 1
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: 
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 1
+      elemental: 1
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: 
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 1
+      elemental: 1
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: 
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 1
+      elemental: 1
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: 
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 1
+      elemental: 1
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: 
