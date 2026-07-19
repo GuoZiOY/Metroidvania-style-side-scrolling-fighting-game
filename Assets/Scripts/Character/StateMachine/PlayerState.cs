@@ -25,7 +25,7 @@ public abstract class PlayerState : EntityState
     public override void Update()
     {
         base.Update();
-        
+
         if (GameInput.GetKeyDown(GameInput.Action.Dash) && CanDash())
         {
             skillManager.dash.StartSkillCooldown();

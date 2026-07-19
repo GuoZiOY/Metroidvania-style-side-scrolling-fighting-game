@@ -58,15 +58,28 @@ public static class GameInput
         OnBindingsChanged?.Invoke();
     }
 
-    public static bool GetKeyDown(Action action) => Input.GetKeyDown(GetBinding(action));
-    public static bool GetKey(Action action) => Input.GetKey(GetBinding(action));
-    public static bool GetKeyUp(Action action) => Input.GetKeyUp(GetBinding(action));
+    public static bool GetKeyDown(Action action)
+    {
+        if (Networking.UI_Chat.IsChatFocused) return false;
+        return Input.GetKeyDown(GetBinding(action));
+    }
+    public static bool GetKey(Action action)
+    {
+        if (Networking.UI_Chat.IsChatFocused) return false;
+        return Input.GetKey(GetBinding(action));
+    }
+    public static bool GetKeyUp(Action action)
+    {
+        if (Networking.UI_Chat.IsChatFocused) return false;
+        return Input.GetKeyUp(GetBinding(action));
+    }
 
     // Digital axis — computed from held keys, no Unity Input Manager dependency
     public static float Horizontal
     {
         get
         {
+            if (Networking.UI_Chat.IsChatFocused) return 0;
             float r = GetKey(Action.MoveRight) ? 1 : 0;
             float l = GetKey(Action.MoveLeft) ? 1 : 0;
             return r - l;
@@ -76,6 +89,7 @@ public static class GameInput
     {
         get
         {
+            if (Networking.UI_Chat.IsChatFocused) return 0;
             float u = GetKey(Action.MoveUp) ? 1 : 0;
             float d = GetKey(Action.MoveDown) ? 1 : 0;
             return u - d;
