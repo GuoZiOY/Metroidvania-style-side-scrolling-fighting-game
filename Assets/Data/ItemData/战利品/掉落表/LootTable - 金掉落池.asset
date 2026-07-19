@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e51cd789fe2e2604a9400079ede8b2bb, type: 3}
+  m_Name: "LootTable - \u91D1\u6389\u843D\u6C60"
+  m_EditorClassIdentifier: 
+  tableId: T006
+  lootItems:
+  - itemData: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 100
+    minDropCount: 1
+    maxDropCount: 2
+  - itemData: {fileID: 11400000, guid: 9636be97919282242afcdb25dcb8cec0, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 20
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: 1b30f58bf930d1d4a93ce42724673185, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 20
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: 4dacd2303cb9aff4d8176240abb0aede, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 20
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: a41057ec981781f48976f5049ee2af20, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 20
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: f34ae61d1e15262489e305a25d49bb71, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 20
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: c5d8717ffbcce3b4d97ba7e25e7bb327, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 15
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: 76acec1b7beb13b4d81fdd4d83a0a768, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 15
+    minDropCount: 1
+    maxDropCount: 1
+  - itemData: {fileID: 11400000, guid: ec86d47f5d7aa7148afb0478cdaae920, type: 2}
+    useItemRarity: 1
+    rarity: 0
+    dropChance: 15
+    minDropCount: 1
+    maxDropCount: 1
+  minDropCount: 2
+  maxDropCount: 4
+  allowDuplicates: 0
+  extraRarityDropChanceBonus: 50

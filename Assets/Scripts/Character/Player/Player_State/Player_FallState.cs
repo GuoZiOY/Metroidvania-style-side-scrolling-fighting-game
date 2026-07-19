@@ -13,7 +13,13 @@ public class Player_FallState : Player_AiredState
         base.Update();
 
         if (player.isOnGround)
+        {
+            bool isDoubleJumpLand = player.jumpCount >= 2;
+            AudioManager.Instance?.PlayLandingSfx(isDoubleJumpLand);
+            float particleScale = isDoubleJumpLand ? 1.2f : 1f;
+            player.VFX?.PlayFallHitVFX(false, particleScale);
             stateMachine.ChangeState(player.idleState);
+        }
 
         if (player.isOnWall)
             stateMachine.ChangeState(player.wallSlideState);

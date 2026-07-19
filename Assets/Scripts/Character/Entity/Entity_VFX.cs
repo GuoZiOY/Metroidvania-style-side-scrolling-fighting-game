@@ -8,7 +8,7 @@ using static Entity_Stats;
 public class Entity_VFX : MonoBehaviour//实体视觉特效
 {
     protected SpriteRenderer sr;//����
-    private Entity entity;
+    protected Entity entity;
 
     [SerializeField] private GameObject popUpTextPrefab;//�����ı�Ԥ����
 

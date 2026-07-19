@@ -422,8 +422,8 @@ MonoBehaviour:
   enableHitStop: 1
   hitStopDuration: 0.08
   hitStopTimeScale: 0
-  enemyName: "\u654C\u4EBA"
-  uniqueID: 0010
+  enemyName: "\u9AB7\u9AC5"
+  uniqueID: 010101
   enemyType: 0
   levelSystem: {fileID: 6372802947176737643}
   enemyLevel: 1
@@ -868,7 +868,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   statGrowthMultiplier: 0.1
   critChancePerLevel: 0.5
-  evasionPerLevel: 0.3
   critPowerPerLevel: 1
   elementalResPerLevel: 0.5
   stats: {fileID: 8805806070054349267}

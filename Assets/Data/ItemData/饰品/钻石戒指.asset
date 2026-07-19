@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2224266a95e9464bad25c603e8112a6, type: 3}
+  m_Name: "\u94BB\u77F3\u6212\u6307"
+  m_EditorClassIdentifier: 
+  itemId: 110517
+  itemName: "\u94BB\u77F3\u6212\u6307"
+  itemIcon: {fileID: 504859258, guid: 102d5f6d3278db248a47f32c4b3b8ac5, type: 3}
+  itemType: 6
+  rarity: 3
+  allowRarityVariation: 1
+  maxRaritySteps: 2
+  canStackable: 0
+  modifiers:
+  - statType: 8
+    value: 7
+  - statType: 9
+    value: 12
+  - statType: 3
+    value: 3
+  - statType: 16
+    value: 3

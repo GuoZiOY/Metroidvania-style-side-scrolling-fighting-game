@@ -277,6 +277,18 @@ protected override void Awake()
         }
     }
 
+public override void StartHitStop(float duration)
+    {
+        base.StartHitStop(duration);
+        if (VFX != null) VFX.ToggleShockwavePause(true);
+    }
+
+    public override void EndHitStop()
+    {
+        base.EndHitStop();
+        if (VFX != null) VFX.ToggleShockwavePause(false);
+    }
+
     public override void EntityDead()//实体死亡方法
     {
         base.EntityDead();

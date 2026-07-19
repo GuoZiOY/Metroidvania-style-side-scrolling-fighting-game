@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68870d0841b524b44bbd609839e5bd6e, type: 3}
+  m_Name: "\u94C1\u76AE\u836F\u5242"
+  m_EditorClassIdentifier: 
+  itemId: 120007
+  itemName: "\u94C1\u76AE\u836F\u5242"
+  itemIcon: {fileID: 0}
+  itemType: 8
+  rarity: 0
+  allowRarityVariation: 1
+  maxRaritySteps: 1
+  canStackable: 1
+  consumableType: 2
+  effectType: 3
+  effectValue: 5
+  effectDuration: 15
+  buffStatType: 0
+  cooldownTime: 60

@@ -23,4 +23,9 @@ public class Entity_AimatorTriggers : MonoBehaviour
     {
         entityCombat.PerformAttack();
     }
+
+    public void FootstepTrigger()
+    {
+        AudioManager.Instance?.PlayFootstepSfx();
+    }
 }

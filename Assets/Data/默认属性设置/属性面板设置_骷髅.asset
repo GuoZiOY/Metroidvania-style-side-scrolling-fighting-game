@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ecd31cea47a3d4a4a8141b7d84f8c7ac, type: 3}
   m_Name: "\u5C5E\u6027\u9762\u677F\u8BBE\u7F6E_\u9AB7\u9AC5"
   m_EditorClassIdentifier: 
+  setupId: 500002
   maxHP: 50
   healthRegen: 0
   attackSpeed: 1
-  damage: 10
+  damage: 5
   critChance: 0
-  critPower: 150
+  critPower: 100
   armorReduction: 0
   elementalHeart: 0
   fireDamage: 0

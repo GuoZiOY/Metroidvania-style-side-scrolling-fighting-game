@@ -12,27 +12,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e51cd789fe2e2604a9400079ede8b2bb, type: 3}
   m_Name: "LootTable - \u8840\u74F6"
   m_EditorClassIdentifier: 
+  tableId: T001
   lootItems:
   - itemData: {fileID: 11400000, guid: 32aedde48fbe9634294c30b5d6335e4b, type: 2}
-    useItemRarity: 0
+    useItemRarity: 1
     rarity: 0
     dropChance: 100
     minDropCount: 1
     maxDropCount: 1
   - itemData: {fileID: 11400000, guid: 6146f431e3cd1f84399881843ee35f71, type: 2}
-    useItemRarity: 0
+    useItemRarity: 1
     rarity: 0
     dropChance: 100
     minDropCount: 1
     maxDropCount: 1
   - itemData: {fileID: 11400000, guid: 255970c597568ae4bb7d984b347206d5, type: 2}
-    useItemRarity: 0
+    useItemRarity: 1
     rarity: 0
     dropChance: 100
     minDropCount: 1
     maxDropCount: 1
   - itemData: {fileID: 11400000, guid: 03ebeaf6b7c652d4d99a1671690d0a36, type: 2}
-    useItemRarity: 0
+    useItemRarity: 1
     rarity: 0
     dropChance: 100
     minDropCount: 1

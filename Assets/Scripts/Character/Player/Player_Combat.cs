@@ -37,7 +37,6 @@ public class Player_Combat : Entity_Combat
     [SerializeField] private float critHitStopDuration = 0.15f;
     [SerializeField] private bool enableCounterHitStop = true;
     [SerializeField] private float counterHitStopDuration = 0.12f;
-    [SerializeField] private float counterHitStopDelay = 0.1f;
     [SerializeField] private bool enableChaseHitStop = false;
     [SerializeField] private float chaseHitStopDuration = 0.1f;
     [SerializeField] private bool enableLastComboHitStop = true;
@@ -215,9 +214,9 @@ public class Player_Combat : Entity_Combat
         }
     }
 
-    private IEnumerator DelayedCounterHitStop(GameObject target, float delay, float knockbackMultiplier, bool canBeChased)
+    private IEnumerator DelayedCounterHitStop(GameObject target, float knockbackMultiplier, bool canBeChased)
     {
-        yield return new WaitForSecondsRealtime(delay);
+        yield return null; // 1帧，等待粒子生成
         HitStopManager.Instance.TriggerLocalHitStop(gameObject, target, counterHitStopDuration);
         yield return new WaitForSecondsRealtime(counterHitStopDuration);
         
@@ -258,7 +257,10 @@ public class Player_Combat : Entity_Combat
                 AudioManager.Instance?.PlayCounterWithDelay();
 
                 if (player.VFX != null)
+                {
                     player.VFX.ShakeScreenForCounter();
+                    player.VFX.DoCounterVisuals(target.transform.position);
+                }
                 
                 if (enableCounterHitStop)
                 {
@@ -267,7 +269,7 @@ public class Player_Combat : Entity_Combat
                         chaseTarget = target.transform;
                         Debug.Log($"立即设置追击目标: {chaseTarget.name}");
                     }
-                    StartCoroutine(DelayedCounterHitStop(target.gameObject, counterHitStopDelay, counterKnockbackMultiplier, targetCanBeChased));
+                    StartCoroutine(DelayedCounterHitStop(target.gameObject, counterKnockbackMultiplier, targetCanBeChased));
                 }
                 else
                 {

@@ -23,9 +23,11 @@ public class Entity : MonoBehaviour, IHitStopable
 
     [Header("碰撞检测")]
     public LayerMask whatIsGround;
-    [SerializeField] private float groundCheckDistance;
+    [SerializeField] public float groundCheckDistance;
     [SerializeField] private float wallCheckDistance;
-    [SerializeField] private Transform groundCheck;
+    [SerializeField] public Transform groundCheck;
+    public Transform GroundCheck => groundCheck;
+    public float GroundCheckDistance => groundCheckDistance;
     [SerializeField] private Transform primaryWallCheck;
     [SerializeField] private Transform secondaryWallCheck;
     public bool isOnGround { get; private set; }
@@ -43,6 +45,8 @@ public class Entity : MonoBehaviour, IHitStopable
     public bool IsHitStopActive => isHitStopActive;
     private bool isHitStopActive;
     private float originalAnimSpeed;
+    private Vector2 savedVelocity;
+    private RigidbodyConstraints2D savedConstraints;
     private Coroutine hitStopCo;
 
 
@@ -61,9 +65,10 @@ protected virtual void Awake()
 
     protected virtual void Update()
     {
-        stateMachine.UpdateActiveState();//����״̬������������״̬
+        if (stateMachine == null) return;
+        stateMachine.UpdateActiveState();
 
-        HandleCollisionDetection();//������ײ���
+        HandleCollisionDetection();
     }
 
 
@@ -161,7 +166,7 @@ protected virtual void Awake()
             isOnWall = Physics2D.Raycast(primaryWallCheck.position, Vector2.right * facingDir, wallCheckDistance, whatIsGround);
     }
 
-    public void StartHitStop(float duration)
+    public virtual void StartHitStop(float duration)
     {
         if (!enableHitStop || isHitStopActive)
             return;
@@ -172,7 +177,7 @@ protected virtual void Awake()
         hitStopCo = StartCoroutine(HitStopCo(duration));
     }
 
-    public void EndHitStop()
+    public virtual void EndHitStop()
     {
         if (!isHitStopActive)
             return;
@@ -184,6 +189,8 @@ protected virtual void Awake()
         }
 
         anim.speed = originalAnimSpeed;
+        rb.constraints = savedConstraints;
+        rb.velocity = savedVelocity;
         isHitStopActive = false;
     }
 
@@ -193,6 +200,22 @@ protected virtual void Awake()
         {
             anim.speed = speed;
         }
+
+        if (isHitStopActive && rb != null)
+        {
+            if (speed <= 0)
+            {
+                rb.velocity = Vector2.zero;
+                rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            }
+            else
+            {
+                if (rb.constraints == RigidbodyConstraints2D.FreezeAll)
+                    rb.constraints = savedConstraints;
+
+                rb.velocity = savedVelocity * Mathf.Clamp01(speed);
+            }
+        }
     }
 
     private IEnumerator HitStopCo(float duration)
@@ -201,8 +224,15 @@ protected virtual void Awake()
         originalAnimSpeed = anim.speed;
         anim.speed = hitStopTimeScale;
 
+        savedVelocity = rb.velocity;
+        savedConstraints = rb.constraints;
+        rb.velocity = Vector2.zero;
+        rb.constraints = RigidbodyConstraints2D.FreezeAll;
+
         yield return new WaitForSecondsRealtime(duration);
 
+        rb.constraints = savedConstraints;
+        rb.velocity = savedVelocity;
         anim.speed = originalAnimSpeed;
         isHitStopActive = false;
         hitStopCo = null;

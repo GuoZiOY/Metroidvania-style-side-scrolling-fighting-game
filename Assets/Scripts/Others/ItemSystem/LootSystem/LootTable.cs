@@ -4,6 +4,8 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "RPG设置/战利品系统/掉落表", fileName = "LootTable -")]
 public class LootTable : ScriptableObject
 {
+    public string tableId; // CSV 导入用的ID
+
     [Header("掉落表配置")]
     [SerializeField] private List<LootDropItem> lootItems = new List<LootDropItem>(); //掉落物品列表
 

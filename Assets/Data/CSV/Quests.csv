@@ -1,0 +1,3 @@
+﻿id,name,type,description,obj1_type,obj1_targetId,obj1_count,obj2_type,obj2_targetId,obj2_count,rewardExp,rewardSkillPoints,rewardItem1_id,rewardItem1_amount,rewardItem2_id,rewardItem2_amount,prereq1,prereq2
+310002,上交血瓶,Side,许多镇民受伤了，急需医疗物品,Collect,120003,1,,,,100,0,110505,1,,,,
+310001,击杀骷髅,Side,魔王军来袭！骷髅先遣兵隐藏在阴暗的小巷里，解决它们！,Kill,010101,1,,,,100,1,120001,1,,,,

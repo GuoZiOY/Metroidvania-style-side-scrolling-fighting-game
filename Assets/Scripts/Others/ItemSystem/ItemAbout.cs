@@ -164,12 +164,15 @@ public class ItemAbout : MonoBehaviour
     {
         isPickedUp = true;
         targetInventory.AddItem(itemToAdd);
-        
+
+        if (itemData != null && !string.IsNullOrEmpty(itemData.itemId))
+            QuestEvents.ReportItemCollected(itemData.itemId, 1);
+
         if (anim != null)
         {
             anim.Play("Items_PickUp");
         }
-        
+
         DisableCollider();
         Destroy(gameObject, DESTROY_DELAY);
     }
@@ -254,10 +257,8 @@ public class ItemAbout : MonoBehaviour
     {
         if (itemData == null)
             return;
-        
+
         gameObject.name = itemData.itemName;
-        sr = GetComponentInChildren<SpriteRenderer>();
-        sr.sprite = itemData.itemIcon;
     }
 
     #endregion

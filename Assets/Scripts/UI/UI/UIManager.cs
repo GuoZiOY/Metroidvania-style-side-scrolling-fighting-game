@@ -12,6 +12,8 @@ public class UIManager : MonoBehaviour
     public GameObject characterPanel;   // 角色主面板
     public GameObject skillPanel;       // 技能主面板
     public GameObject settingPanel;     // 设置主面板
+    public GameObject questPanel;       // 任务面板
+    public GameObject questTrackerPanel; // 小任务面板
     public GameObject skillSlotsPanel;  // 技能槽面板
     #endregion
 
@@ -30,6 +32,7 @@ public class UIManager : MonoBehaviour
     public Button characterBtn;         // 角色按钮
     public Button skillBtn;             // 技能按钮
     public Button settingBtn;           // 设置按钮
+    public Button questBtn;             // 任务按钮
     #endregion
 
     #region 子面板切换器
@@ -52,6 +55,8 @@ public class UIManager : MonoBehaviour
         characterBtn.onClick.AddListener(ShowCharacterPanel);
         skillBtn.onClick.AddListener(ShowSkillPanel);
         settingBtn.onClick.AddListener(ShowSettingPanel);
+        if (questBtn != null)
+            questBtn.onClick.AddListener(ShowQuestPanel);
 
         HideAllPanels();
         ResetAllButtonStatus();
@@ -82,6 +87,11 @@ public class UIManager : MonoBehaviour
         settingPanelSwitcher?.ShowPanel(0);
     }
 
+    public void ShowQuestPanel()
+    {
+        ShowPanel(questPanel, questBtn);
+    }
+
     private void ShowPanel(GameObject panel, Button button)
     {
         HideAllPanels();
@@ -91,6 +101,8 @@ public class UIManager : MonoBehaviour
         UpdateMainBtnStatus(button);
         UpdateSkillSlotsVisibility(panel);
         HideAllToolTips();
+        if (questTrackerPanel != null)
+            questTrackerPanel.SetActive(false);
     }
     #endregion
 
@@ -103,10 +115,14 @@ public class UIManager : MonoBehaviour
         characterPanel.SetActive(false);
         skillPanel.SetActive(false);
         settingPanel.SetActive(false);
+        if (questPanel != null)
+            questPanel.SetActive(false);
         if (panelBackground != null)
             panelBackground.SetActive(false);
         ShowSkillSlots();
         HideAllToolTips();
+        if (questTrackerPanel != null)
+            questTrackerPanel.SetActive(true);
     }
 
     private void ResetAllButtonStatus()
@@ -114,6 +130,8 @@ public class UIManager : MonoBehaviour
         SetButtonColor(characterBtn, normalColor);
         SetButtonColor(skillBtn, normalColor);
         SetButtonColor(settingBtn, normalColor);
+        if (questBtn != null)
+            SetButtonColor(questBtn, normalColor);
     }
 
     /// <summary>
@@ -236,6 +254,9 @@ public class UIManager : MonoBehaviour
 
         if (GameInput.GetKeyDown(GameInput.Action.ToggleSettingsPanel))
             TogglePanelWithKey(ShowSettingPanel);
+
+        if (GameInput.GetKeyDown(GameInput.Action.ToggleQuestPanel))
+            TogglePanelWithKey(ShowQuestPanel);
     }
 
     /// <summary>
@@ -290,6 +311,10 @@ public class UIManager : MonoBehaviour
         else if (showTargetPanel == ShowSettingPanel)
         {
             return settingPanel.activeSelf;
+        }
+        else if (showTargetPanel == ShowQuestPanel)
+        {
+            return questPanel != null && questPanel.activeSelf;
         }
         return false;
     }

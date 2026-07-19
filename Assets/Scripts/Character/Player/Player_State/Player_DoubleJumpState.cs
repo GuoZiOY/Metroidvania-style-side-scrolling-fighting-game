@@ -12,6 +12,7 @@ public class Player_DoubleJumpState : Player_AiredState
     {
         base.Enter();
 
+        AudioManager.Instance?.PlayJumpSfx(true);
         player.SetDoubleJumping(true);
         player.JumpSquashAndStretch();
         player.IncrementJumpCount();

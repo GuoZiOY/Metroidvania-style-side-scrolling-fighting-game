@@ -119,6 +119,11 @@ public class Enemy : Entity
     public override void EntityDead()
     {
         base.EntityDead();
+
+        // 通知任务系统敌人被击杀
+        if (!string.IsNullOrEmpty(uniqueID))
+            QuestEvents.ReportEnemyKilled(uniqueID);
+
         stateMachine.ChangeState(deadState);
     }
 

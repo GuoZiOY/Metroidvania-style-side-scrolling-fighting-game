@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e8ac0bf7d04aab46a5060af14b189e0, type: 3}
+  m_Name: "QuestData -\u4E0A\u4EA4\u8840\u74F6"
+  m_EditorClassIdentifier: 
+  questId: 310002
+  questName: "\u4E0A\u4EA4\u8840\u74F6"
+  questType: 1
+  description: "\u8BB8\u591A\u9547\u6C11\u53D7\u4F24\u4E86\uFF0C\u6025\u9700\u533B\u7597\u7269\u54C1"
+  objectives:
+  - type: 1
+    targetId: 120003
+    requiredCount: 1
+    description: "\u6536\u96C6 \u8840\u74F6 x1"
+    targetName: "\u8840\u74F6"
+  reward:
+    expAmount: 100
+    skillPoints: 0
+    items:
+    - itemData: {fileID: 11400000, guid: 2acc9834da1cbe54f8fcfa95b4786198, type: 2}
+      amount: 1
+  prerequisiteQuestIds: []

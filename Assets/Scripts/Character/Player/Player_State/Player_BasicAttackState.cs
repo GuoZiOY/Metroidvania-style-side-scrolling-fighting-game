@@ -35,7 +35,6 @@ public class Player_BasicAttackState : PlayerState
         base.Enter();
         comboAttackQueued = false;
         ResetComboIndexIfNeed();
-        isFromChase = false;
         isLastAttackHit = false;
         SyncAttackSpeed();
         InputAttackDir();
@@ -48,8 +47,13 @@ public class Player_BasicAttackState : PlayerState
 
         if (comboIndex == comboLimit)
         {
-            player.combat.SetSpecialAttackType(Player_Combat.SpecialAttackType.ThirdComboAttack);
+            if (isFromChase)
+                player.combat.SetSpecialAttackType(Player_Combat.SpecialAttackType.ChaseAttack);
+            else
+                player.combat.SetSpecialAttackType(Player_Combat.SpecialAttackType.ThirdComboAttack);
         }
+
+        isFromChase = false;
     }
 
     public override void Exit()

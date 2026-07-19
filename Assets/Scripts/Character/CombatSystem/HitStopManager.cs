@@ -29,9 +29,9 @@ public class HitStopManager : MonoBehaviour
     [SerializeField] private float localHitStopTimeScale = 0.0f;
 
     [Header("三段式顿帧配置")]
-    [SerializeField] private float freezePhaseRatio = 0.4f;
+    [SerializeField] private float freezePhaseRatio = 0.5f;
     [SerializeField] private float slowRecoveryPhaseRatio = 0.3f;
-    [SerializeField] private float fastRecoveryPhaseRatio = 0.3f;
+    [SerializeField] private float fastRecoveryPhaseRatio = 0.2f;
     [SerializeField] private AnimationCurve recoveryCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     private bool isGlobalHitStopActive;

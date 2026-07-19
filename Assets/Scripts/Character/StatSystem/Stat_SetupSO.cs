@@ -3,6 +3,8 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "RPG设置/属性配置", fileName = "属性配置数据")]
 public class Stat_SetupSO : ScriptableObject
 {
+    public string setupId; // CSV 导入用的ID
+
     [Header("资源")]
     public float maxHP = 100;
     public float healthRegen;

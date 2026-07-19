@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e51cd789fe2e2604a9400079ede8b2bb, type: 3}
   m_Name: "LootTable -\u65B0\u624B\u88C5\u5907"
   m_EditorClassIdentifier: 
+  tableId: T002
   lootItems:
   - itemData: {fileID: 11400000, guid: e510f8cc2cdcf294d98a575ecd13b601, type: 2}
     useItemRarity: 1

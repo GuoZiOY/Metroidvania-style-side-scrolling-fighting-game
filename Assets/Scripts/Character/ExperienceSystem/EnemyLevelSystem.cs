@@ -7,7 +7,6 @@ public class EnemyLevelSystem : MonoBehaviour
 
     [Header("百分比属性成长")]
     [SerializeField] private float critChancePerLevel = 0.5f; // 暴击率每级增加0.5%
-    [SerializeField] private float evasionPerLevel = 0f; // 闪避率每级增加（默认0，需要闪避的敌人单独调）
     [SerializeField] private float critPowerPerLevel = 1f; // 暴击伤害每级增加1%
     [SerializeField] private float elementalResPerLevel = 0.5f; // 元素抗性每级增加0.5%
 
@@ -81,7 +80,6 @@ public class EnemyLevelSystem : MonoBehaviour
         stats.offense.critChance.AddBaseValue(levelBonus * critChancePerLevel);
         stats.offense.critPower.AddBaseValue(levelBonus * critPowerPerLevel);
 
-        stats.defense.evasion.AddBaseValue(levelBonus * evasionPerLevel);
         stats.defense.fireRes.AddBaseValue(levelBonus * elementalResPerLevel);
         stats.defense.iceRes.AddBaseValue(levelBonus * elementalResPerLevel);
         stats.defense.lightningRes.AddBaseValue(levelBonus * elementalResPerLevel);

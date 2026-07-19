@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e51cd789fe2e2604a9400079ede8b2bb, type: 3}
   m_Name: "LootTable -\u65B0\u624B\u88C5\u5907\u2014\u2014\u9AB7\u9AC5\u6389\u843D"
   m_EditorClassIdentifier: 
+  tableId: T003
   lootItems:
   - itemData: {fileID: 11400000, guid: e510f8cc2cdcf294d98a575ecd13b601, type: 2}
     useItemRarity: 1
@@ -43,7 +44,6 @@ MonoBehaviour:
     dropChance: 20
     minDropCount: 1
     maxDropCount: 1
-  overallDropChance: 100
   minDropCount: 0
   maxDropCount: 1
   allowDuplicates: 0

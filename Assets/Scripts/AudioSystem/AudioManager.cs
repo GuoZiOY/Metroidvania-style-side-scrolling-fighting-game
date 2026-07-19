@@ -6,21 +6,46 @@ public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
 
-    [Header("音频源")]
+    [Header("BGM")]
     public AudioClip bgmClip;
-    public AudioClip chestSfxClip;
-    public AudioClip buttonSfxClip;
-    public AudioClip denySfxClip;
-    public AudioClip counterSuccessSfxClip;
-    public AudioClip counterHitSfxClip;
-    public AudioClip[] swingSfxClips;
-    public AudioClip[] hitSfxClips;
-    public AudioClip[] extraSfxClips;
-    public AudioClip[] critSfxClips;
+    [SerializeField, Range(0, 1)] private float bgmVolume = 0.5f;
 
-    [Header("设置")]
+    [Header("环境音效")]
+    public AudioClip chestSfxClip;
+    [SerializeField, Range(0, 1)] private float chestVolume = 1f;
+
+    [Header("UI音效")]
+    public AudioClip buttonSfxClip;
+    [SerializeField, Range(0, 1)] private float buttonVolume = 1f;
+    public AudioClip denySfxClip;
+    [SerializeField, Range(0, 1)] private float denyVolume = 1f;
+
+    [Header("角色音效")]
+    public AudioClip footstepSfxClip;
+    [SerializeField, Range(0, 1)] private float footstepVolume = 1f;
+    public AudioClip[] jumpSfxClips;
+    [SerializeField, Range(0, 1)] private float jumpVolume = 1f;
+    public AudioClip[] landingSfxClips;
+    [SerializeField, Range(0, 1)] private float landingVolume = 1f;
+    public AudioClip jumpAttackExtraSfxClip;
+    [SerializeField, Range(0, 1)] private float jumpAttackExtraVolume = 1f;
+
+    [Header("战斗音效")]
+    public AudioClip[] swingSfxClips;
+    [SerializeField, Range(0, 1)] private float swingVolume = 1f;
+    public AudioClip[] hitSfxClips;
+    [SerializeField, Range(0, 1)] private float hitVolume = 1f;
+    public AudioClip[] extraSfxClips;
+    [SerializeField, Range(0, 1)] private float extraVolume = 1f;
+    public AudioClip[] critSfxClips;
+    [SerializeField, Range(0, 1)] private float critVolume = 1f;
+    public AudioClip[] counterSuccessSfxClips;
+    [SerializeField, Range(0, 1)] private float counterSuccessVolume = 1f;
+    public AudioClip counterHitSfxClip;
+    [SerializeField, Range(0, 1)] private float counterHitVolume = 1f;
+
+    [Header("其他设置")]
     [SerializeField] private float fadeInDuration = 2f;
-    [SerializeField, Range(0, 1)] private float swingVolume = 0.5f;
     [SerializeField] private float counterHitDelay = 0.1f;
 
     private AudioSource bgmSource;
@@ -32,7 +57,6 @@ public class AudioManager : MonoBehaviour
     private bool isFadingIn;
 
     private float masterVolume = 1f;
-    private float bgmVolume = 0.5f;
     private float sfxVolume = 1f;
 
     private const string MasterVolumePrefs = "Audio_MasterVolume";
@@ -118,7 +142,39 @@ public class AudioManager : MonoBehaviour
     {
         if (chestSfxClip == null) return;
         if (chestSource != null)
-            chestSource.PlayOneShot(chestSfxClip, sfxVolume * masterVolume);
+            chestSource.PlayOneShot(chestSfxClip, sfxVolume * masterVolume * chestVolume);
+    }
+
+    // ===== 角色音效 =====
+
+    public void PlayFootstepSfx()
+    {
+        if (footstepSfxClip == null) return;
+        if (uiSource != null)
+            uiSource.PlayOneShot(footstepSfxClip, sfxVolume * masterVolume * footstepVolume);
+    }
+
+    public void PlayJumpSfx(bool isDoubleJump = false)
+    {
+        int index = isDoubleJump ? 1 : 0;
+        if (jumpSfxClips == null || index >= jumpSfxClips.Length || jumpSfxClips[index] == null) return;
+        if (uiSource != null)
+            uiSource.PlayOneShot(jumpSfxClips[index], sfxVolume * masterVolume * jumpVolume);
+    }
+
+    public void PlayLandingSfx(bool isDoubleJumpLanding = false)
+    {
+        int index = isDoubleJumpLanding ? 1 : 0;
+        if (landingSfxClips == null || index >= landingSfxClips.Length || landingSfxClips[index] == null) return;
+        if (uiSource != null)
+            uiSource.PlayOneShot(landingSfxClips[index], sfxVolume * masterVolume * landingVolume);
+    }
+
+    public void PlayJumpAttackExtraSfx()
+    {
+        if (jumpAttackExtraSfxClip == null) return;
+        if (uiSource != null)
+            uiSource.PlayOneShot(jumpAttackExtraSfxClip, sfxVolume * masterVolume * jumpAttackExtraVolume);
     }
 
     // ===== UI 音效 =====
@@ -127,30 +183,31 @@ public class AudioManager : MonoBehaviour
     {
         if (buttonSfxClip == null) return;
         if (uiSource != null)
-            uiSource.PlayOneShot(buttonSfxClip, sfxVolume * masterVolume);
+            uiSource.PlayOneShot(buttonSfxClip, sfxVolume * masterVolume * buttonVolume);
     }
 
     public void PlayDenySfx()
     {
         if (denySfxClip == null) return;
         if (uiSource != null)
-            uiSource.PlayOneShot(denySfxClip, sfxVolume * masterVolume);
+            uiSource.PlayOneShot(denySfxClip, sfxVolume * masterVolume * denyVolume);
     }
 
     // ===== 战斗音效 =====
 
     public void PlayCounterSuccessSfx()
     {
-        if (counterSuccessSfxClip == null) return;
-        if (extraSource != null)
-            extraSource.PlayOneShot(counterSuccessSfxClip, sfxVolume * masterVolume * 1.5f);
+        if (counterSuccessSfxClips == null || counterSuccessSfxClips.Length == 0) return;
+        AudioClip clip = counterSuccessSfxClips[Random.Range(0, counterSuccessSfxClips.Length)];
+        if (clip != null && extraSource != null)
+            extraSource.PlayOneShot(clip, sfxVolume * masterVolume * counterSuccessVolume);
     }
 
     public void PlayCounterHitSfx()
     {
         if (counterHitSfxClip == null) return;
         if (hitSource != null)
-            hitSource.PlayOneShot(counterHitSfxClip, sfxVolume * masterVolume * 0.5f);
+            hitSource.PlayOneShot(counterHitSfxClip, sfxVolume * masterVolume * counterHitVolume);
     }
 
     public void PlayCounterWithDelay()
@@ -180,7 +237,7 @@ public class AudioManager : MonoBehaviour
         int index = Mathf.Clamp(comboIndex - 1, 0, hitSfxClips.Length - 1);
         AudioClip clip = hitSfxClips[index];
         if (clip != null && hitSource != null)
-            hitSource.PlayOneShot(clip, sfxVolume * masterVolume);
+            hitSource.PlayOneShot(clip, sfxVolume * masterVolume * hitVolume);
     }
 
     public void PlayExtraSfx(int comboIndex)
@@ -189,7 +246,7 @@ public class AudioManager : MonoBehaviour
         int index = Mathf.Clamp(comboIndex - 1, 0, extraSfxClips.Length - 1);
         AudioClip clip = extraSfxClips[index];
         if (clip != null && extraSource != null)
-            extraSource.PlayOneShot(clip, sfxVolume * masterVolume);
+            extraSource.PlayOneShot(clip, sfxVolume * masterVolume * extraVolume);
     }
 
     public void PlayCritSfx(int comboIndex)
@@ -198,7 +255,7 @@ public class AudioManager : MonoBehaviour
         int index = Mathf.Clamp(comboIndex - 1, 0, critSfxClips.Length - 1);
         AudioClip clip = critSfxClips[index];
         if (clip != null && critSource != null)
-            critSource.PlayOneShot(clip, sfxVolume * masterVolume);
+            critSource.PlayOneShot(clip, sfxVolume * masterVolume * critVolume);
     }
 
     public void RegisterButton(Button btn)
@@ -208,7 +265,6 @@ public class AudioManager : MonoBehaviour
     }
 
     // ===== 音量 API =====
-    // 外部使用 1-10 整数，内部转为 0-1
 
     public int GetMasterVolume() => Mathf.RoundToInt(masterVolume * 10);
     public int GetBgmVolume() => Mathf.RoundToInt(bgmVolume * 10);

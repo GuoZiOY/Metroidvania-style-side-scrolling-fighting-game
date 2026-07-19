@@ -18,6 +18,22 @@ public class UI_EventTip : BaseTip
     }
 
 
+    // ========== 任务相关提示 ==========
+
+    public void ShowQuestAccepted(string questName)
+    {
+        ShowTip($"接受任务: {questName}", true, AnimationType.滑动, false);
+    }
+
+    public void ShowQuestCompleted(string questName)
+    {
+        ShowTip($"任务完成: {questName}", true, AnimationType.滑动, false);
+    }
+
+    public void ShowQuestFailed(string questName)
+    {
+        ShowTip($"任务失败: {questName}", false, AnimationType.基础, true);
+    }
     // ========== 区域相关提示 ==========
 
     // 显示遭遇敌人提示（基础动画）

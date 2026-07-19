@@ -1,0 +1,3 @@
+﻿id,name,maxHP,healthRegen,damage,attackSpeed,critChance,critPower,armorReduction,elementalHeart,fireDamage,iceDamage,lightningDamage,armor,evasion,fireResistance,iceResistance,lightningResistance,strength,agility,intelligence,vitality
+500001,属性面板设置_玩家,100,0,10,1,10,150,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+500002,属性面板设置_骷髅,50,0,5,1,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0
