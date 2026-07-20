@@ -15,13 +15,9 @@ namespace Networking
         [SerializeField] private KeyCode hostKey = KeyCode.H;
         [SerializeField] private KeyCode clientKey = KeyCode.C;
         [SerializeField] private KeyCode stopKey = KeyCode.X;
-        [SerializeField] private KeyCode sendKey = KeyCode.S;
 
         private NetworkManager _netManager;
-        private int _sendCount;
-        private int _receiveCount;
         private string _statusText = "空闲";
-        private Vector2 _scrollPos;
 
         void Start()
         {
@@ -56,7 +52,6 @@ namespace Networking
             if (Input.GetKeyDown(hostKey)) StartHost();
             if (Input.GetKeyDown(clientKey)) StartClient();
             if (Input.GetKeyDown(stopKey)) StopNet();
-            if (Input.GetKeyDown(sendKey)) SendTestMessage();
         }
 
         public void StartHost()
@@ -96,20 +91,7 @@ namespace Networking
             if (_netManager == null) return;
             _netManager.Stop();
             _statusText = "已停止";
-            _sendCount = 0;
-            _receiveCount = 0;
             Debug.Log("[NetworkTest] 网络已停止");
-        }
-
-        private void SendTestMessage()
-        {
-            if (_netManager == null || !_netManager.IsClient) return;
-
-            _sendCount++;
-            string text = $"测试消息 #{_sendCount} 来自 {(_netManager.IsHost ? "Host" : "Client")} Time={Time.time:F2}";
-            byte[] data = System.Text.Encoding.UTF8.GetBytes(text);
-            _netManager.SendToServer(data, true);
-            Debug.Log($"[NetworkTest] 发送: {text}");
         }
 
         void OnDestroy()
@@ -117,53 +99,5 @@ namespace Networking
             StopNet();
         }
 
-        void OnGUI()
-        {
-            GUILayout.BeginArea(new Rect(10, 10, 400, 300), GUI.skin.box);
-            GUILayout.Label("=== 网络联机验证 ===");
-            GUILayout.Label($"状态: {_statusText}");
-            GUILayout.Label($"发送: {_sendCount} | 收到: {_receiveCount}");
-            GUILayout.Space(5);
-
-            if (!_netManager.IsRunning)
-            {
-                if (GUILayout.Button($"启动 Host (H) 端口 {port}"))
-                    StartHost();
-                if (GUILayout.Button($"启动 Client (C) 连 127.0.0.1:{port}"))
-                    StartClient();
-            }
-            else
-            {
-                if (GUILayout.Button($"停止 (X)"))
-                    StopNet();
-                if (_netManager.IsClient && !_netManager.IsHost)
-                {
-                    if (GUILayout.Button($"发消息 (S)"))
-                        SendTestMessage();
-                }
-            }
-
-            GUILayout.Label("", GUI.skin.horizontalSlider);
-
-            // 测试说明
-            _scrollPos = GUILayout.BeginScrollView(_scrollPos);
-            GUILayout.Label("测试步骤：", EditorBold());
-            GUILayout.Label("1. 运行第一个 Unity 实例，点「启动 Host」");
-            GUILayout.Label("2. 运行第二个 Unity 实例，点「启动 Client」");
-            GUILayout.Label("3. 在客户端按 S 发消息，Host 应收到并回声");
-            GUILayout.Label("4. 两个实例的 Console 都会显示收发日志");
-            GUILayout.Space(5);
-            GUILayout.Label("同一台机器测试：", EditorBold());
-            GUILayout.Label("打包一个 Build，Editor 跑 Host，Build 跑 Client");
-            GUILayout.EndScrollView();
-
-            GUILayout.EndArea();
-        }
-
-        private GUIStyle EditorBold()
-        {
-            var style = new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Bold };
-            return style;
-        }
     }
 }

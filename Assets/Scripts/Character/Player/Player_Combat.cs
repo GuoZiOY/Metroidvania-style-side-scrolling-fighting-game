@@ -252,6 +252,9 @@ public class Player_Combat : Entity_Combat
             {
                 hasPerformedCounter = true;
 
+                // 立即关闭敌人的反击窗口，防止 HitStop 延迟期间被二次反击
+                target.GetComponent<Enemy>()?.EnableCounterTime(false);
+
                 bool targetCanBeChased = counterable.CanBeChased;
 
                 AudioManager.Instance?.PlayCounterWithDelay();
