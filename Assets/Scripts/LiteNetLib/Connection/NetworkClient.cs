@@ -138,6 +138,8 @@ public class NetworkClient
             channel.SendUnreliable(data);
     }
 
+    private DateTime lastHeartbeat = DateTime.UtcNow;
+
     // 每帧调用，驱动 ReliableChannel 重传定时器
     public void Update()
     {
@@ -150,6 +152,13 @@ public class NetworkClient
         }
 
         channel.Update();
+
+        // 客户端心跳：每秒发一个不可靠包，告诉服务端我还活着
+        if (State == ConnectionState.Connected && (DateTime.UtcNow - lastHeartbeat).TotalSeconds >= 1)
+        {
+            lastHeartbeat = DateTime.UtcNow;
+            channel.SendUnreliable(new byte[] { 0 }); // 1 字节的心跳
+        }
     }
 
     // ==================== 内部方法 ====================
@@ -163,6 +172,7 @@ public class NetworkClient
     // 接收线程：从 UDP Socket 读取数据并喂给 ReliableChannel
     private void ReceiveLoop()
     {
+        OnLog?.Invoke("[NetworkClient] ReceiveLoop: 线程启动");
         while (isRunning)
         {
             try
@@ -174,11 +184,19 @@ public class NetworkClient
                     channel.OnRawDataReceived(received);
                 }
             }
-            catch (ObjectDisposedException) { break; }
-            catch (SocketException) { break; }
+            catch (ObjectDisposedException)
+            {
+                OnLog?.Invoke("[NetworkClient] ReceiveLoop: ObjectDisposedException，线程退出");
+                break;
+            }
+            catch (SocketException ex)
+            {
+                OnLog?.Invoke($"[NetworkClient] ReceiveLoop: SocketException({ex.NativeErrorCode})，继续");
+                Thread.Sleep(10);
+            }
             catch (Exception ex)
             {
-                OnLog?.Invoke($"[NetworkClient] 接收异常: {ex.Message}");
+                OnLog?.Invoke($"[NetworkClient] ReceiveLoop: {ex.GetType().Name}: {ex.Message}，继续");
                 Thread.Sleep(10);
             }
         }

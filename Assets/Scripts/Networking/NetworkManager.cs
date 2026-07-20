@@ -15,6 +15,7 @@ namespace Networking
         [SerializeField] private string defaultAddress = "127.0.0.1";
 
         private IGameTransport _transport;
+        private System.Type _transportType = typeof(LiteNetTransport);
 
         // ---- 状态 ----
         public bool IsServer { get; private set; }
@@ -27,6 +28,12 @@ namespace Networking
 
         // ---- 本地玩家 NetId（由 SpawnSystem 分配后设置） ----
         public uint LocalPlayerNetId { get; set; }
+
+        // 注册传输层类型（可切换 LiteNetTransport / SteamTransport）
+        public void RegisterTransport<T>() where T : IGameTransport, new()
+        {
+            _transportType = typeof(T);
+        }
 
         void Awake()
         {
@@ -71,6 +78,8 @@ namespace Networking
                 string detail = (_transport as LiteNetTransport)?.LastErrorMessage ?? "未知错误";
                 Debug.LogError($"[NetworkManager] 服务端启动失败（端口 {port}）: {detail}");
                 _transport = null;
+                IsServer = false;
+                IsClient = false;
                 return;
             }
 
@@ -105,6 +114,7 @@ namespace Networking
             {
                 Debug.LogError($"[NetworkManager] 连接失败 {address}:{port}");
                 _transport = null;
+                IsClient = false;
                 return;
             }
 
@@ -125,10 +135,10 @@ namespace Networking
             Debug.Log("[NetworkManager] 网络已停止");
         }
 
-        // 创建传输层实例（后续可扩展为根据配置切换 LiteNetTransport / SteamTransport）
-        private static IGameTransport CreateTransport()
+        // 创建传输层实例（根据 RegisterTransport 注册的类型）
+        private IGameTransport CreateTransport()
         {
-            return new LiteNetTransport();
+            return (IGameTransport)System.Activator.CreateInstance(_transportType);
         }
 
         // ---- 便捷发送方法 ----

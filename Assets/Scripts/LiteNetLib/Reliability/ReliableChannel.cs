@@ -139,6 +139,38 @@ public class ReliableChannel
             OnLog?.Invoke($"[ReliableChannel] 消息 seq={seq} 重试超过{_maxRetries}次，放弃发送");
             OnSendFailed?.Invoke(seq, data);
         }
+
+        // 接收方空洞跳过检测：
+        // 如果 reorderBuffer 积累超过 _maxRetries×2 条消息还在等某个序号，
+        // 说明发送方已经重试耗尽放弃那个序号了。
+        // 跳过空洞，从 buffer 里最早的消息开始投递。
+        if (_reorderBuffer.Count >= _maxRetries)
+        {
+            lock (_reorderLock)
+            {
+                if (_reorderBuffer.Count >= _maxRetries)
+                {
+                    uint minSeq = uint.MaxValue;
+                    foreach (var key in _reorderBuffer.Keys)
+                    {
+                        if (IsSequenceBefore(key, minSeq))
+                            minSeq = key;
+                    }
+
+                    // 跳过空洞到 buffer 里最早的消息
+                    _nextReceiveSequence = minSeq;
+                    OnLog?.Invoke($"[ReliableChannel] 跳过空洞，前进到 seq={minSeq}，buffer 中有 {_reorderBuffer.Count} 条等待");
+
+                    // 投递所有连续的消息
+                    while (_reorderBuffer.TryGetValue(_nextReceiveSequence, out byte[]? next))
+                    {
+                        _reorderBuffer.Remove(_nextReceiveSequence);
+                        _nextReceiveSequence++;
+                        OnReliableDataReceived?.Invoke(next);
+                    }
+                }
+            }
+        }
     }
 
     // ==================== 内部方法 ====================

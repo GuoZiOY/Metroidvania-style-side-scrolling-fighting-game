@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-using LiteNetLib.Dispatch;
+// 聊天消息用 NetUtil 手动打包，不经过 protobuf
 
 namespace Networking
 {
@@ -31,8 +31,13 @@ namespace Networking
         // 网络启动后由外部调用，确保 Transport 已存在
         public void Init()
         {
+            if (Net == null || Net.Transport == null)
+            {
+                Debug.LogWarning("[ChatManager] Transport 未就绪，Init 推迟");
+                return;
+            }
+            // 已注册则跳过
             if (_registered) return;
-            if (Net == null || Net.Transport == null) return;
             RegisterHandlers();
         }
 
@@ -44,6 +49,7 @@ namespace Networking
             if (Net.IsServer)
             {
                 Net.Transport.OnServerClientConnected += OnClientConnected;
+                Net.Transport.OnServerClientDisconnected += OnClientDisconnected;
                 Net.Transport.OnServerDataReceived += OnServerData;
             }
             if (Net.IsClient)
@@ -61,6 +67,7 @@ namespace Networking
                 if (Net.IsServer)
                 {
                     Net.Transport.OnServerClientConnected -= OnClientConnected;
+                    Net.Transport.OnServerClientDisconnected -= OnClientDisconnected;
                     Net.Transport.OnServerDataReceived -= OnServerData;
                 }
                 if (Net.IsClient)
@@ -79,12 +86,21 @@ namespace Networking
             }
         }
 
+        // 服务端：客户端断开 → 清理编号
+        private void OnClientDisconnected(int clientId)
+        {
+            lock (playerLock)
+            {
+                clientToPlayer.Remove(clientId);
+            }
+        }
+
         // 服务端：收到聊天消息 → 广播给其他客户端
         private void OnServerData(int clientId, byte[] data)
         {
             if (data == null || data.Length < 4) return;
 
-            var (msgId, body) = MessageDispatcher.UnpackMessage(data);
+            var (msgId, body) = NetUtil.UnpackMessage(data);
             if (msgId != MSG_CHAT) return;
 
             // 如果还没分配编号（比如 Host 的本地客户端），现在分配
@@ -100,7 +116,7 @@ namespace Networking
             // 打包：服务端写入玩家编号后广播给其他客户端
             string full = $"玩家{playerIdx}\0{messageContent}";
             byte[] newBody = Encoding.UTF8.GetBytes(full);
-            byte[] newPacket = MessageDispatcher.PackMessage(MSG_CHAT, newBody);
+            byte[] newPacket = NetUtil.PackMessage(MSG_CHAT, newBody);
 
             // 广播给所有人（包括发送者），消息经过服务端格式化后才显示
             Net.Broadcast(newPacket, true);
@@ -111,7 +127,7 @@ namespace Networking
         {
             if (data == null || data.Length < 4) return;
 
-            var (msgId, body) = MessageDispatcher.UnpackMessage(data);
+            var (msgId, body) = NetUtil.UnpackMessage(data);
             if (msgId != MSG_CHAT) return;
 
             string full = Encoding.UTF8.GetString(body);
@@ -132,7 +148,7 @@ namespace Networking
             if (Net == null || !Net.IsClient) return;
 
             byte[] body = Encoding.UTF8.GetBytes(message);
-            byte[] packet = MessageDispatcher.PackMessage(MSG_CHAT, body);
+            byte[] packet = NetUtil.PackMessage(MSG_CHAT, body);
 
             Net.SendToServer(packet, true);
         }

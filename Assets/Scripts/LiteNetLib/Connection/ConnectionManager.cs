@@ -30,7 +30,7 @@ public class ConnectionManager
     private int localClientId = -1;
 
     private readonly TimeSpan _heartbeatInterval = TimeSpan.FromSeconds(1);
-    private readonly TimeSpan _timeoutThreshold = TimeSpan.FromSeconds(5);
+    private readonly TimeSpan _timeoutThreshold = TimeSpan.FromSeconds(10);
     private DateTime _lastHeartbeatCheck = DateTime.UtcNow;
     private DateTime _lastHeartbeatSend = DateTime.UtcNow;
 

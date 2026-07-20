@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -5,55 +6,78 @@ using TMPro;
 
 namespace Networking
 {
-    // 聊天 UI 面板。
-    // 需要手动在场景中搭建 UI 组件并拖拽引用。
+    // 聊天 UI 面板。每条消息是一个独立的 TextMeshPro 对象。
+    // Content 自动用 VerticalLayoutGroup 排列 + ContentSizeFitter 扩展。
     public class UI_Chat : MonoBehaviour
     {
         [Header("UI 组件（手动拖拽）")]
-        public GameObject panel;                // 聊天面板根对象
-        public TMP_InputField inputField;       // 输入框
-        public TextMeshProUGUI textDisplay;     // 消息显示文本
-        public ScrollRect scrollRect;           // 滚动区域
-        public ChatManager chatManager;         // 聊天管理器（拖拽场景中的 NetworkTester）
+        public GameObject panel;                    // 聊天面板根对象
+        public TMP_InputField inputField;           // 输入框
+        public RectTransform messageContainer;      // Content（挂 VerticalLayoutGroup + ContentSizeFitter）
+        public ScrollRect scrollRect;               // 滚动区域
+        public ChatManager chatManager;             // 聊天管理器
 
         [Header("按键设置")]
         public KeyCode toggleKey = KeyCode.Y;
         public KeyCode sendKey = KeyCode.Return;
 
         [Header("玩家颜色")]
-        [Tooltip("玩家1~6的颜色，按玩家编号顺序取")]
         public string[] playerColors = new string[]
         {
-            "#88CCFF",  // 玩家1 蓝
-            "#FF6B6B",  // 玩家2 红
-            "#51CF66",  // 玩家3 绿
-            "#FFD43B",  // 玩家4 黄
-            "#DA77F2",  // 玩家5 紫
-            "#FF922B",  // 玩家6 橙
+            "#88CCFF", "#FF6B6B", "#51CF66", "#FFD43B", "#DA77F2", "#FF922B"
         };
 
+        [Header("预制体")]
+        public GameObject messagePrefab;            // 消息文本预制体（Assets/Prefab/消息文本.prefab）
+
         [Header("设置")]
+        [Tooltip("最多保留的消息条数，超出后自动删除最旧的")]
         public int maxMessages = 50;
 
-        // 聊天面板是否正在输入（供游戏逻辑判断，聊天打开时屏蔽游戏快捷键）
         public static bool IsChatFocused { get; private set; }
 
-    private readonly List<string> _messages = new();
+        private readonly Queue<GameObject> messageQueue = new();
         private bool _isOpen;
 
         void Start()
         {
             if (chatManager == null)
             {
-                Debug.LogError("[UI_Chat] chatManager 未赋值，请在 Inspector 中拖拽");
+                Debug.LogError("[UI_Chat] chatManager 未赋值");
                 return;
             }
 
             chatManager.OnChatReceived += AddMessage;
 
-            // 按回车发送（InputField 会吞掉 Update 里的回车检测，所以这里也监听）
             if (inputField != null)
                 inputField.onSubmit.AddListener(_ => SendMessage());
+
+            // 确保 messageContainer 有必要的布局组件
+            if (messageContainer != null)
+            {
+                if (messageContainer.GetComponent<VerticalLayoutGroup>() == null)
+                {
+                    var vlg = messageContainer.gameObject.AddComponent<VerticalLayoutGroup>();
+                    vlg.childAlignment = TextAnchor.UpperCenter;
+                    vlg.childForceExpandWidth = true;
+                    vlg.childForceExpandHeight = false;
+                    vlg.spacing = 2;
+                }
+                if (messageContainer.GetComponent<ContentSizeFitter>() == null)
+                {
+                    var csf = messageContainer.gameObject.AddComponent<ContentSizeFitter>();
+                    csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+                }
+                // 锚点顶部，向下增长
+                messageContainer.anchorMin = new Vector2(0, 1);
+                messageContainer.anchorMax = new Vector2(1, 1);
+                messageContainer.pivot = new Vector2(0.5f, 1);
+                messageContainer.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 0);
+            }
+
+            // 自动补全 scrollRect.viewport
+            if (scrollRect != null && scrollRect.viewport == null && messageContainer != null)
+                scrollRect.viewport = messageContainer.parent as RectTransform;
 
             if (panel != null) panel.SetActive(false);
         }
@@ -94,7 +118,7 @@ namespace Networking
                     inputField.Select();
                     inputField.ActivateInputField();
                 }
-                ScrollToBottom();
+                StartCoroutine(ScrollToBottomNextFrame());
             }
         }
 
@@ -108,50 +132,44 @@ namespace Networking
             inputField.ActivateInputField();
         }
 
-        private string GetPlayerColor(string sender)
+        private string GetPlayerColorHex(string sender)
         {
-            // 从"玩家N"中提取编号，取对应颜色
-            if (sender.StartsWith("玩家") && sender.Length > 2)
-            {
-                if (int.TryParse(sender.Substring(2), out int idx) &&
-                    idx >= 1 && idx <= playerColors.Length)
-                {
-                    return playerColors[idx - 1];
-                }
-            }
-            return playerColors[0]; // 默认第一个颜色
+            if (sender.StartsWith("玩家") && sender.Length > 2 &&
+                int.TryParse(sender.Substring(2), out int idx) &&
+                idx >= 1 && idx <= playerColors.Length)
+                return playerColors[idx - 1];
+            return playerColors[0];
         }
 
         private void AddMessage(string sender, string content)
         {
-            Debug.Log($"[UI_Chat] AddMessage: {sender}: {content}");
-            string color = GetPlayerColor(sender);
-            string line = $"<color={color}>{sender}</color>: {content}";
-            _messages.Add(line);
+            if (messageContainer == null) return;
 
-            if (_messages.Count > maxMessages)
-                _messages.RemoveAt(0);
+            // 用预制体生成消息对象
+            var msgObj = Instantiate(messagePrefab, messageContainer, false);
 
-            if (textDisplay != null)
-            {
-                textDisplay.text = string.Join("\n", _messages);
-            }
-            else
-            {
-                Debug.LogWarning("[UI_Chat] textDisplay 未赋值，无法显示消息");
-            }
+            // 设置文本内容
+            var tmp = msgObj.GetComponent<TextMeshProUGUI>();
+            if (tmp != null)
+                tmp.text = $"<color={GetPlayerColorHex(sender)}>{sender}</color>: {content}";
 
-            if (_isOpen)
-                ScrollToBottom();
+            messageQueue.Enqueue(msgObj);
+
+            // 超上限则删除最旧的
+            while (messageQueue.Count > maxMessages)
+                Destroy(messageQueue.Dequeue());
+
+            StartCoroutine(ScrollToBottomNextFrame());
         }
 
-        private void ScrollToBottom()
+        private IEnumerator ScrollToBottomNextFrame()
         {
-            if (scrollRect != null)
-            {
-                Canvas.ForceUpdateCanvases();
-                scrollRect.verticalNormalizedPosition = 0;
-            }
+            yield return null; // 等 VerticalLayoutGroup 完成布局
+
+            if (scrollRect == null) yield break;
+
+            Canvas.ForceUpdateCanvases();
+            scrollRect.verticalNormalizedPosition = 0;
         }
     }
 }

@@ -27,6 +27,15 @@ public class LiteNetTransport : IGameTransport
 
     private int nextClientId = 1001;
 
+    // 客户端数据队列（后台线程 → 主线程转发）
+    private readonly ConcurrentQueue<byte[]> clientReceiveQueue = new();
+
+    // 服务端数据队列（后台线程 → 主线程转发）
+    private readonly ConcurrentQueue<(int, byte[])> serverReceiveQueue = new();
+
+    // 服务端连接事件队列（后台线程 → 主线程转发）
+    private readonly ConcurrentQueue<System.Action> serverEventQueue = new();
+
     // ==================== 事件 ====================
 
     public event Action<int>? OnServerClientConnected;
@@ -53,21 +62,22 @@ public class LiteNetTransport : IGameTransport
         server = new ConnectionManager();
         server.OnLog = msg => { };
 
-        // 收到远端客户端消息 → 转成 int connectionId 后触发上层事件
+        // 收到远端客户端消息 → 入队，主线程处理
         server.OnMessageReceived = (conn, data) =>
         {
             if (guidToId.TryGetValue(conn.ConnectionId, out int cid))
-                OnServerDataReceived?.Invoke(cid, data);
+                serverReceiveQueue.Enqueue((cid, data));
         };
 
-        // 新客户端连接 → 分配 int ID
+        // 新客户端连接 → 分配 int ID（字典操作线程安全），事件入队
         server.OnClientConnected = (conn) =>
         {
             int cid = Interlocked.Increment(ref nextClientId);
             conn.ClientId = cid;
             guidToId[conn.ConnectionId] = cid;
             idToGuid[cid] = conn.ConnectionId;
-            OnServerClientConnected?.Invoke(cid);
+            int captured = cid;
+            serverEventQueue.Enqueue(() => OnServerClientConnected?.Invoke(captured));
         };
 
         server.OnClientDisconnected = (conn) =>
@@ -75,7 +85,8 @@ public class LiteNetTransport : IGameTransport
             if (guidToId.TryRemove(conn.ConnectionId, out int cid))
             {
                 idToGuid.TryRemove(cid, out _);
-                OnServerClientDisconnected?.Invoke(cid);
+                int captured = cid;
+                serverEventQueue.Enqueue(() => OnServerClientDisconnected?.Invoke(captured));
             }
         };
 
@@ -236,6 +247,18 @@ public class LiteNetTransport : IGameTransport
     {
         server?.Update();
         client?.Update();
+
+        // 主线程处理：客户端收到数据
+        while (clientReceiveQueue.TryDequeue(out byte[]? data))
+            OnClientDataReceived?.Invoke(data);
+
+        // 主线程处理：服务端收到数据
+        while (serverReceiveQueue.TryDequeue(out var item))
+            OnServerDataReceived?.Invoke(item.Item1, item.Item2);
+
+        // 主线程处理：服务端连接事件
+        while (serverEventQueue.TryDequeue(out var action))
+            action();
     }
 
     // ==================== 内部方法 ====================
@@ -246,8 +269,9 @@ public class LiteNetTransport : IGameTransport
 
         client.OnConnected += () => OnClientConnected?.Invoke();
         client.OnDisconnected += () => OnClientDisconnected?.Invoke();
-        client.OnDataReceived += data => OnClientDataReceived?.Invoke(data);
-        client.OnLog = msg => { };
+        // 后台线程收到的数据先入队列，由主线程 Update 处理
+        client.OnDataReceived += data => clientReceiveQueue.Enqueue(data);
+        client.OnLog = msg => System.Console.WriteLine("[NetClient] " + msg);
     }
 
     // ==================== UDP 监听线程（服务端接收） ====================
@@ -284,9 +308,21 @@ public class LiteNetTransport : IGameTransport
                 // 喂给该连接的 ReliableChannel
                 conn.Channel.OnRawDataReceived(received);
             }
-            catch (ObjectDisposedException) { break; }
-            catch (System.Net.Sockets.SocketException) { break; }
-            catch (Exception) { Thread.Sleep(10); }
+            catch (ObjectDisposedException)
+            {
+                System.Console.WriteLine("[ListenerLoop] ObjectDisposedException，线程退出");
+                break;
+            }
+            catch (System.Net.Sockets.SocketException ex)
+            {
+                System.Console.WriteLine($"[ListenerLoop] SocketException({ex.NativeErrorCode})，继续");
+                Thread.Sleep(10);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[ListenerLoop] {ex.GetType().Name}: {ex.Message}，继续");
+                Thread.Sleep(10);
+            }
         }
     }
 }
