@@ -205,7 +205,7 @@ public class ItemAbout : MonoBehaviour
     private void PushItemAway(ItemAbout otherItem, Transform otherTransform)
     {
         Vector2 pushDirection = (transform.position - otherTransform.position).normalized;
-        otherItem.rb.velocity = pushDirection * pushForce;
+        otherItem.rb.linearVelocity = pushDirection * pushForce;
     }
 
     #endregion
@@ -228,7 +228,7 @@ public class ItemAbout : MonoBehaviour
     private void OnLanded()
     {
         hasLanded = true;
-        rb.velocity = Vector2.zero;
+        rb.linearVelocity = Vector2.zero;
         rb.angularVelocity = 0f;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
     }

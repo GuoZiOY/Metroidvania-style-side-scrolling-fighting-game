@@ -118,11 +118,11 @@ protected virtual void Awake()
     private IEnumerator KnockbackCo(Vector2 knockback,float duration)//ö�ٻ���Эͬ����
     {
         isKnocked = true;
-        rb.velocity = knockback;//���豻���˵��ٶ�
+        rb.linearVelocity = knockback;//���豻���˵��ٶ�
 
         yield return new WaitForSeconds(duration);//�ȴ����˳���ʱ��
 
-        rb.velocity = Vector2.zero;//�����ٶ�
+        rb.linearVelocity = Vector2.zero;//�����ٶ�
         isKnocked = false;
     }
 
@@ -131,7 +131,7 @@ protected virtual void Awake()
         if(isKnocked || isHitStopActive)
             return;
 
-        rb.velocity = new Vector2(xVelocity, yVelocity);
+        rb.linearVelocity = new Vector2(xVelocity, yVelocity);
         HandleFlip(xVelocity);
     }
 
@@ -190,7 +190,7 @@ protected virtual void Awake()
 
         anim.speed = originalAnimSpeed;
         rb.constraints = savedConstraints;
-        rb.velocity = savedVelocity;
+        rb.linearVelocity = savedVelocity;
         isHitStopActive = false;
     }
 
@@ -205,7 +205,7 @@ protected virtual void Awake()
         {
             if (speed <= 0)
             {
-                rb.velocity = Vector2.zero;
+                rb.linearVelocity = Vector2.zero;
                 rb.constraints = RigidbodyConstraints2D.FreezeAll;
             }
             else
@@ -213,7 +213,7 @@ protected virtual void Awake()
                 if (rb.constraints == RigidbodyConstraints2D.FreezeAll)
                     rb.constraints = savedConstraints;
 
-                rb.velocity = savedVelocity * Mathf.Clamp01(speed);
+                rb.linearVelocity = savedVelocity * Mathf.Clamp01(speed);
             }
         }
     }
@@ -224,15 +224,15 @@ protected virtual void Awake()
         originalAnimSpeed = anim.speed;
         anim.speed = hitStopTimeScale;
 
-        savedVelocity = rb.velocity;
+        savedVelocity = rb.linearVelocity;
         savedConstraints = rb.constraints;
-        rb.velocity = Vector2.zero;
+        rb.linearVelocity = Vector2.zero;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
 
         yield return new WaitForSecondsRealtime(duration);
 
         rb.constraints = savedConstraints;
-        rb.velocity = savedVelocity;
+        rb.linearVelocity = savedVelocity;
         anim.speed = originalAnimSpeed;
         isHitStopActive = false;
         hitStopCo = null;

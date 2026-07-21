@@ -21,7 +21,7 @@ public class Enemy_MoveState : Enemy_GroundState
     public override void Update()
     {
         base.Update();
-        enemy.SetVelocity(enemy.GetMoveSpeed() * enemy.facingDir, rb.velocity.y);
+        enemy.SetVelocity(enemy.GetMoveSpeed() * enemy.facingDir, rb.linearVelocity.y);
         if (enemy.isOnGround == false || enemy.isOnWall || stateTimer <= 0)
         {
             stateMachine.ChangeState(enemy.idleState);

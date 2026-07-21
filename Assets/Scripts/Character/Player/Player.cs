@@ -157,7 +157,7 @@ protected override void Awake()
             return;
         }
 
-        if (rb.velocity.y > 0)
+        if (rb.linearVelocity.y > 0)
         {
             if (isDoubleJumping)
                 rb.gravityScale = originalGravityScale * doubleJumpRiseGravityScale;

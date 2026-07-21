@@ -120,7 +120,7 @@ public class Player_BasicAttackState : PlayerState
     {
         attack_PlayerVelocity_Timer -= Time.deltaTime;//攻击时的角色速度变化的计时器
         if (attack_PlayerVelocity_Timer < 0)//计时器时间到，角色可以根据输入移动
-            player.SetVelocity(0,rb.velocity.y);
+            player.SetVelocity(0,rb.linearVelocity.y);
     }
 
     private void AttackingDisplace()//攻击时位移，指定优化

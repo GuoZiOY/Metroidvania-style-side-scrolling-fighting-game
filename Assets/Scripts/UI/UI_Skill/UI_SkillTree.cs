@@ -60,6 +60,21 @@ public class UI_SkillTree : MonoBehaviour
         }
     }
 
+    // 存档读档后刷新全部节点状态（直接接收技能数据，不依赖 Instance）
+    public void LoadSkillLevels(List<SkillLevelEntry> learned)
+    {
+        if (learned == null) return;
+        var allNodes = GetComponentsInChildren<UI_TreeNode>(true);
+        foreach (var node in allNodes)
+        {
+            if (node.skillData == null) continue;
+            var match = learned.Find(e => (SkillUpgradeType)e.upgradeType == node.skillData.upgradeType);
+            if (match != null && match.level > 0)
+                node.LoadStateFromSave(match.level);
+        }
+        UpdateAllConnections();
+    }
+
     [ContextMenu("更新所有连线")]
     public void UpdateAllConnections()
     {

@@ -19,7 +19,7 @@ public class Player_MoveState : Player_GroundedState
     public override void Update()
     {
         base.Update();
-        player.SetVelocity(player.xInput * player.moveSpeed, player.rb.velocity.y);
+        player.SetVelocity(player.xInput * player.moveSpeed, player.rb.linearVelocity.y);
 
         HandleFootstep();
 

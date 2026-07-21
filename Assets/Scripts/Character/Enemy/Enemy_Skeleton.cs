@@ -44,6 +44,6 @@ public class Enemy_Skeleton : Enemy,ICounterable
     private void ApplyCounterKnockback(float multiplier)
     {
         Vector2 counterKnockback = new Vector2(stunnedVelocity.x * multiplier, stunnedVelocity.y * multiplier);
-        rb.velocity = new Vector2(counterKnockback.x * -DirctionToPlayer(), counterKnockback.y);
+        rb.linearVelocity = new Vector2(counterKnockback.x * -DirctionToPlayer(), counterKnockback.y);
     }
 }

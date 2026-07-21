@@ -214,25 +214,11 @@ public class Player_Combat : Entity_Combat
         }
     }
 
-    private IEnumerator DelayedCounterHitStop(GameObject target, float knockbackMultiplier, bool canBeChased)
+    // 仅负责 HitStop 视觉效果，敌人的眩晕/击退已在 CounterAttackPerformed 中立即执行
+    private IEnumerator DelayedHitStopEffect(GameObject target)
     {
         yield return null; // 1帧，等待粒子生成
         HitStopManager.Instance.TriggerLocalHitStop(gameObject, target, counterHitStopDuration);
-        yield return new WaitForSecondsRealtime(counterHitStopDuration);
-        
-        ICounterable counterable = target.GetComponent<ICounterable>();
-        if (counterable != null)
-        {
-            counterable.HandleCounter(knockbackMultiplier);
-            
-            Debug.Log($"反击成功: {target.name}, CanBeChased: {canBeChased}");
-            
-            if (canBeChased)
-            {
-                chaseTarget = target.transform;
-                Debug.Log($"设置追击目标: {chaseTarget.name}");
-            }
-        }
     }
 
     public bool CounterAttackPerformed()
@@ -265,26 +251,18 @@ public class Player_Combat : Entity_Combat
                     player.VFX.DoCounterVisuals(target.transform.position);
                 }
                 
+                // 立即眩晕敌人，中断攻击动画，防止 HitStop 延迟期间被攻击
+                counterable.HandleCounter(counterKnockbackMultiplier);
+
+                if (targetCanBeChased)
+                {
+                    chaseTarget = target.transform;
+                    Debug.Log($"设置追击目标: {chaseTarget.name}");
+                }
+
                 if (enableCounterHitStop)
                 {
-                    if (targetCanBeChased)
-                    {
-                        chaseTarget = target.transform;
-                        Debug.Log($"立即设置追击目标: {chaseTarget.name}");
-                    }
-                    StartCoroutine(DelayedCounterHitStop(target.gameObject, counterKnockbackMultiplier, targetCanBeChased));
-                }
-                else
-                {
-                    counterable.HandleCounter(counterKnockbackMultiplier);
-                    
-                    Debug.Log($"反击成功: {target.name}, CanBeChased: {targetCanBeChased}");
-                    
-                    if (targetCanBeChased)
-                    {
-                        chaseTarget = target.transform;
-                        Debug.Log($"设置追击目标: {chaseTarget.name}");
-                    }
+                    StartCoroutine(DelayedHitStopEffect(target.gameObject));
                 }
             }
         }

@@ -23,7 +23,7 @@ public class Object_Chest : MonoBehaviour, IDamgable
     {
         fx.PlayOnDamageVfx();
         anim.SetBool("chestOpen", true);
-        rb.velocity = knockback;
+        rb.linearVelocity = knockback;
         rb.angularVelocity = Random.Range(-200f, 200f);
         
         //箱子被破坏后掉落物品（只掉落一次）

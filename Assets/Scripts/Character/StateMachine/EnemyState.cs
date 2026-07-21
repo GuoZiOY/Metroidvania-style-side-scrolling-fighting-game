@@ -26,9 +26,9 @@ public class EnemyState : EntityState
     {
         base.UpdateAnimationParaeters();
         float battleAnimSpeedMultiplier = enemy.battleMoveSpeed / enemy.moveAnimSpeedMultiplier;
-        anim.SetFloat("battleAnimSpeedMultiplier", battleAnimSpeedMultiplier);//¸³ÓèµÐÈËÕ½¶·Ê±¶¯»­µÄ²¥·ÅËÙ¶È
-        anim.SetFloat("moveAnimSpeedMultiplier", enemy.moveAnimSpeedMultiplier);//¸³ÓèµÐÈËÒÆ¶¯¶¯»­µÄ²¥·ÅËÙ¶È
-        anim.SetFloat("xVelocity",rb.velocity.x);//Õ½¶·»ìºÏÊ÷µÄx×ø±ê¸³Óè
+        anim.SetFloat("battleAnimSpeedMultiplier", battleAnimSpeedMultiplier);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+        anim.SetFloat("moveAnimSpeedMultiplier", enemy.moveAnimSpeedMultiplier);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+        anim.SetFloat("xVelocity",rb.linearVelocity.x);//Õ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½xï¿½ï¿½ï¿½ê¸³ï¿½ï¿½
 
     }
 }

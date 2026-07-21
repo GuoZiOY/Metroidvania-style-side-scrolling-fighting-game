@@ -26,4 +26,14 @@ public class Inventory_Player : Inventory_Base
         return false;
     }
 
+    // 存档：按 ItemDataSo.itemId 查找背包中的物品
+    public Inventory_Item FindItemByItemId(string itemId)
+    {
+        foreach (var kvp in itemDictionary)
+        {
+            if (kvp.Value != null && kvp.Value.itemData != null && kvp.Value.itemData.itemId == itemId)
+                return kvp.Value;
+        }
+        return null;
+    }
 }

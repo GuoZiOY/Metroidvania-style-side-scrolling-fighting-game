@@ -51,7 +51,7 @@ public abstract class PlayerState : EntityState
     public override void UpdateAnimationParaeters()
     {
         base.UpdateAnimationParaeters();
-        anim.SetFloat("yVelocity", rb.velocity.y);
+        anim.SetFloat("yVelocity", rb.linearVelocity.y);
 
     }
 

@@ -10,7 +10,7 @@ public class Player_IdleState : Player_GroundedState
     public override void Enter()
     {
         base.Enter();
-        player.SetVelocity(0, rb.velocity.y);//idleÊ±Ô­µØ²»¶¯£¬±ÜÃâÒÆ¶¯/³å´Ì/ÌøÔ¾ºóµÄËÙ¶È¸³Óè
+        player.SetVelocity(0, rb.linearVelocity.y);//idleÊ±Ô­ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½/ï¿½ï¿½ï¿½/ï¿½ï¿½Ô¾ï¿½ï¿½ï¿½ï¿½Ù¶È¸ï¿½ï¿½ï¿½
     }
 
     public override void Update()

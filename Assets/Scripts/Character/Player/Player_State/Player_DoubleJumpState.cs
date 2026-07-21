@@ -22,7 +22,7 @@ public class Player_DoubleJumpState : Player_AiredState
     public override void Update()
     {
         base.Update();
-        if (rb.velocity.y < 0 && stateMachine.currentState != player.jumpAttackState)
+        if (rb.linearVelocity.y < 0 && stateMachine.currentState != player.jumpAttackState)
             stateMachine.ChangeState(player.fallState);
     }
 }

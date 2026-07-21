@@ -33,7 +33,7 @@ public class Player_CounterAttackState : PlayerState
     public override void Update()
     {
         base.Update();
-        player.SetVelocity(0, rb.velocity.y);
+        player.SetVelocity(0, rb.linearVelocity.y);
 
         if (stateTimer < 0)
             stateMachine.ChangeState(player.idleState);

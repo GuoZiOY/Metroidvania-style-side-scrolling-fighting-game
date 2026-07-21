@@ -57,7 +57,7 @@ public class Player_JumpAttackState : PlayerState
         {
             touchedGround = true;//落地后播放jumpAttack_end
             anim.SetTrigger("jumpAttackTrigger");
-            player.SetVelocity(0, rb.velocity.y);
+            player.SetVelocity(0, rb.linearVelocity.y);
             player.VFX?.PlayFallHitVFX(true, 1.5f);
             AudioManager.Instance?.PlayJumpAttackExtraSfx();
         }

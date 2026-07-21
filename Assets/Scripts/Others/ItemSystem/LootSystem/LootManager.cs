@@ -202,7 +202,7 @@ public class LootManager : MonoBehaviour
 
         Vector2 velocityDirection = CalculateVelocityDirection(directionFromCenter);
         Vector2 rotatedDirection = ApplyRandomAngleOffset(velocityDirection);
-        rb.velocity = rotatedDirection * dropForce;
+        rb.linearVelocity = rotatedDirection * dropForce;
     }
 
     private Rigidbody2D SetupRigidbody(GameObject itemObject)

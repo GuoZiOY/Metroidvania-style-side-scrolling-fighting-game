@@ -397,4 +397,37 @@ public class EquipmentSystem : MonoBehaviour
         }
         return (ItemType.None, -1);
     }
+
+    // ==================== 存档接口 ====================
+
+    public class EquipSaveInfo { public Inventory_Item item; public int slotIndex; }
+
+    public List<EquipSaveInfo> GetEquippedItemsForSave()
+    {
+        var list = new List<EquipSaveInfo>();
+        foreach (var kvp in equipmentDictionary)
+            for (int i = 0; i < kvp.Value.Count; i++)
+                if (kvp.Value[i] != null)
+                    list.Add(new EquipSaveInfo { item = kvp.Value[i], slotIndex = i });
+        return list;
+    }
+
+    public void UnequipAllForSave()
+    {
+        foreach (var kvp in equipmentDictionary)
+            for (int i = 0; i < kvp.Value.Count; i++)
+                if (kvp.Value[i] != null)
+                {
+                    kvp.Value[i].RemoveModifiers(playerStats);
+                    kvp.Value[i] = null;
+                    slotDictionary[kvp.Key][i].equippedItem = null;
+                }
+        equippedItems.Clear();
+        OnEquipmentUpdated?.Invoke();
+    }
+
+    public void EquipFromSave(Inventory_Item item, int slotIndex)
+    {
+        TryEquipItemToSlot(item, slotIndex);
+    }
 }

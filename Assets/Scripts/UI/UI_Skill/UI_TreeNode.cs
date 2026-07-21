@@ -80,6 +80,21 @@ public class UI_TreeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
 
 
+    // 存档读档后刷新节点状态（完整复制 UnLock + 升级的视觉效果）
+    public void LoadStateFromSave(int level)
+    {
+        if (skillData == null || level <= 0) return;
+        isUnlocked = true;
+        CurrentLevel = level;
+        UpdateIconColor(Color.white);
+        connectHandler?.UnlockConnectionImage(true);
+        SkillIconScale(true);
+        LockConflictNodes();
+        ApplySkillLevelData(level);
+        UpdateLevelUpButtonState();
+        UpdateSkillToolTipData();
+    }
+
     private void Update()
     {
         if (isUnlocked) UpdateLevelUpButtonState();// 实时更新升级按钮状态

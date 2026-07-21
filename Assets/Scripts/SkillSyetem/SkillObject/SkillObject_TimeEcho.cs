@@ -50,7 +50,7 @@ public class SkillObject_TimeEcho : SkillObject_Base
             HandleWispMovement();
         else
         {
-            anim.SetFloat("yVelocity", rb.velocity.y);
+            anim.SetFloat("yVelocity", rb.linearVelocity.y);
             StopHorizontalMovement();
         }
     }
@@ -126,6 +126,6 @@ public class SkillObject_TimeEcho : SkillObject_Base
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1.5f, whatIsGround);
 
         if (hit.collider != null)
-            rb.velocity = new Vector2(0, rb.velocity.y);
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
     }
 }

@@ -78,7 +78,7 @@ public class Player_CounterChaseState : PlayerState
         base.Exit();
 
         rb.gravityScale = originalGravityScale;
-        rb.velocity = Vector2.zero;
+        rb.linearVelocity = Vector2.zero;
 
         float extraInv = skillManager.powerCounterChase?.GetExtraInvincibilityDuration() ?? 0f;
         player.StartCoroutine(DelayedResetInvulnerability(player, 0.2f + extraInv));

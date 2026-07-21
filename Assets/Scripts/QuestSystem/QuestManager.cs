@@ -438,6 +438,75 @@ public class QuestManager : MonoBehaviour
 
     public List<QuestData> GetAllQuestData() => allQuestData;
 
+    // ==================== 存档接口 ====================
+
+    public Dictionary<string, int[]> GetActiveQuestsForSave()
+    {
+        var result = new Dictionary<string, int[]>();
+        foreach (var kvp in activeQuests)
+            result[kvp.Key] = (int[])kvp.Value.objectiveProgress.Clone();
+        return result;
+    }
+
+    public List<string> GetReadyToClaimQuestsForSave()
+    {
+        return new List<string>(readyToClaimQuests);
+    }
+
+    public List<string> GetCompletedQuestsForSave()
+    {
+        return new List<string>(completedQuests);
+    }
+
+    public List<string> GetFailedQuestsForSave()
+    {
+        return new List<string>(failedQuests);
+    }
+
+    public string GetTrackedQuestIdForSave()
+    {
+        return trackedQuestId;
+    }
+
+    public void LoadFromSave(QuestSaveData d)
+    {
+        if (d == null) return;
+
+        // 清空当前状态
+        activeQuests.Clear();
+        readyToClaimQuests.Clear();
+        completedQuests.Clear();
+        failedQuests.Clear();
+
+        // 恢复进行中
+        if (d.active != null)
+        {
+            foreach (var entry in d.active)
+            {
+                var progress = new QuestProgress(entry.objectives?.Count ?? 0);
+                if (entry.objectives != null)
+                {
+                    for (int i = 0; i < entry.objectives.Count; i++)
+                    {
+                        if (i < progress.objectiveProgress.Length)
+                            progress.objectiveProgress[i] = entry.objectives[i].currentCount;
+                    }
+                }
+                activeQuests[entry.questId] = progress;
+            }
+        }
+
+        // 恢复其他状态
+        if (d.readyToClaim != null)
+            foreach (var id in d.readyToClaim) readyToClaimQuests.Add(id);
+        if (d.completed != null)
+            foreach (var id in d.completed) completedQuests.Add(id);
+        if (d.failed != null)
+            foreach (var id in d.failed) failedQuests.Add(id);
+
+        trackedQuestId = d.trackedQuestId;
+    }
+
     [Serializable]
     public class QuestProgress
     {

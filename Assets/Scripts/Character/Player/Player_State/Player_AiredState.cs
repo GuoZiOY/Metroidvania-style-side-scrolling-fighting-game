@@ -12,7 +12,7 @@ public class Player_AiredState : PlayerState
     {
         base.Update();
         if (player.xInput != 0)
-            player.SetVelocity(player.xInput *player.moveSpeed * player.inAirMoveMuliplier, rb.velocity.y);
+            player.SetVelocity(player.xInput *player.moveSpeed * player.inAirMoveMuliplier, rb.linearVelocity.y);
 
         if (GameInput.GetKeyDown(GameInput.Action.Attack) || (player.inputBuffer != null && player.inputBuffer.HasAttackBuffer()))
         {

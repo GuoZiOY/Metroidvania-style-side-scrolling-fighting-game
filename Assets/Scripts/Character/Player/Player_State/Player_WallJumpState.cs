@@ -13,14 +13,14 @@ public class Player_WallJumpState : PlayerState
     public override void Enter()
     {
         base.Enter();
-        player.SetVelocity(player.wallJumpForce.x * -player.facingDir,player.wallJumpForce.y);//·­×ª½ÇÉ«³¯Ïò¼´»¬Ç½Ê±½ÇÉ«ÃæÏà°´wallJumpForceÌøÔ¾
+        player.SetVelocity(player.wallJumpForce.x * -player.facingDir,player.wallJumpForce.y);//ï¿½ï¿½×ªï¿½ï¿½É«ï¿½ï¿½ï¿½ò¼´»ï¿½Ç½Ê±ï¿½ï¿½É«ï¿½ï¿½ï¿½à°´wallJumpForceï¿½ï¿½Ô¾
 
     }
     public override void Update()
     {
         base.Update();
 
-        if(rb.velocity.y < 0)
+        if(rb.linearVelocity.y < 0)
             stateMachine.ChangeState(player.fallState);
 
         if(player.isOnWall)

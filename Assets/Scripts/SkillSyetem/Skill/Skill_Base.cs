@@ -91,6 +91,9 @@ public class Skill_Base : MonoBehaviour
     protected bool IsOnCooldown() => Time.time < lastTimeUsed + cooldown;// 若当前时间小于（上次使用时间+冷却时间），则表示仍在冷却
     public void StartSkillCooldown() => lastTimeUsed = Time .time; // 设置技能进入冷却状态（将上次使用时间更新为当前时间）
     
+    // 存档：获取所有升级类型的等级
+    public Dictionary<SkillUpgradeType, int> GetAllUpgradeTypeLevels() => new Dictionary<SkillUpgradeType, int>(upgradeTypeLevels);
+
     public float GetRemainingCooldown()//剩余的冷却时间
     {
         if (IsOnCooldown() == false) return 0f;

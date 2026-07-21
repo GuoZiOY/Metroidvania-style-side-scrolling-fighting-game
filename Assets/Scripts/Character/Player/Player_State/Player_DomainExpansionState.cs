@@ -34,7 +34,7 @@ public class Player_DomainExpansionState : PlayerState
 
         if(isLevitating == true)
         {
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
             rb.gravityScale = 0;
             skillManager.domainExpansion.DoSpellCasting();
             if(stateTimer <= 0)
@@ -57,7 +57,7 @@ public class Player_DomainExpansionState : PlayerState
     private void Levitate()
     {
         isLevitating = true;
-        rb.velocity = Vector2.zero;//停止移动
+        rb.linearVelocity = Vector2.zero;//停止移动
         rb.gravityScale = 0;
 
         stateTimer = skillManager.domainExpansion.GetDomainDuration();//设置状态时间为领域持续时间  

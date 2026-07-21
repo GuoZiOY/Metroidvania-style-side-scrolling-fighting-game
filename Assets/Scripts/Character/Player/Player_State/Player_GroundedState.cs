@@ -23,7 +23,7 @@ public class Player_GroundedState : PlayerState
         if (player.isOnGround)
             player.UpdateLastGroundedTime();
 
-        if (rb.velocity.y < 0 && player.isOnGround == false && !player.CanUseCoyoteTime())
+        if (rb.linearVelocity.y < 0 && player.isOnGround == false && !player.CanUseCoyoteTime())
             stateMachine.ChangeState(player.fallState);
 
         if (GameInput.GetKeyDown(GameInput.Action.Jump) || (player.inputBuffer != null && player.inputBuffer.HasJumpBuffer()))

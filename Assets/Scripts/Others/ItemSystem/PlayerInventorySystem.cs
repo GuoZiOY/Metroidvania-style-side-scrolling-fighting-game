@@ -170,13 +170,17 @@ public class PlayerInventorySystem : MonoBehaviour
         return equipmentSystem.SwapEquipmentSlots(itemType, slotA, slotB);
     }
 
-    public Inventory_Player GetInventory()//获取物品栏
+    public Inventory_Player GetInventory()
     {
+        if (inventory == null) inventory = GetComponentInChildren<Inventory_Player>(true);
+        if (inventory == null) inventory = FindAnyObjectByType<Inventory_Player>();
         return inventory;
     }
 
-    public EquipmentSystem GetEquipmentSystem()//获取装备系统
+    public EquipmentSystem GetEquipmentSystem()
     {
+        if (equipmentSystem == null) equipmentSystem = GetComponentInChildren<EquipmentSystem>(true);
+        if (equipmentSystem == null) equipmentSystem = FindAnyObjectByType<EquipmentSystem>();
         return equipmentSystem;
     }
 

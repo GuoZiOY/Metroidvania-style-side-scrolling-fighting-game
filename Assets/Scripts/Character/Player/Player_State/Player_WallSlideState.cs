@@ -33,9 +33,9 @@ public class Player_WallSlideState : PlayerState
     private void HandleWallSlide()
     {
         if (player.yInput < 0)//��ǽʱ����s��ԭ���»�
-            player.SetVelocity(player.xInput, rb.velocity.y);
+            player.SetVelocity(player.xInput, rb.linearVelocity.y);
         else//���򣬻����»�
-            player.SetVelocity(player.xInput, rb.velocity.y * player.wallSlideSlowMoveMuliplier);
+            player.SetVelocity(player.xInput, rb.linearVelocity.y * player.wallSlideSlowMoveMuliplier);
     }
 }
  
