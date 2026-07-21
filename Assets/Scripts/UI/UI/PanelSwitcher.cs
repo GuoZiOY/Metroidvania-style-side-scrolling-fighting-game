@@ -222,7 +222,7 @@ public class PanelSwitcher : MonoBehaviour
         }
     }
 
-    /// <summary>设置按钮颜色，保留 hover/press 的层次变化</summary>
+    /// <summary>设置按钮颜色，保留 hover/press 的层次变化，同时同步文本颜色</summary>
     public static void SetButtonColor(Button btn, Color color)
     {
         if (btn == null) return;
@@ -234,5 +234,9 @@ public class PanelSwitcher : MonoBehaviour
         cb.colorMultiplier = 1f;
         cb.fadeDuration = 0.08f;
         btn.colors = cb;
+
+        // 同步子节点文本颜色
+        var tmp = btn.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+        if (tmp != null) tmp.color = color;
     }
 }

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 存档选择面板。用于主菜单的新游戏/读档。
-/// 支持 3 个手动槽位，每个显示等级、场景名、游玩时间、存档日期。
+/// 4 个槽位只做信息展示和选中，操作通过两个公共按钮进行。
 /// </summary>
 public class UI_SavePanel : MonoBehaviour
 {
@@ -23,10 +23,10 @@ public class UI_SavePanel : MonoBehaviour
         public TextMeshProUGUI sceneText;    // "场景名"
         public TextMeshProUGUI playTimeText; // "02:30:15"
         public TextMeshProUGUI dateText;     // "2026-07-21"
-        public Button actionBtn;             // 新游戏/加载
-        public Button deleteBtn;             // 删除（仅已有存档显示）
         public GameObject emptyGroup;        // 空槽位提示组
         public GameObject infoGroup;         // 存档信息组
+        public GameObject highlight;         // 选中高亮（选中时显示）
+        public Button clickBtn;              // 点击选中该槽位
     }
 
     #endregion
@@ -40,6 +40,11 @@ public class UI_SavePanel : MonoBehaviour
     [SerializeField] private CanvasGroup panelGroup;       // 面板自身 CanvasGroup
     [SerializeField] private TextMeshProUGUI headerText;   // 标题文字
     [SerializeField] private Button backBtn;               // 返回主菜单
+
+    [Header("公共操作按钮")]
+    [SerializeField] private Button actionBtn;              // 新游戏/覆盖/加载
+    [SerializeField] private TextMeshProUGUI actionBtnText;
+    [SerializeField] private Button deleteBtn;              // 删除存档
 
     [Header("确认弹窗")]
     [SerializeField] private GameObject confirmDialog;     // 确认弹窗根对象
@@ -62,8 +67,8 @@ public class UI_SavePanel : MonoBehaviour
     private CanvasGroup _cg;
     private List<SaveProfile> _profiles;
 
-    private Action _pendingAction;              // 待确认的操作
-    private int _pendingSlot = -1;
+    private int _selectedSlot = -1;     // 当前选中的槽位，-1=未选
+    private Action _pendingAction;      // 待确认的操作
 
     public event Action<int, PanelMode> OnSlotConfirmed;
 
@@ -76,14 +81,16 @@ public class UI_SavePanel : MonoBehaviour
         _cg = GetComponent<CanvasGroup>();
         if (_cg == null) _cg = gameObject.AddComponent<CanvasGroup>();
 
+        // 每个槽位可点击选中
         for (int i = 0; i < slots.Length; i++)
         {
             int idx = i;
-            slots[i].actionBtn.onClick.AddListener(() => OnActionBtn(idx));
-            slots[i].deleteBtn.onClick.AddListener(() => OnDeleteBtn(idx));
+            slots[i].clickBtn?.onClick.AddListener(() => SelectSlot(idx));
         }
 
         backBtn?.onClick.AddListener(Hide);
+        actionBtn?.onClick.AddListener(OnAction);
+        deleteBtn?.onClick.AddListener(OnDelete);
         confirmYesBtn?.onClick.AddListener(OnConfirmYes);
         confirmNoBtn?.onClick.AddListener(OnConfirmNo);
 
@@ -133,9 +140,6 @@ public class UI_SavePanel : MonoBehaviour
 
             s.emptyGroup.SetActive(!hasData);
             s.infoGroup.SetActive(hasData);
-            s.deleteBtn.gameObject.SetActive(hasData);
-
-            var btnText = s.actionBtn.GetComponentInChildren<TextMeshProUGUI>();
 
             if (hasData)
             {
@@ -143,20 +147,13 @@ public class UI_SavePanel : MonoBehaviour
                 s.sceneText?.SetText(p.sceneName);
                 s.playTimeText?.SetText(FormatPlayTime(p.playTime));
                 s.dateText?.SetText(FormatSaveTime(p.saveTime));
-                s.actionBtn.interactable = true;
-
-                if (btnText != null)
-                    btnText.SetText(_currentMode == PanelMode.Load ? "加载" : "覆盖");
-            }
-            else
-            {
-                s.actionBtn.interactable = _currentMode != PanelMode.Load;
-                if (btnText != null)
-                    btnText.SetText("新游戏");
             }
 
             s.root.SetActive(true);
         }
+
+        // 清除选中状态
+        SelectSlot(-1);
     }
 
     private static string FormatPlayTime(float seconds)
@@ -181,35 +178,79 @@ public class UI_SavePanel : MonoBehaviour
 
     #endregion
 
+    #region 选中逻辑
+
+    private void SelectSlot(int index)
+    {
+        _selectedSlot = index;
+
+        // 高亮切换
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i].highlight != null)
+                slots[i].highlight.SetActive(i == index);
+        }
+
+        // 公共按钮状态
+        bool selected = index >= 0;
+        actionBtn.interactable = selected;
+        deleteBtn.interactable = selected && HasData(index);
+        actionBtnText?.SetText(GetActionBtnText(index));
+    }
+
+    private bool HasData(int index)
+    {
+        if (index < 0) return false;
+        var p = _profiles?.Find(x => x.slotIndex == index);
+        return p != null && !p.isEmpty;
+    }
+
+    private string GetActionBtnText(int index)
+    {
+        if (index < 0) return "选择存档";
+        bool hasData = HasData(index);
+
+        switch (_currentMode)
+        {
+            case PanelMode.NewGame:
+                return hasData ? "覆盖并开始新游戏" : "开始新游戏";
+            case PanelMode.Load:
+                return hasData ? "加载存档" : "所选槽位无数据";
+            default:
+                return "确定";
+        }
+    }
+
+    #endregion
+
     #region 按钮事件
 
-    private void OnActionBtn(int index)
+    private void OnAction()
     {
-        _pendingSlot = index;
-        var p = _profiles?.Find(x => x.slotIndex == index);
-        bool hasData = p != null && !p.isEmpty;
+        if (_selectedSlot < 0) return;
+        bool hasData = HasData(_selectedSlot);
 
         switch (_currentMode)
         {
             case PanelMode.NewGame:
                 if (hasData)
                     ShowConfirm("确定覆盖此存档吗？\n当前进度将被永久覆盖。",
-                        () => StartNewGame(index));
+                        () => StartNewGame(_selectedSlot));
                 else
-                    StartNewGame(index);
+                    StartNewGame(_selectedSlot);
                 break;
 
             case PanelMode.Load:
-                if (hasData) LoadGame(index);
+                if (hasData) LoadGame(_selectedSlot);
                 break;
         }
     }
 
-    private void OnDeleteBtn(int index)
+    private void OnDelete()
     {
-        _pendingSlot = index;
+        if (_selectedSlot < 0 || !HasData(_selectedSlot)) return;
         ShowConfirm("确定删除此存档吗？\n此操作不可恢复。",
-            () => DeleteSlot(index));
+            () => DeleteSlot(_selectedSlot));
     }
 
     #endregion
@@ -269,14 +310,12 @@ public class UI_SavePanel : MonoBehaviour
     {
         _pendingAction?.Invoke();
         _pendingAction = null;
-        _pendingSlot = -1;
         HideConfirm();
     }
 
     private void OnConfirmNo()
     {
         _pendingAction = null;
-        _pendingSlot = -1;
         HideConfirm();
     }
 

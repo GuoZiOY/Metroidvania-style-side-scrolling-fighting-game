@@ -30,6 +30,7 @@ public class UI_QuestPanel : MonoBehaviour
     private bool isProcessingAction;
     private Sequence detailSeq;
     private Vector2 detailOriginalPos;
+    private bool _detailPosRecorded;
     private List<string> questOrder = new List<string>();
 
     private void Awake()
@@ -181,10 +182,18 @@ public class UI_QuestPanel : MonoBehaviour
     {
         if (detailContent == null) { UpdateDetailPanel(); return; }
 
-        detailOriginalPos = detailContent.anchoredPosition;
-        detailSeq?.Kill();
+        // 只记录一次真实原点，防止连续点击累积偏移
+        if (!_detailPosRecorded)
+        {
+            detailOriginalPos = detailContent.anchoredPosition;
+            _detailPosRecorded = true;
+        }
 
-        float slideH = Mathf.Max(detailContent.rect.height * 0.4f, 30f);
+        // 终止旧动画，回到真实原点
+        detailSeq?.Kill();
+        detailContent.anchoredPosition = detailOriginalPos;
+
+        float slideH = Mathf.Max(detailContent.rect.height * 0.75f, 50f);
         float fromY = slideDown ? slideH : -slideH;
 
         detailSeq = DOTween.Sequence();
