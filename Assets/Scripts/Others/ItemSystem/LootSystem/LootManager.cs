@@ -108,13 +108,13 @@ public class LootManager : MonoBehaviour
     {
         List<LootedItem> items = new List<LootedItem>();
 
-        if (lootable.LootPool != null)
+        if (lootable.LootTables != null)
         {
-            items.AddRange(lootable.LootPool.GenerateLoot());
-        }
-        else if (lootable.LootTable != null)
-        {
-            items.AddRange(lootable.LootTable.GenerateLoot());
+            foreach (var table in lootable.LootTables)
+            {
+                if (table != null)
+                    items.AddRange(table.GenerateLoot());
+            }
         }
 
         return items;

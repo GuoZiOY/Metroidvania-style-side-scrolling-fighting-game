@@ -11,8 +11,7 @@ public class SaveManager : MonoBehaviour
 {
     public static SaveManager Instance { get; private set; }
 
-    private const int MAX_MANUAL_SLOTS = 3;
-    private const int AUTO_SLOT = 3;  // slot_auto 固定为索引 3
+    private const int MAX_SLOTS = 4;  // 4 个手动存档槽
     private const string FILE_PREFIX = "slot_";
     private const string PROFILES_FILE = "profiles.json";
 
@@ -25,14 +24,6 @@ public class SaveManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         ItemLookup.Initialize();
-    }
-
-    // 测试用快捷键（正式版本替换为 UI 按钮触发）
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.F5)) Save(0);       // F5 存档到槽0
-        if (Input.GetKeyDown(KeyCode.F6)) QuickSave();    // F6 快速存档
-        if (Input.GetKeyDown(KeyCode.F9)) Load(0);        // F9 读档槽0
     }
 
     // ==================== 公开 API ====================
@@ -162,12 +153,6 @@ public class SaveManager : MonoBehaviour
     {
         var profiles = LoadProfileList();
         return profiles.profiles;
-    }
-
-    // 快速存档（自动槽）
-    public void QuickSave()
-    {
-        Save(AUTO_SLOT);
     }
 
     // ==================== 数据收集 ====================

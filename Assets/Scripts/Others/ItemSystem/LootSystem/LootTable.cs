@@ -25,27 +25,26 @@ public class LootTable : ScriptableObject
         List<LootedItem> droppedItems = new List<LootedItem>();
         List<LootDropItem> availableItems = new List<LootDropItem>(lootItems);
 
+        // 尝试掉落次数由 min/maxDropCount 决定
         int dropCount = UnityEngine.Random.Range(minDropCount, maxDropCount + 1);
 
         for (int i = 0; i < dropCount; i++)
         {
-            LootDropItem selectedItem = SelectRandomItem(availableItems);
+            if (availableItems.Count == 0) break;
 
-            if (selectedItem != null && selectedItem.CanDrop())
+            LootDropItem selectedItem = SelectRandomItem(availableItems); // 权重选物品（已含概率）
+            if (selectedItem == null) continue;
+
+            // 去掉 CanDrop()，因为 SelectRandomItem 已按权重做了概率筛选
+            int count = selectedItem.GetDropCount();
+            for (int j = 0; j < count; j++)
             {
-                int count = selectedItem.GetDropCount();
-                for (int j = 0; j < count; j++)
-                {
-                    LootRarity actualRarity = selectedItem.GetDroppedRarity(extraRarityDropChanceBonus); //传递稀有度加成
-                    LootedItem lootedItem = new LootedItem(selectedItem.ItemData, actualRarity);
-                    droppedItems.Add(lootedItem);
-                }
-
-                if (!allowDuplicates)
-                {
-                    availableItems.Remove(selectedItem);
-                }
+                LootRarity actualRarity = selectedItem.GetDroppedRarity(extraRarityDropChanceBonus);
+                droppedItems.Add(new LootedItem(selectedItem.ItemData, actualRarity));
             }
+
+            if (!allowDuplicates)
+                availableItems.Remove(selectedItem);
         }
 
         return droppedItems;

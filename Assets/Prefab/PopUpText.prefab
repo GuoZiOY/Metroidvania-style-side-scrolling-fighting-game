@@ -52,7 +52,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myText: {fileID: 5873485833487787329}
   horizontalSpeed: 3
-  upwardSpeed: 5
+  upwardSpeed: 4
   gravity: 8
   startScale: 0.7
   maxScale: 1.8
@@ -61,7 +61,7 @@ MonoBehaviour:
   elasticity: 0.6
   maxRotation: 15
   enableShake: 0
-  shakeIntensity: 0.3
+  shakeIntensity: 0.4
   shakeDuration: 0.4
   enableColorFlash: 1
   colorFlashSpeed: 40
@@ -72,9 +72,9 @@ MonoBehaviour:
   criticalScaleDurationMultiplier: 0.4
   criticalElasticityMultiplier: 0.2
   textOffsetX: 1
-  textOffsetY: 1.5
+  textOffsetY: 1.3
   criticalOffsetX: 1.5
-  criticalOffsetY: 2
+  criticalOffsetY: 1.7
   stayDuration: 0.4
   disappearUpwardSpeed: 2
   disappearSpeed: 3
@@ -96,10 +96,15 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2528802164461637546, guid: 099f780e697ae704baa368ba9437ddaa, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -117,9 +122,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &5873485833487787329
 MonoBehaviour:
@@ -144,7 +151,7 @@ MonoBehaviour:
   m_text: 123
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 099f780e697ae704baa368ba9437ddaa, type: 2}
-  m_sharedMaterial: {fileID: 0}
+  m_sharedMaterial: {fileID: 2528802164461637546, guid: 099f780e697ae704baa368ba9437ddaa, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -179,20 +186,23 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 1
+  m_ActiveFontFeatures: 6e72656b
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
+  m_EmojiFallbackSupport: 1
   m_parseCtrlCharacters: 1
   m_isOrthographic: 0
   m_isCullingEnabled: 0
@@ -210,6 +220,6 @@ MonoBehaviour:
   _SortingLayer: 0
   _SortingLayerID: 0
   _SortingOrder: 0
-  m_hasFontAssetChanged: 1
+  m_hasFontAssetChanged: 0
   m_renderer: {fileID: 5528636553433693364}
   m_maskType: 0

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
@@ -6,16 +7,40 @@ using UnityEngine;
 public class UI_QuestTracker : MonoBehaviour
 {
     [Header("追踪显示")]
-    [SerializeField] private TMP_Text nameText;    // 任务名文本
-    [SerializeField] private TMP_Text progressText; // 任务进度文本
-    [SerializeField] private UnityEngine.UI.Button hideButton;     // 收起按钮（可选）
-    [SerializeField] private Color hideButtonActiveColor = Color.yellow; // 按钮活跃颜色
+    [SerializeField] private TMP_Text nameText;
+    [SerializeField] private TMP_Text progressText;
+    [SerializeField] private UnityEngine.UI.Button hideButton;
+    [SerializeField] private Color hideButtonActiveColor = Color.yellow;
 
-    /// <summary>切换面板显示/隐藏</summary>
+    private RectTransform _rect;
+    private Vector2 _showPos;
+    private Tween _slideTween;
+
+    private void Awake()
+    {
+        _rect = GetComponent<RectTransform>();
+        _showPos = _rect.anchoredPosition;
+    }
+
     public void ToggleShow()
     {
+        _slideTween?.Kill();
         bool show = !gameObject.activeSelf;
-        gameObject.SetActive(show);
+
+        if (show)
+        {
+            gameObject.SetActive(true);
+            // 从右滑入
+            _rect.anchoredPosition = _showPos + new Vector2(_rect.rect.width, 0);
+            _slideTween = _rect.DOAnchorPos(_showPos, 0.3f).SetEase(Ease.OutCubic);
+        }
+        else
+        {
+            // 滑出到右侧，完成后隐藏
+            _slideTween = _rect.DOAnchorPos(_showPos + new Vector2(_rect.rect.width, 0), 0.25f)
+                .SetEase(Ease.InCubic)
+                .OnComplete(() => gameObject.SetActive(false));
+        }
         UpdateButtonColor(show);
     }
 
@@ -23,13 +48,7 @@ public class UI_QuestTracker : MonoBehaviour
     {
         if (hideButton == null) return;
         var img = hideButton.GetComponent<UnityEngine.UI.Image>();
-        if (img != null)
-            img.color = visible ? hideButtonActiveColor : Color.white;
-    }
-
-    private void OnEnable()
-    {
-        UpdateButtonColor(gameObject.activeSelf);
+        if (img != null) img.color = visible ? hideButtonActiveColor : Color.white;
     }
 
     private void Start()

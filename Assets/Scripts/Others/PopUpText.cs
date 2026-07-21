@@ -1,7 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using DG.Tweening;
 using static Entity_Stats;
 
 public enum PopUpType
@@ -34,7 +33,7 @@ public class PopUpText : MonoBehaviour
     [SerializeField] private float maxRotation = 15f;
 
     [Header("震动参数")]
-    [SerializeField] private bool enableShake = false;
+    [SerializeField] private bool enableShake = true;
     [SerializeField] private float shakeIntensity = 0.2f;
     [SerializeField] private float shakeDuration = 0.3f;
 
@@ -46,9 +45,9 @@ public class PopUpText : MonoBehaviour
     [SerializeField] private Color flashColor2 = Color.red;
 
     [Header("暴击伤害参数 - 缩放")]
-    [SerializeField] private float criticalScaleMultiplier = 1.5f;//暴击伤害缩放倍数
-    [SerializeField] private float criticalScaleDurationMultiplier = 1.5f;//暴击伤害缩放持续时间倍数
-    [SerializeField] private float criticalElasticityMultiplier = 1.5f;//暴击伤害缩放弹性倍数   
+    [SerializeField] private float criticalScaleMultiplier = 1.5f;
+    [SerializeField] private float criticalScaleDurationMultiplier = 1.5f;
+    [SerializeField] private float criticalElasticityMultiplier = 1.5f;
 
     [Header("位置偏移参数")]
     [SerializeField] private float textOffsetX = 1f;
@@ -66,304 +65,208 @@ public class PopUpText : MonoBehaviour
     [SerializeField] private float disappearSpeed = 3f;
     [SerializeField] private float disappearRotationSpeed = 30f;
 
-    private float timer;
-    private float scaleTimer;
-    private float rotationTimer;
-    private Vector3 velocity;
-    private int horizontalDirection;
-    private bool isDisappearing;
-    private float currentRotation;
-    private float shakeTimer;
     private float scaleMultiplier = 1f;
-    private Vector3 originalPosition;
-    private bool directionSet = false;
     private Color originalColor;
-    private float colorFlashTimer;
-    private float colorFlashElapsedTimer;
+    private Tween _mainTween;
+    private Tween _shakeTween;
+    private const float DISAPPEAR_DURATION = 0.5f;
 
     private void Start()
     {
         myText = GetComponent<TextMeshPro>();
         originalColor = myText.color;
-        originalPosition = transform.position;
-        
         transform.localScale = Vector3.one * startScale;
-        
-        InitializeNormalDamage();
-    }
 
-    private void InitializeNormalDamage()
-    {
-        if (!directionSet)
+        switch (popUpType)
         {
-            horizontalDirection = Random.Range(0, 2) == 0 ? -1 : 1;
+            case PopUpType.NormalDamage:
+            case PopUpType.SkillTip:
+                PlayNormalDamage();
+                break;
+            case PopUpType.CriticalDamage:
+                PlayCriticalDamage();
+                break;
         }
-        
-        velocity = new Vector3(horizontalDirection * horizontalSpeed, upwardSpeed, 0);
-        currentRotation = Random.Range(-maxRotation, maxRotation);
     }
 
-    private void Update()
+    // ==================== 普通伤害 ====================
+
+    private void PlayNormalDamage()
     {
-        if (!isDisappearing)
+        int dir = Random.Range(0, 2) == 0 ? -1 : 1;
+        float rotZ = Random.Range(-maxRotation, maxRotation);
+        transform.rotation = Quaternion.Euler(0, 0, rotZ);
+        Vector3 startPos = transform.position;
+        float totalDuration = scaleDuration + stayDuration + DISAPPEAR_DURATION;
+
+        // 记录消失开始时的基准位置和旋转，用于不依赖 Time.deltaTime 的时间推导
+        Vector3 disappearBasePos = default;
+        float accumulatedRotation = 0f;
+
+        _mainTween = DOTween.To(() => 0f, t =>
         {
-            switch (popUpType)
+            if (t <= scaleDuration)
             {
-                case PopUpType.NormalDamage:
-                case PopUpType.SkillTip:
-                    UpdateNormalDamage();
-                    break;
-                case PopUpType.CriticalDamage:
-                    UpdateCriticalDamage();
-                    break;
-            }
-            
-            timer += Time.deltaTime;
-            
-            float currentScaleDuration = scaleDuration;
-            if (popUpType == PopUpType.CriticalDamage)
-            {
-                currentScaleDuration *= criticalScaleDurationMultiplier;
-            }
-            
-            if (timer >= currentScaleDuration + stayDuration)
-            {
-                StartDisappearAnimation();
-            }
-        }
-        else
-        {
-            UpdateDisappearAnimation();
-        }
-    }
+                // Phase 1: 抛物线 + 弹性缩放 + 旋转回正（0~scaleDuration）
+                float x = startPos.x + dir * horizontalSpeed * t;
+                float y = startPos.y + upwardSpeed * t - 0.5f * gravity * t * t;
+                transform.position = new Vector3(x, y, 0);
 
-    private void UpdateNormalDamage()
-    {
-        UpdateParabolicMotion();
-        UpdateElasticScale();
-        UpdateRotation();
-        
-        if (enableShake)
-            UpdateShake();
-    }
+                // 弹性缩放（原公式）
+                float p = t / scaleDuration;
+                float val;
+                if (p < 0.5f)
+                    val = Mathf.Lerp(startScale, maxScale, EaseOutBack(p * 2f, elasticity));
+                else
+                    val = Mathf.Lerp(maxScale, targetScale, EaseOutElastic((p - 0.5f) * 2f, elasticity));
+                transform.localScale = Vector3.one * val * scaleMultiplier;
 
-    private void UpdateCriticalDamage()
-    {
-        UpdateElasticScale();
-        UpdateShake();
-        UpdateColorFlash();
-    }
-
-    private void UpdateParabolicMotion()
-    {
-        if (timer < scaleDuration)
-        {
-            transform.position += velocity * Time.deltaTime;
-            velocity.y -= gravity * Time.deltaTime;
-        }
-    }
-
-    private void UpdateElasticScale()
-    {
-        float currentScaleDuration = scaleDuration;
-        float currentElasticity = elasticity;
-        
-        if (popUpType == PopUpType.CriticalDamage)
-        {
-            currentScaleDuration *= criticalScaleDurationMultiplier;
-            currentElasticity *= criticalElasticityMultiplier;
-        }
-        
-        if (scaleTimer < currentScaleDuration)
-        {
-            scaleTimer += Time.deltaTime;
-            float progress = scaleTimer / currentScaleDuration;
-            
-            float elasticScale;
-            if (progress < 0.5f)
-            {
-                float t = progress * 2f;
-                elasticScale = Mathf.Lerp(startScale, maxScale, EaseOutBack(t, currentElasticity));
+                // 旋转回正
+                transform.rotation = Quaternion.Euler(0, 0, Mathf.Lerp(rotZ, 0, EaseOutQuad(p)));
             }
             else
             {
-                float t = (progress - 0.5f) * 2f;
-                elasticScale = Mathf.Lerp(maxScale, targetScale, EaseOutElastic(t, currentElasticity));
+                float dt = t - scaleDuration - stayDuration;
+                if (dt > 0)
+                {
+                    // Phase 3: 消失 — 基于消失时间推导位置和旋转，不依赖 Time.deltaTime
+                    float dp = Mathf.Clamp01(dt / DISAPPEAR_DURATION);
+                    if (dp < 0.01f)
+                    {
+                        disappearBasePos = transform.position;
+                        accumulatedRotation = transform.rotation.eulerAngles.z;
+                    }
+
+                    // 位置 = 基准 + 上浮距离 × 进度
+                    transform.position = disappearBasePos + new Vector3(0, disappearUpwardSpeed * DISAPPEAR_DURATION * dp, 0);
+                    // 旋转 = 基准 + 累计旋转 × 进度
+                    transform.rotation = Quaternion.Euler(0, 0, accumulatedRotation + disappearRotationSpeed * DISAPPEAR_DURATION * dp);
+
+                    // 渐隐
+                    Color c = myText.color;
+                    myText.color = new Color(c.r, c.g, c.b, 1f - dp);
+                }
             }
-            
-            transform.localScale = Vector3.one * elasticScale * scaleMultiplier;
-        }
+        }, totalDuration, totalDuration)
+            .SetEase(Ease.Linear)
+            .OnComplete(() => Destroy(gameObject));
     }
 
-    private void UpdateRotation()
-    {
-        if (rotationTimer < scaleDuration)
-        {
-            rotationTimer += Time.deltaTime;
-            float progress = rotationTimer / scaleDuration;
-            float targetRotation = Mathf.Lerp(currentRotation, 0f, EaseOutQuad(progress));
-            transform.rotation = Quaternion.Euler(0, 0, targetRotation);
-        }
-    }
+    // ==================== 暴击伤害 ====================
 
-    private void UpdateShake()
+    private void PlayCriticalDamage()
     {
-        if (shakeTimer < shakeDuration)
-        {
-            shakeTimer += Time.deltaTime;
-            float intensity = shakeIntensity * (1f - shakeTimer / shakeDuration);
-            Vector3 shakeOffset = new Vector3(
-                Random.Range(-intensity, intensity),
-                Random.Range(-intensity, intensity),
-                0
-            );
-            transform.position = originalPosition + shakeOffset;
-        }
-    }
+        float rotZ = Random.Range(-maxRotation, maxRotation);
+        transform.rotation = Quaternion.Euler(0, 0, rotZ);
+        Vector3 startPos = transform.position;
 
-    private void UpdateColorFlash()
-    {
-        if (enableColorFlash)
+        float tDur = scaleDuration * criticalScaleDurationMultiplier;
+        float curElasticity = elasticity * criticalElasticityMultiplier;
+        float totalDuration = tDur + stayDuration + DISAPPEAR_DURATION;
+
+        Vector3 disappearBasePos = default;
+        float accumulatedRotation = 0f;
+
+        _mainTween = DOTween.To(() => 0f, t =>
         {
-            colorFlashElapsedTimer += Time.deltaTime;
-            
-            if (colorFlashElapsedTimer < colorFlashDuration)
+            if (t <= tDur)
             {
-                colorFlashTimer += Time.deltaTime * colorFlashSpeed;
-                float flashProgress = (Mathf.Sin(colorFlashTimer) + 1f) / 2f;
-                Color flashColor = Color.Lerp(flashColor1, flashColor2, flashProgress);
-                myText.color = new Color(flashColor.r, flashColor.g, flashColor.b, myText.color.a);
+                // Phase 1: 弹性缩放 + 抖动 + 颜色闪烁
+                float p = t / tDur;
+                float val;
+                if (p < 0.5f)
+                    val = Mathf.Lerp(startScale, maxScale, EaseOutBack(p * 2f, curElasticity));
+                else
+                    val = Mathf.Lerp(maxScale, targetScale, EaseOutElastic((p - 0.5f) * 2f, curElasticity));
+                transform.localScale = Vector3.one * val * scaleMultiplier;
+
+                // 抖动（独立 tween，每帧随机偏移，和原版完全一致）
+                if (enableShake && shakeDuration > 0 && t <= Time.deltaTime && _shakeTween == null)
+                {
+                    Vector3 shakeBasePos = transform.position;
+                    _shakeTween = DOTween.To(() => 0f, st =>
+                    {
+                        float intensity = shakeIntensity * (1f - st / shakeDuration);
+                        transform.position = shakeBasePos + new Vector3(
+                            Random.Range(-intensity, intensity),
+                            Random.Range(-intensity, intensity), 0);
+                    }, shakeDuration, shakeDuration).SetEase(Ease.Linear)
+                    .OnComplete(() => { transform.position = shakeBasePos; _shakeTween = null; });
+                }
+
+                // 颜色闪烁（原版 sin 波）
+                if (enableColorFlash)
+                {
+                    float fp = (Mathf.Sin(t * colorFlashSpeed) + 1f) / 2f;
+                    myText.color = Color.Lerp(flashColor1, flashColor2, fp);
+                }
             }
             else
             {
-                myText.color = new Color(originalColor.r, originalColor.g, originalColor.b, myText.color.a);
+                float dt = t - tDur - stayDuration;
+                if (dt > 0)
+                {
+                    float dp = Mathf.Clamp01(dt / DISAPPEAR_DURATION);
+                    if (dp < 0.01f)
+                    {
+                        disappearBasePos = transform.position;
+                        accumulatedRotation = transform.rotation.eulerAngles.z;
+                    }
+
+                    transform.position = disappearBasePos + new Vector3(0, disappearUpwardSpeed * DISAPPEAR_DURATION * dp, 0);
+                    transform.rotation = Quaternion.Euler(0, 0, accumulatedRotation + disappearRotationSpeed * DISAPPEAR_DURATION * dp);
+
+                    Color c = myText.color;
+                    if (enableColorFlash)
+                    {
+                        float fp = (Mathf.Sin(t * colorFlashSpeed) + 1f) / 2f;
+                        c = Color.Lerp(flashColor1, flashColor2, fp);
+                    }
+                    myText.color = new Color(c.r, c.g, c.b, 1f - dp);
+                }
             }
-        }
+        }, totalDuration, totalDuration)
+            .SetEase(Ease.Linear)
+            .OnComplete(() => Destroy(gameObject));
     }
 
-    private void StartDisappearAnimation()
-    {
-        isDisappearing = true;
-        velocity = Vector3.zero;
-    }
+    // ==================== 原版缓动函数（保持视觉完全一致） ====================
 
-    private void UpdateDisappearAnimation()
+    private float EaseOutBack(float t, float e = 1f)
     {
-        transform.position += Vector3.up * disappearUpwardSpeed * Time.deltaTime;
-        transform.Rotate(0, 0, disappearRotationSpeed * Time.deltaTime);
-        
-        if (enableColorFlash && popUpType == PopUpType.CriticalDamage && colorFlashElapsedTimer < colorFlashDuration)
-        {
-            colorFlashTimer += Time.deltaTime * colorFlashSpeed;
-            float flashProgress = (Mathf.Sin(colorFlashTimer) + 1f) / 2f;
-            Color flashColor = Color.Lerp(flashColor1, flashColor2, flashProgress);
-            float alpha = myText.color.a - disappearSpeed * Time.deltaTime;
-            myText.color = new Color(flashColor.r, flashColor.g, flashColor.b, alpha);
-        }
-        else
-        {
-            float alpha = myText.color.a - disappearSpeed * Time.deltaTime;
-            myText.color = new Color(myText.color.r, myText.color.g, myText.color.b, alpha);
-        }
-
-        if (myText.color.a <= 0)
-        {
-            Destroy(gameObject);
-        }
-    }
-
-    private float EaseOutBack(float t, float elasticity = 1f)
-    {
-        float c1 = 1.70158f * elasticity;
+        float c1 = 1.70158f * e;
         float c3 = c1 + 1f;
         return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
     }
 
-    private float EaseOutElastic(float t, float elasticity = 1f)
+    private float EaseOutElastic(float t, float e = 1f)
     {
         float c4 = (2f * Mathf.PI) / 3f;
-        float amplitude = 1f * elasticity;
-        return t == 0f ? 0f : t == 1f ? 1f : amplitude * Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * c4) + 1f;
+        float amp = 1f * e;
+        return t == 0f ? 0f : t == 1f ? 1f : amp * Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * c4) + 1f;
     }
 
-    private float EaseOutQuad(float t)
-    {
-        return 1f - (1f - t) * (1f - t);
-    }
+    private float EaseOutQuad(float t) => 1f - (1f - t) * (1f - t);
 
-    public void SetScale(float multiplier)
-    {
-        scaleMultiplier = multiplier;
-    }
+    private void OnDestroy() { _mainTween?.Kill(); _shakeTween?.Kill(); }
 
-    public void EnableShake()
-    {
-        enableShake = true;
-    }
+    // ==================== 公共接口 ====================
 
-    public void SetDirectionFromOffset(float xOffset)
-    {
-        if (xOffset < 0)
-        {
-            horizontalDirection = -1;
-        }
-        else if (xOffset > 0)
-        {
-            horizontalDirection = 1;
-        }
-        else
-        {
-            horizontalDirection = Random.Range(0, 2) == 0 ? -1 : 1;
-        }
-        
-        directionSet = true;
-        
-        if (velocity != Vector3.zero)
-        {
-            velocity = new Vector3(horizontalDirection * horizontalSpeed, upwardSpeed, 0);
-        }
-    }
-
-    public void SetText(string text)
-    {
-        if (myText != null)
-        {
-            myText.SetText(text);
-        }
-    }
-
-    public void SetColor(Color color)
-    {
-        if (myText != null)
-        {
-            myText.color = color;
-        }
-    }
+    public void SetScale(float multiplier) { scaleMultiplier = multiplier; }
+    public void SetText(string text) { if (myText != null) myText.SetText(text); }
+    public void SetColor(Color color) { if (myText != null) myText.color = color; }
 
     public void SetRandomOffsetPosition()
     {
-        float randomXOffset = Random.Range(-textOffsetX, textOffsetX);
-        float randomYOffset = Random.Range(textOffsetY, textOffsetY * 2f);
-        
-        transform.position += new Vector3(randomXOffset, randomYOffset, 0);
-        originalPosition = transform.position;
-        
-        SetDirectionFromOffset(randomXOffset);
+        transform.position += new Vector3(Random.Range(-textOffsetX, textOffsetX), Random.Range(textOffsetY, textOffsetY * 2f), 0);
     }
 
     public void SetCriticalRandomOffsetPosition()
     {
-        float randomXOffset = Random.Range(-criticalOffsetX, criticalOffsetX);
-        float randomYOffset = Random.Range(criticalOffsetY, criticalOffsetY * 2f);
-        
-        transform.position += new Vector3(randomXOffset, randomYOffset, 0);
-        originalPosition = transform.position;
+        transform.position += new Vector3(Random.Range(-criticalOffsetX, criticalOffsetX), Random.Range(criticalOffsetY, criticalOffsetY * 2f), 0);
     }
 
-    public void SetPopUpType(PopUpType type)
-    {
-        popUpType = type;
-    }
+    public void SetPopUpType(PopUpType type) { popUpType = type; }
 
     public void SetSkillTip(string text, Color color)
     {
@@ -376,99 +279,60 @@ public class PopUpText : MonoBehaviour
 
     public void SetCriticalDamage(float physicalDamage, float elementalDamage, ElementType element)
     {
-        float totalDamage = physicalDamage + elementalDamage;
-        string damageText = totalDamage.ToString("F0");
-        
         popUpType = PopUpType.CriticalDamage;
-        
-        SetText(damageText);
-        
-        Color damageColor = Color.white;
-        
+        SetText((physicalDamage + elementalDamage).ToString("F0"));
+
         if (elementalDamage > 0)
         {
-            switch (element)
+            Color dc = element switch
             {
-                case ElementType.Fire:
-                    damageColor = Color.red;
-                    break;
-                case ElementType.Ice:
-                    damageColor = Color.cyan;
-                    break;
-                case ElementType.Lightning:
-                    damageColor = Color.yellow;
-                    break;
-            }
-            
+                ElementType.Fire => Color.red,
+                ElementType.Ice => Color.cyan,
+                ElementType.Lightning => Color.yellow,
+                _ => Color.white
+            };
             flashColor1 = Color.white;
-            flashColor2 = damageColor;
+            flashColor2 = dc;
+            SetColor(dc);
         }
         else
         {
-            damageColor = Color.white;
             flashColor1 = Color.white;
             flashColor2 = new Color(1f, 0.5f, 0f);
+            SetColor(Color.white);
         }
-        
-        SetColor(damageColor);
-        originalColor = damageColor;
-        
+        originalColor = myText.color;
         enableShake = true;
         enableColorFlash = true;
         scaleMultiplier = criticalScaleMultiplier;
-        colorFlashElapsedTimer = 0f;
-        colorFlashTimer = 0f;
         SetCriticalRandomOffsetPosition();
     }
 
     public void SetDamageText(float physicalDamage, float elementalDamage, ElementType element, bool isCrit = false)
     {
-        float totalDamage = physicalDamage + elementalDamage;
-        string damageText = totalDamage.ToString("F0");
-        
-        SetText(damageText);
-        
+        SetText((physicalDamage + elementalDamage).ToString("F0"));
         popUpType = isCrit ? PopUpType.CriticalDamage : PopUpType.NormalDamage;
-        
-        Color damageColor = Color.white;
-        
+
+        Color dc = Color.white;
         if (elementalDamage > 0)
         {
-            switch (element)
+            dc = element switch
             {
-                case ElementType.Fire:
-                    damageColor = Color.red;
-                    break;
-                case ElementType.Ice:
-                    damageColor = Color.cyan;
-                    break;
-                case ElementType.Lightning:
-                    damageColor = new Color(1f, 0.5f, 0f);
-                    break;
-            }
-            
-            if (isCrit)
-            {
-                flashColor1 = Color.white;
-                flashColor2 = damageColor;
-            }
+                ElementType.Fire => Color.red,
+                ElementType.Ice => Color.cyan,
+                ElementType.Lightning => new Color(1f, 0.5f, 0f),
+                _ => Color.white
+            };
+            if (isCrit) { flashColor1 = Color.white; flashColor2 = dc; }
         }
-        else if (isCrit)
-        {
-            damageColor = Color.white;
-            enableColorFlash = false;
-        }
-        
-        SetColor(damageColor);
-        originalColor = damageColor;
-        
+        else if (isCrit) { enableColorFlash = false; }
+
+        SetColor(dc);
+        originalColor = dc;
+        scaleMultiplier = isCrit ? criticalScaleMultiplier : 1f;
         if (isCrit)
         {
             enableShake = true;
-            enableColorFlash = true;
-            scaleMultiplier = criticalScaleMultiplier;
-            colorFlashElapsedTimer = 0f;
-            colorFlashTimer = 0f;
             SetCriticalRandomOffsetPosition();
         }
         else

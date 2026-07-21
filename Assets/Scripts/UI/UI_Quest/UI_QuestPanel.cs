@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,9 +23,14 @@ public class UI_QuestPanel : MonoBehaviour
     [SerializeField] private Button claimButton;    // 领取奖励
     [SerializeField] private Button acceptButton;    // 接受/提交/放弃
     [SerializeField] private Button trackButton;     // 标记/取消标记
+    [SerializeField] private RectTransform detailContent;  // 详情内容容器（用于滑动静画）
 
     private string selectedQuestId;
+    private int selectedQuestIndex = -1;
     private bool isProcessingAction;
+    private Sequence detailSeq;
+    private Vector2 detailOriginalPos;
+    private List<string> questOrder = new List<string>();
 
     private void Awake()
     {
@@ -118,15 +124,15 @@ public class UI_QuestPanel : MonoBehaviour
             Destroy(child.gameObject);
 
         var qm = QuestManager.Instance;
-        if (qm == null)
-            return;
+        if (qm == null) return;
 
+        questOrder.Clear();
         foreach (var quest in qm.GetAllQuestData())
         {
+            questOrder.Add(quest.questId);
             var entry = Instantiate(questEntryPrefab, questScrollView.content);
             var text = entry.GetComponentInChildren<TMP_Text>();
             string status = GetQuestStatus(quest.questId);
-
             if (text != null)
                 text.text = $"{quest.questName}  {status}";
 
@@ -156,7 +162,47 @@ public class UI_QuestPanel : MonoBehaviour
     private void OnEntryClicked(string questId)
     {
         selectedQuestId = questId;
-        UpdateDetailPanel();
+        int newIndex = questOrder.IndexOf(questId);
+        // 确保 CanvasGroup 存在（DOFade 需要）
+        if (detailContent != null && detailContent.GetComponent<CanvasGroup>() == null)
+            detailContent.gameObject.AddComponent<CanvasGroup>();
+        if (selectedQuestIndex < 0 || newIndex == selectedQuestIndex)
+        {
+            selectedQuestIndex = newIndex;
+            UpdateDetailPanel();
+            return;
+        }
+        bool slideDown = newIndex > selectedQuestIndex;
+        selectedQuestIndex = newIndex;
+        AnimateDetailTransition(slideDown);
+    }
+
+    private void AnimateDetailTransition(bool slideDown)
+    {
+        if (detailContent == null) { UpdateDetailPanel(); return; }
+
+        detailOriginalPos = detailContent.anchoredPosition;
+        detailSeq?.Kill();
+
+        float slideH = Mathf.Max(detailContent.rect.height * 0.4f, 30f);
+        float fromY = slideDown ? slideH : -slideH;
+
+        detailSeq = DOTween.Sequence();
+
+        // 滑出（下一任务向上滑，上一任务向下滑）
+        detailSeq.Append(detailContent.DOAnchorPosY(detailOriginalPos.y - fromY, 0.15f));
+        detailSeq.Join(detailContent.GetComponent<CanvasGroup>().DOFade(0, 0.12f));
+
+        // 更新文本，复位到滑入起始位置
+        detailSeq.AppendCallback(() =>
+        {
+            UpdateDetailPanel();
+            detailContent.anchoredPosition = detailOriginalPos + new Vector2(0, fromY);
+        });
+
+        // 滑入
+        detailSeq.Append(detailContent.DOAnchorPosY(detailOriginalPos.y, 0.2f).SetEase(Ease.OutCubic));
+        detailSeq.Join(detailContent.GetComponent<CanvasGroup>().DOFade(1, 0.18f));
     }
 
     private void UpdateDetailPanel()

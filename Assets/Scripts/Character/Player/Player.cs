@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class Player : Entity
 {
@@ -75,7 +76,7 @@ public class Player : Entity
     public float jumpSquashDuration = 0.1f;
     public float jumpStretchDuration = 0.1f;
     public float landSquashDuration = 0.1f;
-    private Coroutine squashStretchCoroutine;
+    private Tween squashStretchTween;
 
 
     [Header("攻击参数")]
@@ -175,34 +176,26 @@ protected override void Awake()
 
     public void JumpSquashAndStretch()
     {
-        if (squashStretchCoroutine != null)
-            StopCoroutine(squashStretchCoroutine);
+        squashStretchTween?.Kill();
 
-        squashStretchCoroutine = StartCoroutine(JumpSquashAndStretchCo());
-    }
-
-    private IEnumerator JumpSquashAndStretchCo()//跳跃压扁和拉伸协程
-    {
-        sr.transform.localScale = new Vector3(1 / jumpSquashScale, jumpSquashScale, 1);//跳跃压扁
-        yield return new WaitForSeconds(jumpSquashDuration);//等待跳跃压扁时间
-        sr.transform.localScale = new Vector3(1 / jumpStretchScale, jumpStretchScale, 1);//跳跃拉伸
-        yield return new WaitForSeconds(jumpStretchDuration);//等待跳跃拉伸时间
-        sr.transform.localScale = Vector3.one;//跳跃拉伸完成后恢复原始大小  
+        var seq = DOTween.Sequence();
+        seq.Append(sr.transform.DOScaleY(jumpSquashScale, jumpSquashDuration).SetEase(Ease.OutQuad));
+        seq.Join(sr.transform.DOScaleX(1f / jumpSquashScale, jumpSquashDuration).SetEase(Ease.OutQuad));
+        seq.Append(sr.transform.DOScaleY(jumpStretchScale, jumpStretchDuration).SetEase(Ease.OutQuad));
+        seq.Join(sr.transform.DOScaleX(1f / jumpStretchScale, jumpStretchDuration).SetEase(Ease.OutQuad));
+        seq.Append(sr.transform.DOScale(Vector3.one, 0.05f));
+        squashStretchTween = seq;
     }
 
     public void LandSquash()
     {
-        if (squashStretchCoroutine != null)
-            StopCoroutine(squashStretchCoroutine);
+        squashStretchTween?.Kill();
 
-        squashStretchCoroutine = StartCoroutine(LandSquashCo());
-    }
-
-    private IEnumerator LandSquashCo()//落地压扁和拉伸协程
-    {
-        sr.transform.localScale = new Vector3(1 / landSquashScale, landSquashScale, 1);//落地压扁
-        yield return new WaitForSeconds(landSquashDuration);//等待落地压扁时间
-        sr.transform.localScale = Vector3.one;//落地拉伸
+        // 落地压扁 + 弹性弹回，比硬切更自然
+        sr.transform.localScale = Vector3.one;
+        squashStretchTween = sr.transform.DOPunchScale(
+            new Vector3(1f / landSquashScale - 1f, landSquashScale - 1f, 0),
+            landSquashDuration * 1.5f, 5, 0.5f);
     }
 
     public void Input()

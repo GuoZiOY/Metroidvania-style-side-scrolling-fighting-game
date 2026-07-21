@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -120,9 +121,14 @@ public class UI_TreeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
             skillTree.RemoveSkillPoints(upgradeCost);
             CurrentLevel++;
             ApplySkillLevelData(CurrentLevel);
-            UpdateLevelUpButtonState();//更新按钮状态
-            UpdateSkillToolTipData();//更新提示显示信息
-            ui.skillTip.ShowUpgradeSuccess(skillData.displayName, CurrentLevel);//显示提示-升级成功
+            UpdateLevelUpButtonState();
+            UpdateSkillToolTipData();
+            ui.skillTip.ShowUpgradeSuccess(skillData.displayName, CurrentLevel);
+
+                // 升级弹性动画（先复位再弹，防连续点击累积偏移）
+            skillIcom.rectTransform.DOKill();
+            skillIcom.rectTransform.localScale = originalScale * scaleMultiplier;
+            skillIcom.rectTransform.DOPunchScale(Vector3.one * 0.2f, 0.25f, 3, 0.5f);
         }
     }
 
@@ -186,34 +192,34 @@ public class UI_TreeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
     public void UnLock()
     {
-        // 原有前置条件校验（防止重复解锁）
+        // 前置条件校验（防止重复解锁）
         if (isUnlocked || isLocked || !skillTree.EnoughSkillPoints(skillData.levelDatas[0].levelUpCost))
             return;
 
-        // 1. 更新解锁状态
+        // 更新解锁状态
         isUnlocked = true;
-        CurrentLevel = 1; // 解锁默认1级
-        Debug.Log($"技能 {skillData.displayName} 解锁成功，初始等级：{CurrentLevel}"); // 调试日志
+        CurrentLevel = 1;
         UpdateIconColor(Color.white);
 
-        // 2. 锁定冲突节点（原逻辑）
+        // 锁定冲突节点
         LockConflictNodes();
 
-        // 3. 扣除1级技能点（解锁时=1级，扣除1级成本）
+        // 扣除技能点
         skillTree.RemoveSkillPoints(skillData.levelDatas[0].levelUpCost);
 
-        // 4. 开启连线、动画
+        // 开启连线、放大图标
         connectHandler?.UnlockConnectionImage(true);
         SkillIconScale(true);
 
-        // 5. 应用技能数据
+        // 解锁弹性动画（先复位至目标大小再弹，防连续点击累积偏移）
+        skillIcom.rectTransform.DOKill();
+        skillIcom.rectTransform.localScale = originalScale * scaleMultiplier;
+        skillIcom.rectTransform.DOPunchScale(Vector3.one * 0.4f, 0.4f, 5, 0.5f);
+
+        // 应用技能数据
         ApplySkillLevelData(CurrentLevel);
         UpdateLevelUpButtonState();
-
-        // 刷新提示显示
         UpdateSkillToolTipData();
-
-        //播放提示-解锁成功
         ui.skillTip.ShowUnlockSuccess(skillData.displayName);
     }
 
@@ -386,10 +392,9 @@ public class UI_TreeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
     public void SkillIconScale(bool isBig)
     {
-        if(isBig)
-            skillIcom.rectTransform.localScale = originalScale * scaleMultiplier;
-        else
-            skillIcom.rectTransform.localScale = originalScale;
+        // 悬停/取消悬停时图标平滑缩放（DOTween 替代原硬切）
+        Vector3 target = isBig ? originalScale * scaleMultiplier : originalScale;
+        skillIcom.rectTransform.DOScale(target, 0.12f).SetEase(Ease.OutQuad);
     }
 
     private void ToggleNodeHighlight(bool highlight)
