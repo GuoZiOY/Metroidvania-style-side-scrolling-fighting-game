@@ -18,10 +18,6 @@ public class PanelSwitcher : MonoBehaviour
 {
     [SerializeField] private PanelEntry[] entries;
 
-    [Header("初始设置")]
-    [SerializeField] private bool showFirstOnStart = false;    // 启动时自动显示第一个（子面板用）
-    [SerializeField] private bool enableToggle = true;         // 同按钮再按关闭
-
     [Header("按钮颜色")]
     [SerializeField] private Color selectedColor = Color.white;
     [SerializeField] private Color normalColor = new Color(0.5f, 0.5f, 0.5f);
@@ -43,6 +39,7 @@ public class PanelSwitcher : MonoBehaviour
 
     private Vector2[] originalPositions;
     private Vector3[] originalScales;
+    private Vector3[] buttonOriginalScales;  // 按钮原始缩放
     private CanvasGroup[] canvasGroups;
     private bool initialized;
 
@@ -60,6 +57,7 @@ public class PanelSwitcher : MonoBehaviour
         int count = entries.Length;
         originalPositions = new Vector2[count];
         originalScales = new Vector3[count];
+        buttonOriginalScales = new Vector3[count];
         canvasGroups = new CanvasGroup[count];
 
         for (int i = 0; i < count; i++)
@@ -72,6 +70,11 @@ public class PanelSwitcher : MonoBehaviour
             if (rt != null) originalPositions[i] = rt.anchoredPosition;
             originalScales[i] = panel.transform.localScale;
 
+            // 记录按钮原始缩放
+            var btn = entries[i].button;
+            if (btn != null)
+                buttonOriginalScales[i] = btn.transform.localScale;
+
             // 确保有 CanvasGroup
             var cg = panel.GetComponent<CanvasGroup>();
             if (cg == null) cg = panel.AddComponent<CanvasGroup>();
@@ -79,23 +82,14 @@ public class PanelSwitcher : MonoBehaviour
 
             // 绑定按钮点击
             int index = i;
-            entries[i].button?.onClick.AddListener(() => HandleButtonClick(index));
+            btn?.onClick.AddListener(() => HandleButtonClick(index));
         }
     }
 
-    private void Start()
-    {
-        if (showFirstOnStart && entries.Length > 0)
-            ShowPanelInternal(0, false);
-    }
-
-    /// <summary>按钮点击处理（同按钮再按关闭）</summary>
+    /// <summary>按钮点击处理</summary>
     private void HandleButtonClick(int index)
     {
-        if (enableToggle && index == CurrentIndex)
-            HideAll();
-        else
-            ShowPanel(index);
+        ShowPanel(index);
     }
 
     /// <summary>显示指定面板（带动画）</summary>
@@ -206,18 +200,23 @@ public class PanelSwitcher : MonoBehaviour
             bool isSelected = i == CurrentIndex;
             SetButtonColor(btn, isSelected ? selectedColor : normalColor);
 
-            // 缩放：选中放大，未选中缩小（平滑过渡）
-            float targetScale = isSelected ? selectedScale : normalScale;
+            // 缩放：基于按钮原始缩放 × 倍率
+            float baseScale = buttonOriginalScales != null && i < buttonOriginalScales.Length
+                ? buttonOriginalScales[i].x
+                : 1f;
+            if (baseScale <= 0) baseScale = 1f;
+            float multiplier = isSelected ? selectedScale : normalScale;
+            Vector3 targetScale = Vector3.one * (baseScale * multiplier);
             var effect = btn.GetComponent<UI_ButtonEffect>();
             if (effect != null)
             {
-                effect.restScale = targetScale;
+                effect.restScale = targetScale.x;
                 effect.AnimateToRestScale();
             }
             else
             {
                 btn.transform.DOKill();
-                btn.transform.DOScale(Vector3.one * targetScale, 0.2f).SetEase(Ease.OutQuad);
+                btn.transform.DOScale(targetScale, 0.2f).SetEase(Ease.OutQuad);
             }
         }
     }

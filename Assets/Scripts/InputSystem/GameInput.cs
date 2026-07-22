@@ -27,6 +27,8 @@ public static class GameInput
         ToggleSkillPanel,
         ToggleSettingsPanel,
         ToggleQuestPanel,
+
+        Interact,
     }
 
     public static event System.Action OnBindingsChanged;
@@ -120,6 +122,8 @@ public static class GameInput
         { Action.ToggleSkillPanel, KeyCode.L },
         { Action.ToggleSettingsPanel, KeyCode.N },
         { Action.ToggleQuestPanel, KeyCode.M },
+
+        { Action.Interact, KeyCode.F },
     };
 
     private static void LoadBindings()

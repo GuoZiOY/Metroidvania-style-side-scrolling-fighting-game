@@ -44,6 +44,12 @@ public class AudioManager : MonoBehaviour
     public AudioClip counterHitSfxClip;
     [SerializeField, Range(0, 1)] private float counterHitVolume = 1f;
 
+    [Header("存档音效")]
+    public AudioClip saveSfxClip;
+    [SerializeField, Range(0, 1)] private float saveVolume = 1f;
+    public AudioClip loadSfxClip;
+    [SerializeField, Range(0, 1)] private float loadVolume = 1f;
+
     [Header("其他设置")]
     [SerializeField] private float fadeInDuration = 2f;
     [SerializeField] private float counterHitDelay = 0.1f;
@@ -191,6 +197,20 @@ public class AudioManager : MonoBehaviour
         if (denySfxClip == null) return;
         if (uiSource != null)
             uiSource.PlayOneShot(denySfxClip, sfxVolume * masterVolume * denyVolume);
+    }
+
+    public void PlaySaveSfx()
+    {
+        if (saveSfxClip == null) return;
+        if (uiSource != null)
+            uiSource.PlayOneShot(saveSfxClip, sfxVolume * masterVolume * saveVolume);
+    }
+
+    public void PlayLoadSfx()
+    {
+        if (loadSfxClip == null) return;
+        if (uiSource != null)
+            uiSource.PlayOneShot(loadSfxClip, sfxVolume * masterVolume * loadVolume);
     }
 
     // ===== 战斗音效 =====

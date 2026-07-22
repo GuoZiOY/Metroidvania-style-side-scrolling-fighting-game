@@ -16,6 +16,7 @@ public class SaveManager : MonoBehaviour
     private const string PROFILES_FILE = "profiles.json";
 
     public string CurrentCheckpointId { get; set; }
+    public int CurrentSlotIndex { get; set; } = -1;  // 当前使用的存档槽（检查点用）
 
     void Awake()
     {
@@ -28,7 +29,18 @@ public class SaveManager : MonoBehaviour
 
     // ==================== 公开 API ====================
 
-    // 存档
+    // 存档到当前槽位（检查点用）
+    public void Save()
+    {
+        if (CurrentSlotIndex < 0)
+        {
+            Debug.LogError("[SaveManager] 未设置当前存档槽位 (CurrentSlotIndex)");
+            return;
+        }
+        Save(CurrentSlotIndex);
+    }
+
+    // 存档到指定槽位
     public void Save(int slotIndex)
     {
         var data = CollectSaveData();
@@ -52,6 +64,8 @@ public class SaveManager : MonoBehaviour
     // 读档
     public void Load(int slotIndex)
     {
+        CurrentSlotIndex = slotIndex;
+
         string path = GetSavePath(slotIndex);
         if (!File.Exists(path))
         {
@@ -132,6 +146,8 @@ public class SaveManager : MonoBehaviour
         // 刷新被动技能
         var psm = FindAnyObjectByType<PassiveSkillManager>();
         if (psm != null) psm.RefreshAllPassiveSkills();
+
+        AudioManager.Instance?.PlayLoadSfx();
 
         Debug.Log("[SaveManager] UI 刷新完成");
     }

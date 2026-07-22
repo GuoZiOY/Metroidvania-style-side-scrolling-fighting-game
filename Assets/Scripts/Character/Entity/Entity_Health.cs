@@ -18,6 +18,7 @@ public class Entity_Health : MonoBehaviour, IDamgable
     [SerializeField] private float regenInterval = 1;
     [SerializeField] private bool canRegenerateHP = true;
     public float lastDamageTaken { get; private set; }
+    public string lastAttackerName { get; private set; }  // 最后一次攻击者名字（死亡原因用）
 
     [Header("击退设置")]
     public bool canKnockbacked = false;
@@ -87,6 +88,11 @@ public class Entity_Health : MonoBehaviour, IDamgable
         ReduceHP(physicalDamageTaken, elementalDamageTaken, element, isCrit);
 
         lastDamageTaken = physicalDamageTaken + elementalDamageTaken;
+        lastAttackerName = damageDealer != null
+            ? (damageDealer.GetComponent<Enemy>() != null
+                ? damageDealer.GetComponent<Enemy>().enemyName
+                : damageDealer.name)
+            : "未知";
 
         return true;
     }
