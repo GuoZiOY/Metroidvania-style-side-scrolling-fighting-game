@@ -23,11 +23,11 @@ public class Checkpoint : MonoBehaviour
     [SerializeField] private float floatHeight = 0.2f;      // 浮动幅度
     [SerializeField] private float floatSpeed = 2f;         // 浮动速度
 
-    private bool _playerInRange;
-    private float _lastSaveTime = -10f;
-    private CanvasGroup _cg;
-    private Vector3 _promptBasePos;
-    private Tween _floatTween;
+    private bool playerInRange;
+    private float lastSaveTime = -10f;
+    private CanvasGroup cg;
+    private Vector3 promptBasePos;
+    private Tween floatTween;
 
     private void Awake()
     {
@@ -36,35 +36,35 @@ public class Checkpoint : MonoBehaviour
             promptRoot.SetActive(false);
 
             // 自动添加 CanvasGroup（淡入淡出用）
-            _cg = promptRoot.GetComponent<CanvasGroup>();
-            if (_cg == null) _cg = promptRoot.AddComponent<CanvasGroup>();
-            _cg.alpha = 0;
+            cg = promptRoot.GetComponent<CanvasGroup>();
+            if (cg == null) cg = promptRoot.AddComponent<CanvasGroup>();
+            cg.alpha = 0;
 
-            _promptBasePos = promptRoot.transform.localPosition;
+            promptBasePos = promptRoot.transform.localPosition;
         }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!other.CompareTag("Player")) return;
-        _playerInRange = true;
+        playerInRange = true;
         ShowPrompt(true);
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
         if (!other.CompareTag("Player")) return;
-        _playerInRange = false;
+        playerInRange = false;
         ShowPrompt(false);
     }
 
     private void Update()
     {
-        if (!_playerInRange) return;
+        if (!playerInRange) return;
         if (!GameInput.GetKeyDown(GameInput.Action.Interact)) return;
-        if (Time.time - _lastSaveTime < cooldown) return;
+        if (Time.time - lastSaveTime < cooldown) return;
 
-        _lastSaveTime = Time.time;
+        lastSaveTime = Time.time;
         DoSave();
     }
 
@@ -89,7 +89,7 @@ public class Checkpoint : MonoBehaviour
         AudioManager.Instance?.PlaySaveSfx();
 
         // 事件提示
-        var eventTip = FindObjectOfType<UI_EventTip>();
+        var eventTip = FindAnyObjectByType<UI_EventTip>();
         eventTip?.ShowSaveSuccess();
 
         // 提示闪一下反馈
@@ -99,27 +99,27 @@ public class Checkpoint : MonoBehaviour
 
     private System.Collections.IEnumerator FlashPrompt()
     {
-        _cg.alpha = 0;
+        cg.alpha = 0;
         yield return new WaitForSeconds(0.12f);
-        if (_playerInRange) _cg.DOFade(1, fadeDuration);
+        if (playerInRange) cg.DOFade(1, fadeDuration);
     }
 
     private void ShowPrompt(bool show)
     {
-        if (promptRoot == null || _cg == null) return;
+        if (promptRoot == null || cg == null) return;
 
-        _cg.DOKill();
+        cg.DOKill();
 
         if (show)
         {
             promptRoot.SetActive(true);
-            _cg.alpha = 0;
-            _cg.DOFade(1, fadeDuration);
+            cg.alpha = 0;
+            cg.DOFade(1, fadeDuration);
             StartFloating();
         }
         else
         {
-            _cg.DOFade(0, fadeDuration).OnComplete(() => promptRoot.SetActive(false));
+            cg.DOFade(0, fadeDuration).OnComplete(() => promptRoot.SetActive(false));
             StopFloating();
         }
     }
@@ -129,9 +129,9 @@ public class Checkpoint : MonoBehaviour
         StopFloating();
         if (promptRoot == null) return;
 
-        _floatTween = DOTween.To(
+        floatTween = DOTween.To(
             () => 0f,
-            t => promptRoot.transform.localPosition = _promptBasePos + Vector3.up * Mathf.Sin(t * floatSpeed) * floatHeight,
+            t => promptRoot.transform.localPosition = promptBasePos + Vector3.up * Mathf.Sin(t * floatSpeed) * floatHeight,
             Mathf.PI * 2f,
             Mathf.PI * 2f / floatSpeed
         ).SetLoops(-1, LoopType.Restart).SetEase(Ease.Linear);
@@ -139,15 +139,15 @@ public class Checkpoint : MonoBehaviour
 
     private void StopFloating()
     {
-        _floatTween?.Kill();
-        _floatTween = null;
+        floatTween?.Kill();
+        floatTween = null;
         if (promptRoot != null)
-            promptRoot.transform.localPosition = _promptBasePos;
+            promptRoot.transform.localPosition = promptBasePos;
     }
 
     private void OnDestroy()
     {
-        _floatTween?.Kill();
+        floatTween?.Kill();
     }
 
     private void OnDrawGizmosSelected()

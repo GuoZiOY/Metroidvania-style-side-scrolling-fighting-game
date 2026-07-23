@@ -50,7 +50,7 @@ public class UI_InventorySlot : UI_ItemSlot, IItemDropTarget
     //处理物品掉落
     public void OnItemDropped(Inventory_Item item, UI_ItemSlot sourceSlot)
     {
-        PlayerInventorySystem playerInventorySystem = FindObjectOfType<PlayerInventorySystem>();
+        PlayerInventorySystem playerInventorySystem = FindAnyObjectByType<PlayerInventorySystem>();
 
         if (playerInventorySystem == null)
         {

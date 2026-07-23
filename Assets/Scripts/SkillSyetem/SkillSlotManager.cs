@@ -28,7 +28,7 @@ public class SkillSlotManager : MonoBehaviour
 
     private void Start() // 获取技能管理器引用
     {
-        skillManager = Player_SkillManager.Instance ?? FindObjectOfType<Player_SkillManager>();
+        skillManager = Player_SkillManager.Instance ?? FindAnyObjectByType<Player_SkillManager>();
 
         // 监听数据更新事件
         if (SkillDataManager.Instance != null)

@@ -47,7 +47,7 @@ public class SceneLevelArea : AreaDetectorBase // 场景关卡区域：管理多
 
     private void FindPlayer() // 查找玩家
     {
-        player = FindObjectOfType<Player>();
+        player = FindAnyObjectByType<Player>();
         if (player != null)
         {
             player.OnEntityDead += HandlePlayerDeath; // 订阅玩家死亡事件

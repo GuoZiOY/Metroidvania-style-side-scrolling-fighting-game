@@ -31,7 +31,7 @@ public class UI_TrashCan : MonoBehaviour, IItemDropTarget, IPointerEnterHandler,
         if (item == null)
             return;
 
-        PlayerInventorySystem playerInventorySystem = FindObjectOfType<PlayerInventorySystem>();
+        PlayerInventorySystem playerInventorySystem = FindAnyObjectByType<PlayerInventorySystem>();
 
         if (playerInventorySystem == null)
         {

@@ -13,7 +13,7 @@ public class UI_StatToolTip : UI_ToolTip
     protected override void Awake()
     {
         base.Awake();
-        player = FindFirstObjectByType<Player>();
+        player = FindAnyObjectByType<Player>();
         statToolTipText = GetComponentInChildren<TextMeshProUGUI>(true);
     }
 

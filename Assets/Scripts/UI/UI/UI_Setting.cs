@@ -49,7 +49,7 @@ public class UI_Setting : MonoBehaviour
             player = FindAnyObjectByType<Player>();
         }
 
-        enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
+        enemies = FindObjectsByType<Enemy>();
         
         if (player != null)
         {

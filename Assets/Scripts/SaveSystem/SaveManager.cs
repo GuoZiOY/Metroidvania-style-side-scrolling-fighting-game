@@ -18,8 +18,8 @@ public class SaveManager : MonoBehaviour
     public string CurrentCheckpointId { get; set; }
     public int CurrentSlotIndex { get; set; } = -1;
 
-    private float _accumulatedPlayTime;  // 累计游玩时间（不含当前会话）
-    private float _sessionStartTime;     // 当前会话开始时间
+    private float accumulatedPlayTime;  // 累计游玩时间（不含当前会话）
+    private float sessionStartTime;     // 当前会话开始时间
 
     void Awake()
     {
@@ -28,11 +28,11 @@ public class SaveManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         ItemLookup.Initialize();
-        _sessionStartTime = Time.time;
+        sessionStartTime = Time.time;
     }
 
     /// <summary>当前总游玩时间 = 累计 + 本局已玩</summary>
-    private float TotalPlayTime => _accumulatedPlayTime + (Time.time - _sessionStartTime);
+    private float TotalPlayTime => accumulatedPlayTime + (Time.time - sessionStartTime);
 
     // ==================== 公开 API ====================
 
@@ -92,7 +92,7 @@ public class SaveManager : MonoBehaviour
         string currentScene = SceneManager.GetActiveScene().name;
         if (data.sceneName != currentScene)
         {
-            _pendingLoad = data;
+            pendingLoad = data;
             SceneManager.sceneLoaded += OnSceneLoadedForLoad;
             SceneManager.LoadScene(data.sceneName);
         }
@@ -103,15 +103,15 @@ public class SaveManager : MonoBehaviour
         }
     }
 
-    private SaveData _pendingLoad;
+    private SaveData pendingLoad;
 
     private void OnSceneLoadedForLoad(Scene scene, LoadSceneMode mode)
     {
         SceneManager.sceneLoaded -= OnSceneLoadedForLoad;
-        if (_pendingLoad != null)
+        if (pendingLoad != null)
         {
-            StartCoroutine(ApplySaveDataDelayed(_pendingLoad));
-            _pendingLoad = null;
+            StartCoroutine(ApplySaveDataDelayed(pendingLoad));
+            pendingLoad = null;
         }
     }
 
@@ -136,17 +136,17 @@ public class SaveManager : MonoBehaviour
         RefreshAllUI();
     }
 
-    private SkillSaveData _lastLoadedSkills;  // 缓存给 UI 刷新用
+    private SkillSaveData lastLoadedSkills;  // 缓存给 UI 刷新用
 
     private void RefreshAllUI()
     {
         // 刷新技能树（含未激活的面板——玩家可能没打开技能面板）
-        if (_lastLoadedSkills != null)
+        if (lastLoadedSkills != null)
         {
             var skillTrees = Resources.FindObjectsOfTypeAll<UI_SkillTree>();
             foreach (var skillTree in skillTrees)
             {
-                if (skillTree != null) skillTree.LoadSkillLevels(_lastLoadedSkills.learned);
+                if (skillTree != null) skillTree.LoadSkillLevels(lastLoadedSkills.learned);
             }
         }
 
@@ -191,7 +191,7 @@ public class SaveManager : MonoBehaviour
             return;
         }
 
-        _pendingLoad = data;
+        pendingLoad = data;
         SceneManager.sceneLoaded += OnSceneLoadedForLoad;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
@@ -244,6 +244,9 @@ public class SaveManager : MonoBehaviour
     {
         var d = new PlayerSaveData();
         d.currentHP = player.health != null ? player.health.GetCurrentHP() : 100;
+
+        var inv = player.GetComponent<PlayerInventorySystem>();
+        if (inv != null) d.currency = inv.GetCurrency();
 
         var lm = player.GetComponent<PlayerLevelManager>();
         if (lm != null)
@@ -432,8 +435,8 @@ public class SaveManager : MonoBehaviour
         }
 
         // 恢复游玩时间
-        _accumulatedPlayTime = data.playTime;
-        _sessionStartTime = Time.time;
+        accumulatedPlayTime = data.playTime;
+        sessionStartTime = Time.time;
 
         // 位置
         player.transform.position = new Vector3(data.posX, data.posY, data.posZ);
@@ -467,6 +470,9 @@ public class SaveManager : MonoBehaviour
         if (d == null) return;
 
         player.health?.SetCurrentHP(d.currentHP);
+
+        var inv = player.GetComponent<PlayerInventorySystem>();
+        if (inv != null) inv.SetCurrency(d.currency);
 
         var lm = player.GetComponent<PlayerLevelManager>();
         if (lm != null)
@@ -550,7 +556,7 @@ public class SaveManager : MonoBehaviour
     private void ApplySkillData(SkillSaveData d)
     {
         if (d == null) return;
-        _lastLoadedSkills = d;
+        lastLoadedSkills = d;
 
         // 技能等级：先从 Resources 加载所有 Skill_DataSo，建立 upgradeType → Skill_DataSo 映射
         var skillDataMap = new Dictionary<SkillUpgradeType, Skill_DataSo>();

@@ -24,9 +24,9 @@ public class UI_DeathScreen : MonoBehaviour
 
     public static UI_DeathScreen Instance { get; private set; }
 
-    private bool _isShowing;
-    private Player _player;
-    private string _killerName = "未知";
+    private bool isShowing;
+    private Player player;
+    private string killerName = "未知";
 
     private void Awake()
     {
@@ -49,21 +49,21 @@ public class UI_DeathScreen : MonoBehaviour
 
     private void FindPlayer()
     {
-        _player = FindAnyObjectByType<Player>();
+        player = FindAnyObjectByType<Player>();
     }
 
     /// <summary>由 Player 死亡协程调用</summary>
     public void Show()
     {
-        if (_isShowing) return;
-        _isShowing = true;
+        if (isShowing) return;
+        isShowing = true;
 
         // 读取死亡原因
-        if (_player != null)
+        if (player != null)
         {
-            var health = _player.GetComponent<Entity_Health>();
+            var health = player.GetComponent<Entity_Health>();
             if (health != null && !string.IsNullOrEmpty(health.lastAttackerName))
-                _killerName = health.lastAttackerName;
+                killerName = health.lastAttackerName;
         }
 
         screenGroup.gameObject.SetActive(true);
@@ -75,7 +75,7 @@ public class UI_DeathScreen : MonoBehaviour
         {
             if (causeText != null)
             {
-                string fullText = $"{playerTitle} 死于 <color=#FF4444>{_killerName}</color> 之手";
+                string fullText = $"{playerTitle} 死于 <color=#FF4444>{killerName}</color> 之手";
                 TypewriterEffect.Play(causeText, fullText, typeCharInterval, typePunctuationDelay);
             }
         });

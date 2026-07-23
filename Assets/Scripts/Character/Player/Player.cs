@@ -292,7 +292,7 @@ public override void StartHitStop(float duration)
             StartCoroutine(DeathSequence());
     }
 
-    private Tween _timeScaleTween;
+    private Tween timeScaleTween;
 
     [Header("死亡效果")]
     [SerializeField] private float slomoDuration = 2f;
@@ -309,7 +309,7 @@ public override void StartHitStop(float duration)
             Vector3 targetPos = new Vector3(transform.position.x, transform.position.y, cam.transform.position.z);
 
             // 慢动作
-            _timeScaleTween = DOTween.To(() => Time.timeScale, v => Time.timeScale = v, slomoTimeScale, slomoDuration)
+            timeScaleTween = DOTween.To(() => Time.timeScale, v => Time.timeScale = v, slomoTimeScale, slomoDuration)
                 .SetUpdate(true);
 
             // 相机聚焦
@@ -325,7 +325,7 @@ public override void StartHitStop(float duration)
         yield return new WaitForSecondsRealtime(slomoDuration);
 
         // 停止 → 通知死亡面板
-        _timeScaleTween?.Kill();
+        timeScaleTween?.Kill();
         DOTween.Kill(Camera.main?.transform);
         Time.timeScale = 0;
 

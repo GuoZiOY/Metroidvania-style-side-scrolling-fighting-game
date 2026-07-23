@@ -17,6 +17,9 @@ public class ItemDataSo : ScriptableObject
 
     public bool canStackable;//是否可以堆叠
 
+    [Header("价值")]
+    public int value;      // 基础价值（商店售价=value，回收价=value×回收折扣，0=不可交易）
+
     public LootRarity GetDroppedRarity() //获取掉落时的稀有度（基于基准稀有度波动）
     {
         return GetDroppedRarity(0f);

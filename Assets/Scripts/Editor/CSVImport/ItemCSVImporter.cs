@@ -5,8 +5,8 @@ using UnityEngine;
 
 public static class ItemCSVImporter
 {
-    private const string CSV_DIR = "Assets/Data/CSV";
-    private const string SO_DIR = "Assets/Data/ItemData";
+    private const string CSV_DIR = "Assets/Resources/CSV";
+    private const string SO_DIR = "Assets/Resources/Data/ItemData";
 
     private static readonly HashSet<string> EquipItemTypes = new HashSet<string>
         { "武器", "头盔", "盔甲", "靴子", "手套", "饰品" };
@@ -21,7 +21,7 @@ public static class ItemCSVImporter
 
     public static void SyncXlsxToCsv()
     {
-        string scriptPath = System.IO.Path.GetFullPath("Assets/Data/CSV/sync_xlsx_to_csv.ps1");
+        string scriptPath = System.IO.Path.GetFullPath("Assets/Resources/CSV/sync_xlsx_to_csv.ps1");
         if (!System.IO.File.Exists(scriptPath))
         {
             Debug.LogError($"找不到同步脚本: {scriptPath}");

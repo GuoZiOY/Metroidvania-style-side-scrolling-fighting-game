@@ -6,6 +6,24 @@ public class PlayerInventorySystem : MonoBehaviour
 {
     public event Action OnInventoryUpdated;
     public event Action OnEquipmentUpdated;
+    public event Action OnGoldChanged;
+
+    private int currency;  // 统一铜币单位（1金币=10000，1银币=100）
+
+    public int Currency
+    {
+        get => currency;
+        set { currency = Mathf.Max(0, value); OnGoldChanged?.Invoke(); }
+    }
+
+    public int DisplayGold => currency / 10000;
+    public int DisplaySilver => (currency % 10000) / 100;
+    public int DisplayCopper => currency % 100;   // 铜币
+
+    public void AddCurrency(int amount) => Currency += amount;
+    public bool SpendCurrency(int amount) { if (currency < amount) return false; Currency -= amount; return true; }
+    public int GetCurrency() => currency;
+    public void SetCurrency(int amount) => Currency = amount;
 
     [SerializeField] private Inventory_Player inventory;
     [SerializeField] private EquipmentSystem equipmentSystem;

@@ -9,7 +9,7 @@ public class UI_PlayerStats : MonoBehaviour
     {
         UI_statSlots = GetComponentsInChildren<UI_StatSlot>();
 
-        inventory = FindFirstObjectByType<Inventory_Player>();
+        inventory = FindAnyObjectByType<Inventory_Player>();
         inventory.OnInventoryUpdated += UpdateStatsUI;
 
         if (AttributePointManager.Instance != null)

@@ -18,11 +18,24 @@ public class LootTable : ScriptableObject
     [Range(0f, 200f)]
     [SerializeField] private float extraRarityDropChanceBonus = 50f; //额外稀有度掉落概率加成（百分比，0=不加成，50=提升50%，100=提升100%）
 
+    [Header("货币掉落（>0 时额外掉货币，与物品并行）")]
+    [SerializeField] private int currencyAmount = 0; //基础货币量
+
     public List<LootDropItem> LootItems => lootItems; //获取掉落物品列表
+    public int CurrencyAmount => currencyAmount; //货币掉落量
+    public void SetCurrencyAmount(int amount) => currencyAmount = Mathf.Max(0, amount);
 
     public List<LootedItem> GenerateLoot() //生成掉落物品
     {
         List<LootedItem> droppedItems = new List<LootedItem>();
+
+        // 货币掉落（与物品并行）
+        if (currencyAmount > 0)
+        {
+            int amount = Random.Range(currencyAmount / 2, currencyAmount + 1);
+            droppedItems.Add(new LootedItem(null, LootRarity.普通) { currencyAmount = amount });
+        }
+
         List<LootDropItem> availableItems = new List<LootDropItem>(lootItems);
 
         // 尝试掉落次数由 min/maxDropCount 决定

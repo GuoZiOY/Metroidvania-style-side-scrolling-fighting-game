@@ -33,6 +33,7 @@ public class SaveData
 public class PlayerSaveData
 {
     public float currentHP;
+    public int currency;
     public int currentLevel;
     public int currentExp;
     public int unspentSkillPoints;       // PlayerLevelManager.skillPoints

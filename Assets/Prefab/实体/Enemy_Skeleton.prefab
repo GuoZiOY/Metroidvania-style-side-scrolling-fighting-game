@@ -640,6 +640,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lootTables:
   - {fileID: 11400000, guid: 6c45ce86d3cc28d4b9b5d705d84a5939, type: 2}
+  copperPrefab: {fileID: 4397297161721829727, guid: 5e00c20103b3e3a4992d07abff7918f3, type: 3}
+  silverPrefab: {fileID: 2620124386265349158, guid: f811a42b57220e24fb2125e5232f89e9, type: 3}
+  goldPrefab: {fileID: 6767173063993702625, guid: f684e1bd5d49b8b40bc6534342dcf40b, type: 3}
+  currencyMin: 1
+  currencyMax: 10
   dropOffset: {x: 0, y: 0, z: 0}
 --- !u!50 &3428104608643864971
 Rigidbody2D:
@@ -1353,7 +1358,7 @@ MonoBehaviour:
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 1
-  m_ActiveFontFeatures: 00000000
+  m_ActiveFontFeatures: 6e72656b
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1

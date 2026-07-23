@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static bool IsAnyPanelOpen { get; private set; }
+
     #region 面板切换器
     [Header("面板切换器")]
     [SerializeField] private PanelSwitcher mainPanelSwitcher;       // 主面板（角色/技能/设置/任务）
@@ -54,6 +55,7 @@ public class UIManager : MonoBehaviour
 
         // 开局关闭所有面板
         mainPanelSwitcher.HideAll();
+
     }
 
     private void Start()

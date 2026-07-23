@@ -20,7 +20,7 @@ public class PassiveSkillManager : MonoBehaviour
 
     private void Start()
     {
-        skillManager = Player_SkillManager.Instance ?? FindObjectOfType<Player_SkillManager>();
+        skillManager = Player_SkillManager.Instance ?? FindAnyObjectByType<Player_SkillManager>();
 
         if (SkillDataManager.Instance != null)
         {

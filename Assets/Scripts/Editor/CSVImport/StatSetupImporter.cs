@@ -5,8 +5,8 @@ using UnityEngine;
 
 public static class StatSetupImporter
 {
-    private const string CSV_DIR = "Assets/Data/CSV";
-    private const string SO_DIR = "Assets/Data/默认属性设置";
+    private const string CSV_DIR = "Assets/Resources/CSV";
+    private const string SO_DIR = "Assets/Resources/Data/默认属性设置";
 
     [MenuItem("Tools/CSV导入/导入属性配置")]
     public static void Import() { ImportInternal(); }

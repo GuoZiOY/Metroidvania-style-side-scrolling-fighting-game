@@ -72,3 +72,4 @@ MonoBehaviour:
   maxDropCount: 10
   allowDuplicates: 0
   extraRarityDropChanceBonus: 50
+  currencyAmount: 50

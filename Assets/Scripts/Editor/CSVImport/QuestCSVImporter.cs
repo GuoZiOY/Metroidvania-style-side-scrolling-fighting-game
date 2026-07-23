@@ -5,8 +5,8 @@ using UnityEngine;
 
 public static class QuestCSVImporter
 {
-    private const string CSV_DIR = "Assets/Data/CSV";
-    private const string SO_DIR = "Assets/Data/QuestData";
+    private const string CSV_DIR = "Assets/Resources/CSV";
+    private const string SO_DIR = "Assets/Resources/Data/QuestData";
 
     [MenuItem("Tools/CSV导入/导入任务")]
     public static void Import() { ImportInternal(); }

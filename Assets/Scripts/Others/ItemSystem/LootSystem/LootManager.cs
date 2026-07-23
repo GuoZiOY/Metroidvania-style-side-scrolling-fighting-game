@@ -27,6 +27,11 @@ public class LootManager : MonoBehaviour
     [Header("物品预制体")]
     [SerializeField] private GameObject itemPrefab;
 
+    [Header("货币预制体")]
+    [SerializeField] private GameObject copperPrefab;
+    [SerializeField] private GameObject silverPrefab;
+    [SerializeField] private GameObject goldPrefab;
+
     [Header("掉落效果")]
     [SerializeField] private float dropSpreadRadius = 1.5f;
     [SerializeField] private float dropHeight = 2f;
@@ -130,8 +135,17 @@ public class LootManager : MonoBehaviour
         for (int i = 0; i < items.Count; i++)
         {
             var lootedItem = items[i];
-            if (lootedItem == null || lootedItem.baseItemData == null)
+            if (lootedItem == null) continue;
+
+            // 货币掉落
+            if (lootedItem.currencyAmount > 0)
+            {
+                SpawnCurrency(lootedItem.currencyAmount, position);
                 continue;
+            }
+
+            // 物品掉落
+            if (lootedItem.baseItemData == null) continue;
 
             Vector3 spawnPosition = dropPositions[i];
             GameObject itemObject = Instantiate(itemPrefab, spawnPosition, Quaternion.identity);
@@ -142,6 +156,34 @@ public class LootManager : MonoBehaviour
                 itemAbout.InitializeLootedItem(lootedItem);
                 ApplyDropPhysics(itemObject, spawnPosition - position);
             }
+        }
+    }
+
+    private void SpawnCurrency(int amount, Vector3 position)
+    {
+        var denoms = new (int worth, GameObject prefab, float scale)[]
+        {
+            (500000, goldPrefab, 1.8f), (200000, goldPrefab, 1.4f), (100000, goldPrefab, 1.2f), (10000, goldPrefab, 1.0f),
+            (5000, silverPrefab, 1.8f), (2000, silverPrefab, 1.4f), (1000, silverPrefab, 1.2f), (100, silverPrefab, 1.0f),
+            (50, copperPrefab, 1.8f), (20, copperPrefab, 1.4f), (10, copperPrefab, 1.2f), (1, copperPrefab, 1.0f),
+        };
+
+        foreach (var d in denoms)
+        {
+            if (amount <= 0 || d.prefab == null) break;
+            int count = amount / d.worth;
+            if (count <= 0) continue;
+
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 spawnPos = position + new Vector3(0, dropHeight, 0);
+                var coin = Instantiate(d.prefab, spawnPos, Quaternion.identity).transform;
+                coin.localScale = Vector3.one * d.scale;
+                var gold = coin.GetComponent<Gold>();
+                gold.worth = d.worth;
+                ApplyDropPhysics(coin.gameObject, position);
+            }
+            amount -= count * d.worth;
         }
     }
 
@@ -197,34 +239,12 @@ public class LootManager : MonoBehaviour
 
     private void ApplyDropPhysics(GameObject itemObject, Vector3 directionFromCenter)
     {
-        Rigidbody2D rb = SetupRigidbody(itemObject);
-        SetupCollider(itemObject);
+        Rigidbody2D rb = itemObject.GetComponent<Rigidbody2D>();
+        if (rb == null) return;
 
         Vector2 velocityDirection = CalculateVelocityDirection(directionFromCenter);
         Vector2 rotatedDirection = ApplyRandomAngleOffset(velocityDirection);
         rb.linearVelocity = rotatedDirection * dropForce;
-    }
-
-    private Rigidbody2D SetupRigidbody(GameObject itemObject)
-    {
-        Rigidbody2D rb = itemObject.GetComponent<Rigidbody2D>();
-        if (rb == null)
-        {
-            rb = itemObject.AddComponent<Rigidbody2D>();
-        }
-        rb.gravityScale = 2f;
-        return rb;
-    }
-
-    private void SetupCollider(GameObject itemObject)
-    {
-        Collider2D collider = itemObject.GetComponent<Collider2D>();
-        if (collider == null)
-        {
-            collider = itemObject.AddComponent<CircleCollider2D>();
-            ((CircleCollider2D)collider).radius = itemRadius;
-        }
-        collider.isTrigger = true;
     }
 
     private Vector2 CalculateVelocityDirection(Vector3 directionFromCenter)

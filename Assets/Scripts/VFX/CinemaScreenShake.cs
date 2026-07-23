@@ -38,7 +38,7 @@ public class CinemaScreenShake : MonoBehaviour
 
     private void Start()
     {
-        player = FindObjectOfType<Player>();
+        player = FindAnyObjectByType<Player>();
         screenShake = GetComponent<CinemachineImpulseSource>();
     }
     

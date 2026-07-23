@@ -93,7 +93,7 @@ public class UI_ItemSlot : MonoBehaviour, IPointerDownHandler, IPointerClickHand
 
     protected virtual void UseConsumable()//使用消耗品
     {
-        PlayerInventorySystem playerInventorySystem = FindObjectOfType<PlayerInventorySystem>();
+        PlayerInventorySystem playerInventorySystem = FindAnyObjectByType<PlayerInventorySystem>();
         if (playerInventorySystem != null)
         {
             playerInventorySystem.TryUseConsumable(itemInSlot);

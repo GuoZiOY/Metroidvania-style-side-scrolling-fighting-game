@@ -15,7 +15,7 @@ public class UI_AttributeButton : MonoBehaviour, IPointerClickHandler
 
     private void Start()
     {
-        player = FindFirstObjectByType<Player>();
+        player = FindAnyObjectByType<Player>();
 
         if (addButton != null)
         {

@@ -6,8 +6,8 @@ using UnityEngine;
 
 public static class LootTableCSVImporter
 {
-    private const string CSV_DIR = "Assets/Data/CSV";
-    private const string SO_DIR = "Assets/Data/ItemData/战利品/掉落表";
+    private const string CSV_DIR = "Assets/Resources/CSV";
+    private const string SO_DIR = "Assets/Resources/Data/ItemData/战利品/掉落表";
 
     [MenuItem("Tools/CSV导入/导入掉落表")]
     public static void Import() { ImportInternal(); }
@@ -58,6 +58,10 @@ public static class LootTableCSVImporter
             table.tableId = tid;
             table.ClearLootItems();
 
+            // 读取货币掉落量
+            int currency = CSVHelper.GetInt(itemRows[0], "currencyAmount", 0);
+            table.SetCurrencyAmount(currency);
+
             foreach (var row in itemRows)
             {
                 string itemId = CSVHelper.GetId(row, "itemId");
@@ -82,7 +86,7 @@ public static class LootTableCSVImporter
 
     private static void EnsureFolder()
     {
-        string p = "Assets/Data/ItemData";
+        string p = "Assets/Resources/Data/ItemData";
         foreach (var part in "战利品/掉落表".Split('/'))
         {
             string sub = $"{p}/{part}";

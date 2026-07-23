@@ -21,7 +21,7 @@ public class UI_StatSlot : MonoBehaviour, IPointerClickHandler, IPointerExitHand
     {
         ui = GetComponentInParent<UI>();
         rect = GetComponent<RectTransform>();
-        player = FindFirstObjectByType<Player>();
+        player = FindAnyObjectByType<Player>();
     }
 
     private void OnValidate()

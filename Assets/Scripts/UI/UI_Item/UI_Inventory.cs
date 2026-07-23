@@ -16,7 +16,7 @@ public class UI_Inventory : MonoBehaviour
     {
         uiItemSlots = uiItemSlotParent.GetComponentsInChildren<UI_InventorySlot>();
         uiEquipSlots = uiEquipSlotParent.GetComponentsInChildren<UI_EquipSlot>();
-        playerInventorySystem = FindFirstObjectByType<PlayerInventorySystem>();
+        playerInventorySystem = FindAnyObjectByType<PlayerInventorySystem>();
 
         if (playerInventorySystem != null)
         {

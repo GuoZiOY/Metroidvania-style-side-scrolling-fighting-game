@@ -195,7 +195,7 @@ public class QuestManager : MonoBehaviour
 
         if (reward.items != null && reward.items.Count > 0)
         {
-            var inventory = FindFirstObjectByType<Inventory_Player>();
+            var inventory = FindAnyObjectByType<Inventory_Player>();
             if (inventory != null)
             {
                 foreach (var rewardItem in reward.items)
@@ -227,7 +227,7 @@ public class QuestManager : MonoBehaviour
         var progress = activeQuests[questId];
 
         // 收集目标 → 检查并扣除背包物品
-        var inventory = FindFirstObjectByType<Inventory_Player>();
+        var inventory = FindAnyObjectByType<Inventory_Player>();
         for (int i = 0; i < quest.objectives.Count; i++)
         {
             if (quest.objectives[i].type != ObjectiveType.Collect)
@@ -260,7 +260,7 @@ public class QuestManager : MonoBehaviour
     /// <summary>接受任务时：检查背包已有物品，同步收集进度</summary>
     private void SyncCollectProgressFromInventory(QuestData quest, QuestProgress progress)
     {
-        var inventory = FindFirstObjectByType<Inventory_Player>();
+        var inventory = FindAnyObjectByType<Inventory_Player>();
         if (inventory == null)
             return;
 

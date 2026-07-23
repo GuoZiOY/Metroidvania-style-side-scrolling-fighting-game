@@ -89,7 +89,7 @@ public class UI_EquipSlot : UI_ItemSlot, IPointerClickHandler, IItemDropTarget
 
     public void OnItemDropped(Inventory_Item item, UI_ItemSlot sourceSlot)
     {
-        PlayerInventorySystem playerInventorySystem = FindObjectOfType<PlayerInventorySystem>();
+        PlayerInventorySystem playerInventorySystem = FindAnyObjectByType<PlayerInventorySystem>();
 
         if (playerInventorySystem == null)
         {

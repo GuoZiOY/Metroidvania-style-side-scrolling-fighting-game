@@ -8,14 +8,14 @@ public class LootedItem
     public LootRarity actualRarity; //实际稀有度
     public float statMultiplier; //数值倍率（基于差值）
     public string uniqueId; //唯一ID
+    public int currencyAmount; //货币掉落量（>0 时表示是货币，忽略其他字段）
 
     public LootedItem(ItemDataSo baseData, LootRarity actualRarity)
     {
         baseItemData = baseData;
-        baseRarity = baseData.rarity;
+        baseRarity = baseData != null ? baseData.rarity : actualRarity;
         this.actualRarity = actualRarity;
-        
-        //计算差值倍率
+
         statMultiplier = RarityCalculator.GetRarityDifferenceMultiplier(baseRarity, actualRarity);
         uniqueId = System.Guid.NewGuid().ToString();
     }

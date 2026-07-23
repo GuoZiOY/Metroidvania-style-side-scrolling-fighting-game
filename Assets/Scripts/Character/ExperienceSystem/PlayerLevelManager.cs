@@ -55,7 +55,7 @@ public class PlayerLevelManager : MonoBehaviour // 玩家等级管理器
 
         if (attributePointManager == null)
         {
-            attributePointManager = GetComponent<AttributePointManager>() ?? FindFirstObjectByType<AttributePointManager>();
+            attributePointManager = GetComponent<AttributePointManager>() ?? FindAnyObjectByType<AttributePointManager>();
         }
     }
 

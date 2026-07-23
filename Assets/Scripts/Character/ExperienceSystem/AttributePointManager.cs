@@ -40,7 +40,7 @@ public class AttributePointManager : MonoBehaviour // 属性点管理器
 
     private void Start()
     {
-        playerStats ??= GetComponent<Entity_Stats>() ?? FindFirstObjectByType<Entity_Stats>(); // 获取玩家属性组件
+        playerStats ??= GetComponent<Entity_Stats>() ?? FindAnyObjectByType<Entity_Stats>(); // 获取玩家属性组件
     }
 
     private void InitializeAttributeMap() // 初始化属性点字典

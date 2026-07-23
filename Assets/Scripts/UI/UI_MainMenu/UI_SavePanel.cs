@@ -34,15 +34,15 @@ public class UI_SavePanel : MonoBehaviour
     [Header("动画")]
     [SerializeField] private float fadeDuration = 0.25f;
 
-    private CanvasGroup _cg;
-    private List<SaveProfile> _profiles;
-    private int _selectedSlot = -1;
-    private Action _pendingAction;
+    private CanvasGroup cg;
+    private List<SaveProfile> profiles;
+    private int selectedSlot = -1;
+    private Action pendingAction;
 
     private void Awake()
     {
-        _cg = GetComponent<CanvasGroup>();
-        if (_cg == null) _cg = gameObject.AddComponent<CanvasGroup>();
+        cg = GetComponent<CanvasGroup>();
+        if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
 
         for (int i = 0; i < slots.Length; i++)
         {
@@ -69,14 +69,14 @@ public class UI_SavePanel : MonoBehaviour
 
     private void Refresh()
     {
-        _profiles = SaveManager.Instance?.ListProfiles() ?? new List<SaveProfile>();
+        profiles = SaveManager.Instance?.ListProfiles() ?? new List<SaveProfile>();
 
         for (int i = 0; i < slots.Length; i++)
         {
             var s = slots[i];
             if (s == null) continue;
 
-            var p = _profiles.Find(x => x.slotIndex == i);
+            var p = profiles.Find(x => x.slotIndex == i);
             bool hasData = p != null && !p.isEmpty;
 
             s.emptyGroup?.SetActive(!hasData);
@@ -120,7 +120,7 @@ public class UI_SavePanel : MonoBehaviour
 
     private void SelectSlot(int index)
     {
-        _selectedSlot = index;
+        selectedSlot = index;
 
         for (int i = 0; i < slots.Length; i++)
         {
@@ -142,7 +142,7 @@ public class UI_SavePanel : MonoBehaviour
             actionBtnText?.SetText("开始新游戏");
     }
 
-    private bool HasData(int index) => _profiles?.Exists(x => x.slotIndex == index && !x.isEmpty) ?? false;
+    private bool HasData(int index) => profiles?.Exists(x => x.slotIndex == index && !x.isEmpty) ?? false;
 
     #endregion
 
@@ -150,16 +150,16 @@ public class UI_SavePanel : MonoBehaviour
 
     private void OnAction()
     {
-        if (_selectedSlot < 0) return;
-        if (HasData(_selectedSlot))
-            SaveManager.Instance?.Load(_selectedSlot);
+        if (selectedSlot < 0) return;
+        if (HasData(selectedSlot))
+            SaveManager.Instance?.Load(selectedSlot);
         else
         {
             // 记录当前槽位，并清空旧数据
             if (SaveManager.Instance != null)
             {
-                SaveManager.Instance.Delete(_selectedSlot);
-                SaveManager.Instance.CurrentSlotIndex = _selectedSlot;
+                SaveManager.Instance.Delete(selectedSlot);
+                SaveManager.Instance.CurrentSlotIndex = selectedSlot;
             }
             SceneManager.LoadScene(newGameScene);
         }
@@ -167,10 +167,10 @@ public class UI_SavePanel : MonoBehaviour
 
     private void OnDelete()
     {
-        if (_selectedSlot < 0 || !HasData(_selectedSlot)) return;
+        if (selectedSlot < 0 || !HasData(selectedSlot)) return;
         ShowConfirm("确定删除此存档吗？\n此操作不可恢复。", () =>
         {
-            SaveManager.Instance?.Delete(_selectedSlot);
+            SaveManager.Instance?.Delete(selectedSlot);
             Refresh();
             SelectSlot(-1);
         });
@@ -183,7 +183,7 @@ public class UI_SavePanel : MonoBehaviour
     private void ShowConfirm(string message, Action onConfirm)
     {
         if (confirmDialog == null) { onConfirm?.Invoke(); return; }
-        _pendingAction = onConfirm;
+        pendingAction = onConfirm;
         confirmMsg?.SetText(message);
         confirmDialog.SetActive(true);
 
@@ -197,9 +197,9 @@ public class UI_SavePanel : MonoBehaviour
             .Join(confirmDialog.transform.DOScale(Vector3.one, 0.25f).SetEase(Ease.OutBack));
     }
 
-    private void HideConfirm() { if (confirmDialog != null) confirmDialog.SetActive(false); _pendingAction = null; }
-    private void OnConfirmYes() { _pendingAction?.Invoke(); _pendingAction = null; HideConfirm(); }
-    private void OnConfirmNo() { _pendingAction = null; HideConfirm(); }
+    private void HideConfirm() { if (confirmDialog != null) confirmDialog.SetActive(false); pendingAction = null; }
+    private void OnConfirmYes() { pendingAction?.Invoke(); pendingAction = null; HideConfirm(); }
+    private void OnConfirmNo() { pendingAction = null; HideConfirm(); }
 
     #endregion
 }
