@@ -11,7 +11,7 @@ public class Enemy_GroundState : EnemyState
     public override void Update()
     {
         base.Update();
-        if (enemy.PlayerDetected() == true)//如果检测到玩家，进入战斗状态
+        if (enemy.PlayerDetected() == true)
             stateMachine.ChangeState(enemy.battleState);
     }
 }

@@ -16,7 +16,10 @@ public class SaveManager : MonoBehaviour
     private const string PROFILES_FILE = "profiles.json";
 
     public string CurrentCheckpointId { get; set; }
-    public int CurrentSlotIndex { get; set; } = -1;  // 当前使用的存档槽（检查点用）
+    public int CurrentSlotIndex { get; set; } = -1;
+
+    private float _accumulatedPlayTime;  // 累计游玩时间（不含当前会话）
+    private float _sessionStartTime;     // 当前会话开始时间
 
     void Awake()
     {
@@ -25,7 +28,11 @@ public class SaveManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         ItemLookup.Initialize();
+        _sessionStartTime = Time.time;
     }
+
+    /// <summary>当前总游玩时间 = 累计 + 本局已玩</summary>
+    private float TotalPlayTime => _accumulatedPlayTime + (Time.time - _sessionStartTime);
 
     // ==================== 公开 API ====================
 
@@ -51,8 +58,8 @@ public class SaveManager : MonoBehaviour
         }
 
         data.saveTime = DateTime.UtcNow.ToString("O");
+        data.playTime = TotalPlayTime;
         data.lastCheckpointId = CurrentCheckpointId ?? "";
-
         string json = JsonUtility.ToJson(data, true);
         string path = GetSavePath(slotIndex);
         File.WriteAllText(path, json);
@@ -164,6 +171,31 @@ public class SaveManager : MonoBehaviour
         RemoveProfile(slotIndex);
     }
 
+    // 读档并强制重载场景（死亡后继续游戏用，重置敌人/宝箱等）
+    public void LoadWithReload(int slotIndex)
+    {
+        CurrentSlotIndex = slotIndex;
+
+        string path = GetSavePath(slotIndex);
+        if (!File.Exists(path))
+        {
+            Debug.LogError($"[SaveManager] 存档不存在 slot={slotIndex}");
+            return;
+        }
+
+        string json = File.ReadAllText(path);
+        var data = JsonUtility.FromJson<SaveData>(json);
+        if (data == null)
+        {
+            Debug.LogError("[SaveManager] 存档解析失败");
+            return;
+        }
+
+        _pendingLoad = data;
+        SceneManager.sceneLoaded += OnSceneLoadedForLoad;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
     // 获取所有存档槽的元数据（主菜单展示）
     public List<SaveProfile> ListProfiles()
     {
@@ -187,8 +219,6 @@ public class SaveManager : MonoBehaviour
         data.posX = player.transform.position.x;
         data.posY = player.transform.position.y;
         data.posZ = player.transform.position.z;
-        data.playTime = Time.time;
-
         // 角色数据
         data.player = CollectPlayerData(player);
 
@@ -400,6 +430,10 @@ public class SaveManager : MonoBehaviour
             Debug.LogError("[SaveManager] 读档失败：场景中无 Player");
             return;
         }
+
+        // 恢复游玩时间
+        _accumulatedPlayTime = data.playTime;
+        _sessionStartTime = Time.time;
 
         // 位置
         player.transform.position = new Vector3(data.posX, data.posY, data.posZ);

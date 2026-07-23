@@ -44,54 +44,64 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89596655c6ad1eb4881037b27323a218, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bgmClip: {fileID: 8300000, guid: 371d9206692e67a4bb246db330bff3ef, type: 3}
-  bgmVolume: 1
-  chestSfxClip: {fileID: 8300000, guid: 2ddb822e27eced24b93b2d9062269b3e, type: 3}
-  chestVolume: 1
-  buttonSfxClip: {fileID: 8300000, guid: 4b2ab58d2d5ed1b4bbbc2e70cfac3b50, type: 3}
-  buttonVolume: 1
-  denySfxClip: {fileID: 8300000, guid: 501043353e4377c4c820dd48d176c2c1, type: 3}
-  denyVolume: 1
-  footstepSfxClip: {fileID: 8300000, guid: c676e763a4b94b641b29e2822e74dc34, type: 3}
-  footstepVolume: 0.2
-  jumpSfxClips:
-  - {fileID: 8300000, guid: 504a943e530e3ba4a9b4ae5b20ccf5b5, type: 3}
-  - {fileID: 8300000, guid: da79bf071d7b37f48b1b789ed332d9ac, type: 3}
-  jumpVolume: 0.5
-  landingSfxClips:
-  - {fileID: 8300000, guid: 5e2285f09b414304682aa1d7b63c61f0, type: 3}
-  - {fileID: 8300000, guid: 51327d36bed31224b8cbe7a966fcd0f4, type: 3}
-  landingVolume: 0.25
-  jumpAttackExtraSfxClip: {fileID: 8300000, guid: 303f8d70fde296e438b338474fc0b59a, type: 3}
-  jumpAttackExtraVolume: 1
-  swingSfxClips:
-  - {fileID: 8300000, guid: ff7743bfd9eec3f47924f9e481cbf1a0, type: 3}
-  - {fileID: 8300000, guid: 5dd9c01db5988c342bfc7fd43c6c8b8f, type: 3}
-  - {fileID: 8300000, guid: b980afa1aa44dac449c4c67a7babb49c, type: 3}
-  swingVolume: 0.25
-  hitSfxClips:
-  - {fileID: 8300000, guid: 20deb99ef108bbc4ba90d53fc521334d, type: 3}
-  - {fileID: 8300000, guid: a0c90482aecde104da8befcfb358aa02, type: 3}
-  - {fileID: 8300000, guid: df7e27664bd65d04bb67af826b91885e, type: 3}
-  hitVolume: 0.9
-  extraSfxClips:
-  - {fileID: 8300000, guid: ddc4138f44b0aeb4bb7d385f1e33b6fa, type: 3}
-  - {fileID: 8300000, guid: 5bbe9a6d485ccc445a0ddac494f95642, type: 3}
-  - {fileID: 8300000, guid: 8cf9d614fe5ba894d860c1b1e7f0161c, type: 3}
-  extraVolume: 0.9
-  critSfxClips:
-  - {fileID: 8300000, guid: af68bca25d4e2514e9d1cb5fcbdbe32c, type: 3}
-  - {fileID: 8300000, guid: e9c582cd43f82d44ebe244a81b7821c4, type: 3}
-  - {fileID: 8300000, guid: c30b7ab4c5b382e4489a09f4c3def952, type: 3}
-  critVolume: 1
-  counterSuccessSfxClips:
-  - {fileID: 8300000, guid: ba7f598aa49fa84489fcbe4f91705c45, type: 3}
-  - {fileID: 8300000, guid: dcd1d8c96be4f0b40ba1b2b4369c5fcf, type: 3}
-  - {fileID: 8300000, guid: 6df619b4f516deb499ae451db4f96550, type: 3}
-  counterSuccessVolume: 1
-  counterHitSfxClip: {fileID: 8300000, guid: 6865ae8bd47ee764d97563bc14816c61, type: 3}
-  counterHitVolume: 0.9
-  saveSfxClip: {fileID: 8300000, guid: 6067cb60aec25044a9df1c8379af6867, type: 3}
-  saveVolume: 1
-  fadeInDuration: 2
+  BGM:
+    bgmClip: {fileID: 8300000, guid: 371d9206692e67a4bb246db330bff3ef, type: 3}
+    bgmVolume: 1
+  "\u73AF\u5883":
+    chestSfxClip: {fileID: 8300000, guid: 2ddb822e27eced24b93b2d9062269b3e, type: 3}
+    chestVolume: 1
+  "UI\u97F3\u6548":
+    buttonSfxClip: {fileID: 8300000, guid: 4b2ab58d2d5ed1b4bbbc2e70cfac3b50, type: 3}
+    buttonVolume: 1
+    denySfxClip: {fileID: 8300000, guid: 501043353e4377c4c820dd48d176c2c1, type: 3}
+    denyVolume: 1
+  "\u89D2\u8272":
+    footstepSfxClip: {fileID: 8300000, guid: c676e763a4b94b641b29e2822e74dc34, type: 3}
+    footstepVolume: 0.2
+    jumpSfxClips:
+    - {fileID: 8300000, guid: 504a943e530e3ba4a9b4ae5b20ccf5b5, type: 3}
+    - {fileID: 8300000, guid: da79bf071d7b37f48b1b789ed332d9ac, type: 3}
+    jumpVolume: 0.5
+    landingSfxClips:
+    - {fileID: 8300000, guid: 5e2285f09b414304682aa1d7b63c61f0, type: 3}
+    - {fileID: 8300000, guid: 51327d36bed31224b8cbe7a966fcd0f4, type: 3}
+    landingVolume: 0.25
+    jumpAttackExtraSfxClip: {fileID: 8300000, guid: 303f8d70fde296e438b338474fc0b59a, type: 3}
+    jumpAttackExtraVolume: 0.75
+  "\u6218\u6597":
+    swingSfxClips:
+    - {fileID: 8300000, guid: ff7743bfd9eec3f47924f9e481cbf1a0, type: 3}
+    - {fileID: 8300000, guid: 5dd9c01db5988c342bfc7fd43c6c8b8f, type: 3}
+    - {fileID: 8300000, guid: b980afa1aa44dac449c4c67a7babb49c, type: 3}
+    swingVolume: 0.25
+    hitSfxClips:
+    - {fileID: 8300000, guid: 20deb99ef108bbc4ba90d53fc521334d, type: 3}
+    - {fileID: 8300000, guid: a0c90482aecde104da8befcfb358aa02, type: 3}
+    - {fileID: 8300000, guid: df7e27664bd65d04bb67af826b91885e, type: 3}
+    hitVolume: 0.9
+    extraSfxClips:
+    - {fileID: 8300000, guid: ddc4138f44b0aeb4bb7d385f1e33b6fa, type: 3}
+    - {fileID: 8300000, guid: 5bbe9a6d485ccc445a0ddac494f95642, type: 3}
+    - {fileID: 8300000, guid: 8cf9d614fe5ba894d860c1b1e7f0161c, type: 3}
+    extraVolume: 0.9
+    critSfxClips:
+    - {fileID: 8300000, guid: af68bca25d4e2514e9d1cb5fcbdbe32c, type: 3}
+    - {fileID: 8300000, guid: e9c582cd43f82d44ebe244a81b7821c4, type: 3}
+    - {fileID: 8300000, guid: c30b7ab4c5b382e4489a09f4c3def952, type: 3}
+    critVolume: 1
+    counterSuccessSfxClips:
+    - {fileID: 8300000, guid: ba7f598aa49fa84489fcbe4f91705c45, type: 3}
+    - {fileID: 8300000, guid: dcd1d8c96be4f0b40ba1b2b4369c5fcf, type: 3}
+    - {fileID: 8300000, guid: 6df619b4f516deb499ae451db4f96550, type: 3}
+    counterSuccessVolume: 1
+    counterHitSfxClip: {fileID: 8300000, guid: 6865ae8bd47ee764d97563bc14816c61, type: 3}
+    counterHitVolume: 1
+  "\u5B58\u6863":
+    saveSfxClip: {fileID: 8300000, guid: 6067cb60aec25044a9df1c8379af6867, type: 3}
+    saveVolume: 1
+    loadSfxClip: {fileID: 8300000, guid: f508b461c948390489797ff9a7a80484, type: 3}
+    loadVolume: 0.2
+  "\u6253\u5B57\u673A":
+    typewriterSfxClip: {fileID: 8300000, guid: e50f1f2e622b67948b2e7417552d196d, type: 3}
+    typewriterVolume: 1
   counterHitDelay: 0.1

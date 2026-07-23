@@ -7,6 +7,7 @@ using UnityEngine.UI;
 /// </summary>
 public class UIManager : MonoBehaviour
 {
+    public static bool IsAnyPanelOpen { get; private set; }
     #region 面板切换器
     [Header("面板切换器")]
     [SerializeField] private PanelSwitcher mainPanelSwitcher;       // 主面板（角色/技能/设置/任务）
@@ -68,6 +69,8 @@ public class UIManager : MonoBehaviour
     /// <summary>主面板显示时：背景/技能槽/提示框/小任务/子面板复位</summary>
     private void OnMainPanelShown(int index)
     {
+        IsAnyPanelOpen = true;
+
         // 背景
         if (panelBackground != null)
             panelBackground.SetActive(true);
@@ -95,6 +98,8 @@ public class UIManager : MonoBehaviour
     /// <summary>主面板全部关闭时：恢复背景/技能槽/小任务</summary>
     private void OnMainPanelHidden()
     {
+        IsAnyPanelOpen = false;
+
         if (panelBackground != null)
             panelBackground.SetActive(false);
 

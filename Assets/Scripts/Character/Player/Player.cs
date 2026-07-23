@@ -286,6 +286,50 @@ public override void StartHitStop(float duration)
     {
         base.EntityDead();
         stateMachine.ChangeState(deadState);
+
+        // 启动死亡序列（慢动作 → 相机聚焦 → 停时间 → 死亡面板）
+        if (gameObject.activeInHierarchy)
+            StartCoroutine(DeathSequence());
+    }
+
+    private Tween _timeScaleTween;
+
+    [Header("死亡效果")]
+    [SerializeField] private float slomoDuration = 2f;
+    [SerializeField] private float slomoTimeScale = 0.05f;
+    [SerializeField] private float cameraZoom = 1.5f;
+    [SerializeField] private float focusDuration = 2f;
+
+    private IEnumerator DeathSequence()
+    {
+        var cam = Camera.main;
+        if (cam != null)
+        {
+            float originalSize = cam.orthographic ? cam.orthographicSize : cam.fieldOfView;
+            Vector3 targetPos = new Vector3(transform.position.x, transform.position.y, cam.transform.position.z);
+
+            // 慢动作
+            _timeScaleTween = DOTween.To(() => Time.timeScale, v => Time.timeScale = v, slomoTimeScale, slomoDuration)
+                .SetUpdate(true);
+
+            // 相机聚焦
+            if (cam.orthographic)
+                DOTween.To(() => cam.orthographicSize, v => cam.orthographicSize = v, originalSize / cameraZoom, focusDuration).SetUpdate(true);
+            else
+                DOTween.To(() => cam.fieldOfView, v => cam.fieldOfView = v, originalSize / cameraZoom, focusDuration).SetUpdate(true);
+
+            cam.transform.DOMove(targetPos, focusDuration).SetUpdate(true);
+        }
+
+        // 等慢动作播完
+        yield return new WaitForSecondsRealtime(slomoDuration);
+
+        // 停止 → 通知死亡面板
+        _timeScaleTween?.Kill();
+        DOTween.Kill(Camera.main?.transform);
+        Time.timeScale = 0;
+
+        UI_DeathScreen.Instance?.Show();
     }
 
     public void Revive()

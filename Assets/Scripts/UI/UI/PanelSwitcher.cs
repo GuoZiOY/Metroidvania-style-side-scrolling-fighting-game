@@ -18,6 +18,9 @@ public class PanelSwitcher : MonoBehaviour
 {
     [SerializeField] private PanelEntry[] entries;
 
+    [Header("初始设置")]
+    [SerializeField] private bool resetOnEnable = false;     // 每次启用时复位到第一个面板
+
     [Header("按钮颜色")]
     [SerializeField] private Color selectedColor = Color.white;
     [SerializeField] private Color normalColor = new Color(0.5f, 0.5f, 0.5f);
@@ -46,6 +49,12 @@ public class PanelSwitcher : MonoBehaviour
     private void Awake()
     {
         InitializeEntries();
+    }
+
+    private void OnEnable()
+    {
+        if (resetOnEnable && entries.Length > 0)
+            ShowPanel(0);
     }
 
     /// <summary>初始化条目（可从 Awake 或首次使用时调用，支持 GameObject 初始 inactive 的场景）</summary>

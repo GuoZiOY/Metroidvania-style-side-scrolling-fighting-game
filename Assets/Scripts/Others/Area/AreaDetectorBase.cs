@@ -29,7 +29,7 @@ public class AreaDetectorBase : MonoBehaviour
         // 自动查找UI_EventTip引用
         if (eventTip == null)
         {
-            eventTip = FindObjectOfType<UI_EventTip>();
+            eventTip = FindAnyObjectByType<UI_EventTip>();
         }
     }
     

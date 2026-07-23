@@ -88,6 +88,10 @@ public class Checkpoint : MonoBehaviour
         // 音效
         AudioManager.Instance?.PlaySaveSfx();
 
+        // 事件提示
+        var eventTip = FindObjectOfType<UI_EventTip>();
+        eventTip?.ShowSaveSuccess();
+
         // 提示闪一下反馈
         if (promptRoot != null)
             StartCoroutine(FlashPrompt());

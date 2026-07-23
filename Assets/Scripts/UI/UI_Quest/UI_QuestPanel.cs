@@ -132,6 +132,7 @@ public class UI_QuestPanel : MonoBehaviour
         {
             questOrder.Add(quest.questId);
             var entry = Instantiate(questEntryPrefab, questScrollView.content);
+            AudioManager.Instance?.RegisterButton(entry.GetComponent<Button>());
             var text = entry.GetComponentInChildren<TMP_Text>();
             string status = GetQuestStatus(quest.questId);
             if (text != null)

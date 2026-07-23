@@ -34,6 +34,13 @@ public class UI_EventTip : BaseTip
     {
         ShowTip($"任务失败: {questName}", false, AnimationType.基础, true);
     }
+    // ========== 存档提示 ==========
+
+    public void ShowSaveSuccess()
+    {
+        ShowTip("存档成功", true, AnimationType.基础, false);
+    }
+
     // ========== 区域相关提示 ==========
 
     // 显示遭遇敌人提示（基础动画）
