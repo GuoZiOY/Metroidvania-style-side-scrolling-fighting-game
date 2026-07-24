@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Shop -
   m_EditorClassIdentifier: Assembly-CSharp::ShopSO
   shopId: 
-  shopName: 
+  shopName: "\u65B0\u624B\u5546\u5E97"
   items:
   - itemData: {fileID: 11400000, guid: e510f8cc2cdcf294d98a575ecd13b601, type: 2}
     quantity: -1

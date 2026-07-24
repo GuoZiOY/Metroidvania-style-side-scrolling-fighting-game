@@ -8,7 +8,15 @@ public class PlayerInventorySystem : MonoBehaviour
     public event Action OnEquipmentUpdated;
     public event Action OnGoldChanged;
 
+    [Header("调试")]
+    [SerializeField] private int debugCurrency;   // Inspector 实时观察用
+
     private int currency;  // 统一铜币单位（1金币=10000，1银币=100）
+
+    private void Update()
+    {
+        debugCurrency = currency;
+    }
 
     public int Currency
     {

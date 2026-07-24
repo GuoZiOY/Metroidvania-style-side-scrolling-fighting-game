@@ -60,7 +60,7 @@ public class NPCBehaviour : MonoBehaviour
         if (!GameInput.GetKeyDown(GameInput.Action.Interact)) return;
 
         // 商店已打开 → 关闭
-        if (UI_ShopPanel.Instance != null && UI_ShopPanel.Instance.gameObject.activeInHierarchy)
+        if (UI_ShopPanel.IsShopOpen)
         {
             UI_ShopPanel.Instance.Close();
             return;
@@ -71,7 +71,7 @@ public class NPCBehaviour : MonoBehaviour
         {
             var shopUI = UI_ShopPanel.Instance;
             if (shopUI != null)
-                shopUI.Open(shopData);
+                shopUI.Open(shopData, npcName);
         }
     }
 

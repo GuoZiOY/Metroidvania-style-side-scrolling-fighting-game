@@ -44,7 +44,10 @@ public class Gold : MonoBehaviour
 
         AudioManager.Instance?.PlayGoldPickupSfx();
 
-        var inv = other.GetComponent<PlayerInventorySystem>();
+        // PlayerInventorySystem 可能在子物体上，用 GetComponentInParent 或 Find 兜底
+        var inv = other.GetComponentInParent<PlayerInventorySystem>();
+        if (inv == null)
+            inv = other.GetComponentInChildren<PlayerInventorySystem>();
         if (inv != null)
             inv.AddCurrency(worth);
 

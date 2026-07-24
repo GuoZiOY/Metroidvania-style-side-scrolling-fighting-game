@@ -58,7 +58,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.5019608}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -135,7 +135,6 @@ MonoBehaviour:
   highlightColor: {r: 0.8301887, g: 0.8301887, b: 0.121395506, a: 0.78431374}
   hoverIndicator: {fileID: 8810847097098734300}
   rarityBackground: {fileID: 8873198938643009831}
-  rarityBackgroundAlpha: 0.7
   slotIndex: -1
 --- !u!114 &7793382756670191871
 MonoBehaviour:
@@ -454,7 +453,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 528892594933930066, guid: 84b02b43e65db6f49ac00a69bafed007, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1574327904989186479, guid: 84b02b43e65db6f49ac00a69bafed007, type: 3}
       propertyPath: m_Pivot.x

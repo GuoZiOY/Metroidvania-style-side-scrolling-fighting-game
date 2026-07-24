@@ -14,7 +14,7 @@ public class UI_ButtonEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
     [SerializeField] private float clickPunch = 0.15f;
     [SerializeField] private float clickDuration = 0.1f;
 
-    [HideInInspector] public float restScale = 1f; // 基准缩放（被 PanelSwitcher 动态修改）
+    [HideInInspector] public float restScale; // 基准缩放（Awake 初始化，PanelSwitcher 动态修改）
 
     private Button _btn;
     private Tween _scaleTween;
@@ -22,6 +22,7 @@ public class UI_ButtonEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
     private void Awake()
     {
         _btn = GetComponent<Button>();
+        restScale = transform.localScale.x; // 以实际摆放缩放为准
         _btn.onClick.AddListener(PlayClickEffect);
     }
 

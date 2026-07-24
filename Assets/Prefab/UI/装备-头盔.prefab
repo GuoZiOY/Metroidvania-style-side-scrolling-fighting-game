@@ -132,13 +132,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemIcon: {fileID: 2077351305442419536}
   itemStackSize: {fileID: 438196579010312695}
-  background: {fileID: 4269778714274350344}
-  highlightColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   hoverIndicator: {fileID: 6325362741686551745}
   rarityBackground: {fileID: 9139906696872851441}
-  rarityBackgroundAlpha: 0.7
   slotType: 2
   typeSlotIndex: 0
+  background: {fileID: 4269778714274350344}
+  highlightColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
 --- !u!114 &-7767679803990624094
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -427,7 +426,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.5019608}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

@@ -45,3 +45,4 @@ Thumbs.db
 *.7z
 *.log
 *.tmp
+[Tt]emp/

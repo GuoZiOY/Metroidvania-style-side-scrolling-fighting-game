@@ -3,9 +3,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 商店面板。双栏布局：左 NPC 商品（UI_ShopSlot），右玩家背包+装备（移动已有槽位）。
-// 打开商店时把"背包槽""装备槽"节点从角色面板移到商店右侧，关闭时移回。
-// 底部：数量滑块 +/-/拖拽 + 固定购买/出售按钮 + 总价货币显示。
+// 商店面板——纯 UI 层。业务逻辑委托给 ShopSystem。
+// 职责：打开/关闭动画、槽位生成、按钮绑定、视觉状态同步。
 public class UI_ShopPanel : MonoBehaviour
 {
     private static UI_ShopPanel instance;
@@ -20,30 +19,31 @@ public class UI_ShopPanel : MonoBehaviour
         private set => instance = value;
     }
 
-    [Header("商店数据")]
+    public static bool IsShopOpen => instance != null && instance.gameObject.activeInHierarchy;
+
+    [Header("商店名称")]
     [SerializeField] private TextMeshProUGUI shopNameText;
 
     [Header("左栏——NPC 商品")]
     [SerializeField] private Transform npcItemContainer;
-    [SerializeField] private GameObject shopSlotPrefab;    // UI_ShopSlot 预制体
+    [SerializeField] private GameObject shopSlotPrefab;
 
     [Header("右栏——移动已有背包/装备槽")]
     [SerializeField] private Transform playerSlotContainer;
-    [SerializeField] private Transform backpackSlotParent;   // 场景中的"背包槽"
-    [SerializeField] private Transform equipSlotParent;      // 场景中的"装备槽"
+    [SerializeField] private Transform backpackSlotParent;
+    [SerializeField] private Transform equipSlotParent;
 
     [Header("面板关联")]
-    [SerializeField] private GameObject panelBackground;     // 全屏深色遮罩
-    [SerializeField] private GameObject[] hiddenOnOpen;      // 打开时隐藏（如底部切换按钮组）
+    [SerializeField] private GameObject panelBackground;
+    [SerializeField] private GameObject[] hiddenOnOpen;
 
     [Header("数量控件")]
     [SerializeField] private Slider quantitySlider;
     [SerializeField] private TextMeshProUGUI quantityText;
     [SerializeField] private Button minusButton;
     [SerializeField] private Button plusButton;
-    [SerializeField] private int maxQuantity = 99;
 
-    [Header("总价显示（金/银/铜）")]
+    [Header("总价显示")]
     [SerializeField] private TextMeshProUGUI totalGoldText;
     [SerializeField] private Image totalGoldIcon;
     [SerializeField] private TextMeshProUGUI totalSilverText;
@@ -64,14 +64,12 @@ public class UI_ShopPanel : MonoBehaviour
     [SerializeField] private Button sellButton;
     [SerializeField] private Button closeButton;
 
-    // ==================== 运行时数据 ====================
+    // ==================== 系统 ====================
 
-    private ShopSO currentShop;
-    private PlayerInventorySystem playerInventory;
-    private Inventory_Base inventory;
+    private readonly ShopSystem shopSystem = new();
 
+    // NPC 槽位列表（用于视觉管理和索引查询）
     private readonly List<UI_ShopSlot> npcSlots = new();
-    private readonly List<int> npcStockQuantities = new();
 
     // 节点移动恢复数据
     private Transform backpackOriginalParent;
@@ -79,14 +77,12 @@ public class UI_ShopPanel : MonoBehaviour
     private Transform equipOriginalParent;
     private int equipOriginalIndex;
 
-    // 订阅的槽位列表
+    // 订阅的玩家槽位
     private readonly List<UI_ItemSlot> listenedSlots = new();
 
-    // 选中状态
+    // 视觉选中状态（数据选中状态在 ShopSystem 中）
     private UI_ShopSlot selectedShopSlot;
-    private Inventory_Item selectedSellItem;
     private UI_ItemSlot selectedSellSlot;
-    private bool isBuyMode;
 
     // ==================== 生命周期 ====================
 
@@ -107,73 +103,81 @@ public class UI_ShopPanel : MonoBehaviour
         quantitySlider.onValueChanged.AddListener(OnQuantityChanged);
 
         quantitySlider.minValue = 0;
-        quantitySlider.maxValue = maxQuantity;
         quantitySlider.wholeNumbers = true;
         quantitySlider.value = 0;
+
+        shopSystem.OnDataChanged += RefreshUI;
+    }
+
+    private void Update()
+    {
+        if (GameInput.GetKeyDown(GameInput.Action.Escape))
+            Close();
     }
 
     // ==================== 打开 / 关闭 ====================
 
-    public void Open(ShopSO shopData)
+    public void Open(ShopSO shopData, string npcName = "")
     {
         if (shopData == null) return;
 
-        currentShop = shopData;
+        // 关闭所有已打开的面板，避免 IsAnyPanelOpen 状态错乱
+        var uiMgr = FindAnyObjectByType<UIManager>();
+        if (uiMgr != null) uiMgr.HideAllPanels();
 
-        // 确保根 Canvas 激活（否则子物体 SetActive 不会执行）
         transform.root.gameObject.SetActive(true);
         gameObject.SetActive(true);
         Time.timeScale = 0f;
 
         if (shopNameText != null)
-            shopNameText.text = shopData.shopName;
+        {
+            if (!string.IsNullOrEmpty(npcName))
+                shopNameText.text = $"{npcName} 的 {shopData.shopName}";
+            else
+                shopNameText.text = shopData.shopName;
+        }
 
-        playerInventory = FindAnyObjectByType<PlayerInventorySystem>();
-        inventory = playerInventory != null ? playerInventory.GetInventory() : null;
+        var pis = FindAnyObjectByType<PlayerInventorySystem>();
+        var inv = pis != null ? pis.GetInventory() : null;
 
-        ClearSelection();
+        shopSystem.Open(shopData, pis, inv);
 
-        // 背景 / 按钮显隐
+        ClearVisualSelection();
+
         if (panelBackground != null) panelBackground.SetActive(true);
         SetHiddenObjects(true);
 
-        // 生成左栏 NPC 商品 → 移入右栏槽位 → 订阅点击
         GenerateNpcItems(shopData);
         MovePlayerSlotsToShop();
         SubscribePlayerSlots();
 
-        RefreshCurrencyDisplay();
-        UpdateQuantityControls();
+        ModalStack.Push("shop");
+        RefreshUI();
     }
 
     public void Close()
     {
-        // 还原 UI
         SetHiddenObjects(false);
         if (panelBackground != null) panelBackground.SetActive(false);
 
+        // 清理可能残留的拖拽状态
+        if (UI_ItemDragHandler.Instance != null)
+            UI_ItemDragHandler.Instance.CleanupDrag();
+
+        shopSystem.Close();
+
         Time.timeScale = 1f;
+        ModalStack.Pop("shop");
 
-        // 注销订阅
         UnsubscribePlayerSlots();
-
-        // 槽位移回原位
         RestorePlayerSlots();
+        ClearVisualSelection();
 
-        // 清选中
-        ClearSelection();
-
-        // 销毁左栏
         foreach (var slot in npcSlots)
-        {
             if (slot != null) Destroy(slot.gameObject);
-        }
         npcSlots.Clear();
-        npcStockQuantities.Clear();
 
-        quantitySlider.value = 0;
-        currentShop = null;
-
+        quantitySlider.SetValueWithoutNotify(0);
         gameObject.SetActive(false);
     }
 
@@ -182,10 +186,7 @@ public class UI_ShopPanel : MonoBehaviour
     private void SetHiddenObjects(bool hide)
     {
         foreach (var obj in hiddenOnOpen)
-        {
-            if (obj != null)
-                obj.SetActive(!hide);
-        }
+            if (obj != null) obj.SetActive(!hide);
     }
 
     // ==================== 节点移动 ====================
@@ -250,17 +251,13 @@ public class UI_ShopPanel : MonoBehaviour
         listenedSlots.Clear();
     }
 
-    // ==================== 生成左栏（NPC 商品） ====================
+    // ==================== 生成左栏 NPC 商品 ====================
 
     private void GenerateNpcItems(ShopSO shopData)
     {
-        // 清理
         foreach (var slot in npcSlots)
-        {
             if (slot != null) Destroy(slot.gameObject);
-        }
         npcSlots.Clear();
-        npcStockQuantities.Clear();
 
         if (shopData.items == null || npcItemContainer == null) return;
 
@@ -268,7 +265,7 @@ public class UI_ShopPanel : MonoBehaviour
         {
             var entry = shopData.items[i];
             if (entry.itemData == null) continue;
-            if (entry.quantity == 0) continue; // 售罄
+            if (entry.quantity == 0) continue;
 
             var go = Instantiate(shopSlotPrefab, npcItemContainer);
             var slot = go.GetComponent<UI_ShopSlot>();
@@ -277,7 +274,6 @@ public class UI_ShopPanel : MonoBehaviour
             slot.Setup(entry.itemData, UI_ShopSlot.ShopMode.Buying, quantity: entry.quantity);
             slot.OnSlotSelected += OnNpcSlotSelected;
             npcSlots.Add(slot);
-            npcStockQuantities.Add(entry.quantity);
         }
     }
 
@@ -285,38 +281,46 @@ public class UI_ShopPanel : MonoBehaviour
 
     private void OnNpcSlotSelected(UI_ShopSlot slot)
     {
-        // 清其他选中
-        if (selectedShopSlot != null && selectedShopSlot != slot)
-            selectedShopSlot.SetSelected(false);
+        int index = npcSlots.IndexOf(slot);
+        if (index < 0) return;
 
-        DeselectSellSlot();
-
-        // 同一格再点=取消
+        // 同一格再点 = 取消
         if (selectedShopSlot == slot)
         {
             selectedShopSlot.SetSelected(false);
             selectedShopSlot = null;
-        }
-        else
-        {
-            selectedShopSlot = slot;
-            selectedShopSlot.SetSelected(true);
+            shopSystem.DeselectAll();
+            return;
         }
 
-        selectedSellItem = null;
-        isBuyMode = selectedShopSlot != null;
+        // 切新选中
+        DeselectSellSlotVisual();
+        if (selectedShopSlot != null)
+            selectedShopSlot.SetSelected(false);
 
-        ResetQuantityForCurrentSelection();
-        UpdateBuySellButtons();
-        UpdatePriceDisplay();
+        selectedShopSlot = slot;
+        selectedShopSlot.SetSelected(true);
+
+        shopSystem.SelectNpcItem(index);
     }
 
     private void OnPlayerSlotClicked(Inventory_Item item, UI_ItemSlot slot)
     {
         if (item == null) return;
+        if (slot is UI_EquipSlot) return;   // 装备槽不可出售
 
-        // 装备槽不可出售
-        if (slot is UI_EquipSlot) return;
+        // 同一物品再点 = 取消
+        if (selectedSellSlot == slot && shopSystem.SelectedSellItem == item)
+        {
+            DeselectSellSlotVisual();
+            if (selectedShopSlot != null)
+            {
+                selectedShopSlot.SetSelected(false);
+                selectedShopSlot = null;
+            }
+            shopSystem.DeselectAll();
+            return;
+        }
 
         // 清 NPC 选中
         if (selectedShopSlot != null)
@@ -325,95 +329,14 @@ public class UI_ShopPanel : MonoBehaviour
             selectedShopSlot = null;
         }
 
-        // 同一物品再点=取消
-        if (selectedSellItem == item)
-        {
-            DeselectSellSlot();
-            selectedSellItem = null;
-            isBuyMode = false;
-            quantitySlider.SetValueWithoutNotify(0);
-            UpdateBuySellButtons();
-            UpdateQuantityControls();
-            UpdatePriceDisplay();
-            return;
-        }
-
-        // 切新选中
-        DeselectSellSlot();
+        DeselectSellSlotVisual();
         selectedSellSlot = slot;
         selectedSellSlot.SetSelected(true);
-        selectedSellItem = item;
-        isBuyMode = false;
 
-        ResetQuantityForCurrentSelection();
-        UpdateBuySellButtons();
-        UpdatePriceDisplay();
+        shopSystem.SelectSellItem(item);
     }
 
-    // 根据当前选中，算出合法 maxQty 后设置默认数量=1（若合法）
-    private void ResetQuantityForCurrentSelection()
-    {
-        float maxQty = GetLegalMaxQuantity();
-
-        if (maxQty < 1)
-        {
-            quantitySlider.SetValueWithoutNotify(0);
-            quantitySlider.interactable = false;
-            minusButton.interactable = false;
-            plusButton.interactable = false;
-            if (quantityText != null) quantityText.text = "0";
-            return;
-        }
-
-        quantitySlider.interactable = true;
-        minusButton.interactable = true;
-        plusButton.interactable = true;
-        quantitySlider.maxValue = maxQty;
-
-        // 默认设 1
-        quantitySlider.SetValueWithoutNotify(1);
-        if (quantityText != null) quantityText.text = "1";
-    }
-
-    private float GetLegalMaxQuantity()
-    {
-        float maxQty = maxQuantity;
-
-        if (isBuyMode && selectedShopSlot != null)
-        {
-            int itemValue = selectedShopSlot.ItemData.value;
-            if (itemValue > 0 && playerInventory != null)
-            {
-                int byMoney = playerInventory.GetCurrency() / itemValue;
-                maxQty = Mathf.Min(maxQty, byMoney);
-
-                int idx = npcSlots.IndexOf(selectedShopSlot);
-                if (idx >= 0 && idx < npcStockQuantities.Count)
-                {
-                    int s = npcStockQuantities[idx];
-                    if (s >= 0) maxQty = Mathf.Min(maxQty, s);
-                }
-            }
-            else
-            {
-                maxQty = 0;
-            }
-        }
-        else if (!isBuyMode && selectedSellItem != null)
-        {
-            var held = inventory != null ? inventory.FindItem(selectedSellItem.itemData) : null;
-            int holdCount = held != null ? held.currentStackSize : 0;
-            maxQty = Mathf.Min(maxQty, holdCount);
-        }
-        else
-        {
-            maxQty = 0;
-        }
-
-        return maxQty;
-    }
-
-    private void DeselectSellSlot()
+    private void DeselectSellSlotVisual()
     {
         if (selectedSellSlot != null)
         {
@@ -422,16 +345,14 @@ public class UI_ShopPanel : MonoBehaviour
         }
     }
 
-    private void ClearSelection()
+    private void ClearVisualSelection()
     {
         if (selectedShopSlot != null)
         {
             selectedShopSlot.SetSelected(false);
             selectedShopSlot = null;
         }
-        DeselectSellSlot();
-        selectedSellItem = null;
-        isBuyMode = false;
+        DeselectSellSlotVisual();
     }
 
     // ==================== 数量控件 ====================
@@ -451,170 +372,74 @@ public class UI_ShopPanel : MonoBehaviour
         int qty = Mathf.RoundToInt(value);
         if (qty < 0) qty = 0;
 
-        quantitySlider.SetValueWithoutNotify(qty);
+        shopSystem.SetQuantity(qty);
+
+        // 同步 UI（ShopSystem 可能 clamp 了值）
+        SyncSliderToSystem();
+    }
+
+    // 将 Slider 数值与 ShopSystem.Quantity 对齐（防止递归用 SetValueWithoutNotify）
+    private void SyncSliderToSystem()
+    {
+        int systemQty = shopSystem.Quantity;
+        int sliderVal = Mathf.RoundToInt(quantitySlider.value);
+
+        if (sliderVal != systemQty)
+            quantitySlider.SetValueWithoutNotify(systemQty);
+
         if (quantityText != null)
-            quantityText.text = qty.ToString();
-
-        UpdatePriceDisplay();
-        UpdateBuySellButtons();
+            quantityText.text = systemQty.ToString();
     }
 
-    // ==================== 按钮状态 ====================
-
-    private void UpdateBuySellButtons()
-    {
-        bool hasQty = GetQuantity() > 0;
-
-        if (isBuyMode && selectedShopSlot != null)
-        {
-            buyButton.interactable = hasQty && CanAfford();
-            sellButton.interactable = false;
-        }
-        else if (!isBuyMode && selectedSellItem != null)
-        {
-            sellButton.interactable = hasQty && selectedSellItem.itemData.value > 0;
-            buyButton.interactable = false;
-        }
-        else
-        {
-            buyButton.interactable = false;
-            sellButton.interactable = false;
-        }
-    }
-
-    private bool CanAfford()
-    {
-        if (selectedShopSlot == null || playerInventory == null) return false;
-        return playerInventory.GetCurrency() >= selectedShopSlot.ItemData.value * GetQuantity();
-    }
-
-    // ==================== 购买 ====================
+    // ==================== 按钮事件 ====================
 
     private void OnBuyClicked()
     {
-        if (selectedShopSlot == null || playerInventory == null || inventory == null) return;
+        // 在 TryBuy 前保存索引（TryBuy 售罄时会清空 SelectedNpcIndex）
+        int slotIndex = shopSystem.SelectedNpcIndex;
 
-        int qty = GetQuantity();
-        if (qty <= 0) return;
-
-        // 检查 NPC 库存
-        int slotIndex = npcSlots.IndexOf(selectedShopSlot);
-        if (slotIndex < 0 || slotIndex >= npcStockQuantities.Count) return;
-        int stock = npcStockQuantities[slotIndex];
-        if (stock >= 0 && qty > stock)
-            qty = stock;
-        if (qty <= 0) return;
-
-        var itemData = selectedShopSlot.ItemData;
-        int totalCost = itemData.value * qty;
-
-        if (!playerInventory.SpendCurrency(totalCost))
-            return;
-
-        // 逐件添加
-        int added = 0;
-        int loopQty = qty;
-        for (int i = 0; i < loopQty; i++)
+        int added = shopSystem.TryBuy();
+        if (added > 0)
         {
-            var tempItem = new Inventory_Item(itemData);
+            AudioManager.Instance?.PlayButtonSfx();
 
-            bool canAdd = itemData.canStackable
-                ? (inventory.CanAddToStack(tempItem) || inventory.CanAddItem())
-                : inventory.CanAddItem();
-
-            if (!canAdd) break;
-
-            inventory.AddItem(tempItem);
-            added++;
-        }
-
-        // 空间不够 → 退款
-        if (added < loopQty)
-        {
-            int refund = (loopQty - added) * itemData.value;
-            playerInventory.AddCurrency(refund);
-        }
-
-        // 扣库存
-        if (stock > 0)
-        {
-            int remaining = stock - added;
-            npcStockQuantities[slotIndex] = remaining;
-            if (remaining <= 0)
-                RemoveNpcSlot(slotIndex);
-            else
-                selectedShopSlot.UpdateStockDisplay(remaining);
-        }
-
-        RefreshUI();
-    }
-
-    private void RemoveNpcSlot(int index)
-    {
-        if (index < 0 || index >= npcSlots.Count) return;
-
-        var slot = npcSlots[index];
-        if (slot == selectedShopSlot)
-        {
-            slot.SetSelected(false);
-            selectedShopSlot = null;
-            isBuyMode = false;
-        }
-        npcSlots.RemoveAt(index);
-        npcStockQuantities.RemoveAt(index);
-        if (slot != null) Destroy(slot.gameObject);
-    }
-
-    // ==================== 出售 ====================
-
-    private void OnSellClicked()
-    {
-        if (selectedSellItem == null || selectedSellSlot == null) return;
-        if (playerInventory == null || inventory == null || currentShop == null) return;
-
-        // 装备槽禁止出售
-        if (selectedSellSlot is UI_EquipSlot) return;
-
-        int qty = GetQuantity();
-        if (qty <= 0) return;
-
-        if (selectedSellItem.itemData.value <= 0) return;
-
-        // 验证背包里真实持有数
-        var itemInInv = inventory.FindItem(selectedSellItem.itemData);
-        if (itemInInv == null || itemInInv.currentStackSize < qty) return;
-
-        int unitValue = Mathf.RoundToInt(selectedSellItem.itemData.value * currentShop.buyBackRate);
-        int totalRevenue = unitValue * qty;
-
-        // 扣物品
-        if (itemInInv.currentStackSize > qty)
-        {
-            itemInInv.currentStackSize -= qty;
-            inventory.TriggerInventoryUpdate();
+            // 更新 NPC 槽位视觉（售罄槽位移除或库存更新）
+            if (slotIndex >= 0 && slotIndex < npcSlots.Count)
+            {
+                int stock = shopSystem.GetNpcStock(slotIndex);
+                if (stock == 0)
+                    RemoveNpcSlot(slotIndex);
+                else
+                    npcSlots[slotIndex].UpdateStockDisplay(stock);
+            }
         }
         else
         {
-            inventory.RemoveItem(itemInInv);
+            AudioManager.Instance?.PlayDenySfx();
         }
-
-        playerInventory.AddCurrency(totalRevenue);
-
-        // 物品卖光了就清选中
-        if (itemInInv.currentStackSize <= 0)
-        {
-            DeselectSellSlot();
-            selectedSellItem = null;
-        }
-        else if (selectedSellItem == itemInInv)
-        {
-            // 堆叠物品售出部分仍选中，数量滑块收束
-        }
-
-        RefreshUI();
     }
 
-    // ==================== 刷新 ====================
+    private void OnSellClicked()
+    {
+        int sold = shopSystem.TrySell();
+        if (sold > 0)
+        {
+            AudioManager.Instance?.PlayButtonSfx();
+
+            // 卖光后清除视觉选中
+            if (shopSystem.SelectedSellItem == null)
+            {
+                DeselectSellSlotVisual();
+                ClearVisualSelection();
+            }
+        }
+        else
+        {
+            AudioManager.Instance?.PlayDenySfx();
+        }
+    }
+
+    // ==================== UI 刷新（由 ShopSystem.OnDataChanged 触发）====================
 
     private void RefreshUI()
     {
@@ -626,58 +451,58 @@ public class UI_ShopPanel : MonoBehaviour
 
     private void RefreshCurrencyDisplay()
     {
-        if (playerInventory == null) return;
+        var amt = shopSystem.GetPlayerCurrency();
 
-        var amt = CurrencyFormatter.Split(playerInventory.GetCurrency());
+        if (curGoldText != null)
+            curGoldText.text = amt.gold.ToString();
+        if (curGoldIcon != null)
+            curGoldIcon.enabled = true;
 
-        if (curGoldText != null) curGoldText.text = amt.gold.ToString();
-        if (curSilverText != null) curSilverText.text = amt.silver.ToString();
-        if (curCopperText != null) curCopperText.text = amt.copper.ToString();
+        if (curSilverText != null)
+            curSilverText.text = amt.silver.ToString();
+        if (curSilverIcon != null)
+            curSilverIcon.enabled = true;
+
+        if (curCopperText != null)
+            curCopperText.text = amt.copper.ToString();
+        if (curCopperIcon != null)
+            curCopperIcon.enabled = true;
+    }
+
+    private void UpdateBuySellButtons()
+    {
+        // 按钮始终保持可点击（便于播放音效），有效性在 OnClick 中判断
+        buyButton.interactable = true;
+        sellButton.interactable = true;
     }
 
     private void UpdateQuantityControls()
     {
-        float maxQty = GetLegalMaxQuantity();
-
-        if (maxQty < 1)
-        {
-            quantitySlider.SetValueWithoutNotify(0);
-            quantitySlider.interactable = false;
-            minusButton.interactable = false;
-            plusButton.interactable = false;
-            if (quantityText != null) quantityText.text = "0";
-            return;
-        }
+        int maxQty = shopSystem.GetLegalMaxQuantity();
+        if (maxQty < 1) maxQty = 1;
 
         quantitySlider.interactable = true;
         minusButton.interactable = true;
         plusButton.interactable = true;
-        quantitySlider.maxValue = maxQty;
 
-        int cur = Mathf.RoundToInt(quantitySlider.value);
-        if (cur < 1) quantitySlider.SetValueWithoutNotify(1);
-        else if (cur > maxQty) quantitySlider.SetValueWithoutNotify((int)maxQty);
+        float curMax = quantitySlider.maxValue;
+        if (Mathf.Abs(curMax - maxQty) > 0.01f)
+            quantitySlider.maxValue = maxQty;
+
+        // 同步当前值
+        SyncSliderToSystem();
     }
 
     private void UpdatePriceDisplay()
     {
-        int totalCopper = 0;
-        if (isBuyMode && selectedShopSlot != null)
-            totalCopper = selectedShopSlot.ItemData.value * GetQuantity();
-        else if (!isBuyMode && selectedSellItem != null && currentShop != null)
-        {
-            int unit = Mathf.RoundToInt(selectedSellItem.itemData.value * currentShop.buyBackRate);
-            totalCopper = unit * GetQuantity();
-        }
-
+        int total = shopSystem.GetTotalPrice();
         SetMultiPrice(totalGoldText, totalGoldIcon,
                       totalSilverText, totalSilverIcon,
                       totalCopperText, totalCopperIcon,
-                      totalCopper);
+                      total);
     }
 
-    // ==================== 价格排版 ====================
-
+    // 总价始终显示金/银/铜三级，数值为 0 时显示 0
     private void SetMultiPrice(TextMeshProUGUI goldText, Image goldIcon,
                                TextMeshProUGUI silverText, Image silverIcon,
                                TextMeshProUGUI copperText, Image copperIcon,
@@ -685,32 +510,29 @@ public class UI_ShopPanel : MonoBehaviour
     {
         var amt = CurrencyFormatter.Split(copperAmount);
 
-        if (goldText != null)
-        {
-            goldText.text = amt.gold.ToString();
-            goldText.gameObject.SetActive(amt.HasGold);
-        }
-        if (goldIcon != null) goldIcon.enabled = amt.HasGold;
+        if (goldText != null) goldText.text = amt.gold.ToString();
+        if (goldIcon != null) goldIcon.enabled = true;
 
-        if (silverText != null)
-        {
-            silverText.text = amt.silver.ToString();
-            silverText.gameObject.SetActive(amt.HasSilver);
-        }
-        if (silverIcon != null) silverIcon.enabled = amt.HasSilver;
+        if (silverText != null) silverText.text = amt.silver.ToString();
+        if (silverIcon != null) silverIcon.enabled = true;
 
-        if (copperText != null)
-        {
-            copperText.text = amt.copper.ToString();
-            copperText.gameObject.SetActive(amt.HasCopper);
-        }
-        if (copperIcon != null) copperIcon.enabled = amt.HasCopper;
+        if (copperText != null) copperText.text = amt.copper.ToString();
+        if (copperIcon != null) copperIcon.enabled = true;
     }
 
-    // ==================== 辅助 ====================
+    // ==================== 槽位管理 ====================
 
-    private int GetQuantity()
+    private void RemoveNpcSlot(int index)
     {
-        return Mathf.Max(0, Mathf.RoundToInt(quantitySlider.value));
+        if (index < 0 || index >= npcSlots.Count) return;
+
+        var slot = npcSlots[index];
+        if (slot == selectedShopSlot)
+        {
+            slot.SetSelected(false);
+            selectedShopSlot = null;
+        }
+        npcSlots.RemoveAt(index);
+        if (slot != null) Destroy(slot.gameObject);
     }
 }

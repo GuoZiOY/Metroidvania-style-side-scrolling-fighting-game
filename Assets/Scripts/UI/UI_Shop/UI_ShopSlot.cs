@@ -8,9 +8,6 @@ using UnityEngine.EventSystems;
 // 不含拖拽/双击装备/右键消耗品。
 public class UI_ShopSlot : UI_BaseSlot
 {
-    [Header("选中高亮")]
-    [SerializeField] private Image selectionBorder;
-
     [Header("价格显示（金/银/铜）")]
     [SerializeField] private TextMeshProUGUI goldText;
     [SerializeField] private Image goldIcon;
@@ -35,10 +32,6 @@ public class UI_ShopSlot : UI_BaseSlot
     protected override void Awake()
     {
         base.Awake();
-
-        if (selectionBorder != null)
-            selectionBorder.enabled = false;
-
         HidePrice();
     }
 
@@ -83,7 +76,6 @@ public class UI_ShopSlot : UI_BaseSlot
     }
 
     // 更新槽位内金/银/铜显示
-    // 货币图标已在预制体上直接拖入，运行时不修改 sprite
     private void UpdatePriceDisplay()
     {
         int price = GetPrice();
@@ -101,7 +93,7 @@ public class UI_ShopSlot : UI_BaseSlot
             goldText.gameObject.SetActive(amt.HasGold);
         }
         if (goldIcon != null)
-            goldIcon.enabled = amt.HasGold;
+            goldIcon.gameObject.SetActive(amt.HasGold);
 
         if (silverText != null)
         {
@@ -109,7 +101,7 @@ public class UI_ShopSlot : UI_BaseSlot
             silverText.gameObject.SetActive(amt.HasSilver);
         }
         if (silverIcon != null)
-            silverIcon.enabled = amt.HasSilver;
+            silverIcon.gameObject.SetActive(amt.HasSilver);
 
         if (copperText != null)
         {
@@ -117,25 +109,17 @@ public class UI_ShopSlot : UI_BaseSlot
             copperText.gameObject.SetActive(amt.HasCopper);
         }
         if (copperIcon != null)
-            copperIcon.enabled = amt.HasCopper;
+            copperIcon.gameObject.SetActive(amt.HasCopper);
     }
 
     private void HidePrice()
     {
         if (goldText != null) goldText.gameObject.SetActive(false);
-        if (goldIcon != null) goldIcon.enabled = false;
+        if (goldIcon != null) goldIcon.gameObject.SetActive(false);
         if (silverText != null) silverText.gameObject.SetActive(false);
-        if (silverIcon != null) silverIcon.enabled = false;
+        if (silverIcon != null) silverIcon.gameObject.SetActive(false);
         if (copperText != null) copperText.gameObject.SetActive(false);
-        if (copperIcon != null) copperIcon.enabled = false;
-    }
-
-    // 设置选中状态。控制自己的 selectionBorder 边框。
-    public override void SetSelected(bool selected)
-    {
-        base.SetSelected(selected);
-        if (selectionBorder != null)
-            selectionBorder.enabled = selected;
+        if (copperIcon != null) copperIcon.gameObject.SetActive(false);
     }
 
     // ==================== 点击选中 ====================

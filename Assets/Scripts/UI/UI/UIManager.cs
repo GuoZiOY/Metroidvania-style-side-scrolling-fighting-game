@@ -7,7 +7,8 @@ using UnityEngine.UI;
 /// </summary>
 public class UIManager : MonoBehaviour
 {
-    public static bool IsAnyPanelOpen { get; private set; }
+    // 兼容旧代码：外部仍可读 UIManager.IsAnyPanelOpen
+    public static bool IsAnyPanelOpen => ModalStack.IsAnyModalOpen;
 
     #region 面板切换器
     [Header("面板切换器")]
@@ -29,6 +30,7 @@ public class UIManager : MonoBehaviour
     public GameObject skillToolTipObject;    // 技能数据提示框
     public GameObject itemToolTipObject;     // 物品属性提示框
     public GameObject statToolTipObject;     // 角色属性提示框
+    public GameObject eventTipObject;        // 事件提示框
     #endregion
 
     #region 按钮状态颜色设置
@@ -71,7 +73,7 @@ public class UIManager : MonoBehaviour
     /// <summary>主面板显示时：背景/技能槽/提示框/小任务/子面板复位</summary>
     private void OnMainPanelShown(int index)
     {
-        IsAnyPanelOpen = true;
+        ModalStack.Push("panel");
 
         // 背景
         if (panelBackground != null)
@@ -100,7 +102,7 @@ public class UIManager : MonoBehaviour
     /// <summary>主面板全部关闭时：恢复背景/技能槽/小任务</summary>
     private void OnMainPanelHidden()
     {
-        IsAnyPanelOpen = false;
+        ModalStack.Pop("panel");
 
         if (panelBackground != null)
             panelBackground.SetActive(false);
@@ -118,11 +120,24 @@ public class UIManager : MonoBehaviour
     public void ShowSkillPanel()     => mainPanelSwitcher.ShowPanel(IDX_SKILL);
     public void ShowSettingPanel()   => mainPanelSwitcher.ShowPanel(IDX_SETTING);
     public void ShowQuestPanel()     => mainPanelSwitcher.ShowPanel(IDX_QUEST);
+    public void HideAllPanels()      => mainPanelSwitcher.HideAll();
 
     // ==================== 按键控制 ====================
 
     private void Update()
     {
+        // Escape 关闭面板（商店由 UI_ShopPanel 自身处理）
+        if (GameInput.GetKeyDown(GameInput.Action.Escape))
+        {
+            if (mainPanelSwitcher.CurrentIndex >= 0)
+                mainPanelSwitcher.HideAll();
+            return;
+        }
+
+        // 商店打开时禁止切换面板
+        if (UI_ShopPanel.IsShopOpen)
+            return;
+
         if (GameInput.GetKeyDown(GameInput.Action.ToggleCharacterPanel))
             TogglePanelWithKey(IDX_CHARACTER);
 
@@ -174,5 +189,8 @@ public class UIManager : MonoBehaviour
 
         if (statToolTipObject != null)
             statToolTipObject.GetComponent<UI_StatToolTip>()?.ShowToolTip(false, null, StatType.MaxHP);
+
+        if (eventTipObject != null)
+            eventTipObject.GetComponent<UI_EventTip>()?.ForceHideTip();
     }
 }

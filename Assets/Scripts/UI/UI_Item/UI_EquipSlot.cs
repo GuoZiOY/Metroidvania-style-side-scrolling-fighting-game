@@ -9,9 +9,21 @@ public class UI_EquipSlot : UI_ItemSlot, IPointerClickHandler, IItemDropTarget
     [SerializeField] private int typeSlotIndex = 0;//同类型槽位索引（如饰品槽1=0，饰品槽2=1）
     private EquipmentSystem equipmentSystem;
 
+    [Header("高亮设置")]
+    [SerializeField] private Image background;
+    [SerializeField] private Color highlightColor = Color.yellow;
+    private Color originalColor;
+
     private void OnValidate()
     {
         gameObject.name = "装备-" + slotType.ToString();
+    }
+
+    protected override void Awake()
+    {
+        base.Awake();
+        if (background != null)
+            originalColor = background.color;
     }
 
     public void Initialize(EquipmentSystem playerEquipmentSystem)
@@ -86,6 +98,20 @@ public class UI_EquipSlot : UI_ItemSlot, IPointerClickHandler, IItemDropTarget
         }
 
         return true;
+    }
+
+    public override void OnPointerEnter(PointerEventData eventData)
+    {
+        base.OnPointerEnter(eventData);
+        if (background != null)
+            background.color = highlightColor;
+    }
+
+    public override void OnPointerExit(PointerEventData eventData)
+    {
+        base.OnPointerExit(eventData);
+        if (background != null)
+            background.color = originalColor;
     }
 
     public void OnItemDropped(Inventory_Item item, UI_ItemSlot sourceSlot)

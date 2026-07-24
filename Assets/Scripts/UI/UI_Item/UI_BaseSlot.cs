@@ -16,17 +16,11 @@ public abstract class UI_BaseSlot : MonoBehaviour, IPointerEnterHandler, IPointe
     [SerializeField] protected Image itemIcon;
     [SerializeField] protected TextMeshProUGUI itemStackSize;
 
-    [Header("高亮设置")]
-    [SerializeField] protected Image background;
-    [SerializeField] protected Color highlightColor = Color.yellow;
-    protected Color originalColor;
-
     [Header("悬停指示器")]
     [SerializeField] private GameObject hoverIndicator; // 鼠标悬停时显示的边框/发光框
 
     [Header("稀有度背景设置")]
     [SerializeField] protected Image rarityBackground;
-    [SerializeField] protected float rarityBackgroundAlpha = 0.5f;
 
     protected virtual void Awake()
     {
@@ -36,9 +30,6 @@ public abstract class UI_BaseSlot : MonoBehaviour, IPointerEnterHandler, IPointe
             ui = FindAnyObjectByType<UI>(FindObjectsInactive.Include);
 
         rect = GetComponent<RectTransform>();
-
-        if (background != null)
-            originalColor = background.color;
 
         if (hoverIndicator != null)
             hoverIndicator.SetActive(false);
@@ -81,7 +72,7 @@ public abstract class UI_BaseSlot : MonoBehaviour, IPointerEnterHandler, IPointe
 
     public virtual void OnPointerClick(PointerEventData eventData)
     {
-        // 子类覆写以实现选中/买卖等逻辑
+        AudioManager.Instance?.PlayButtonSfx();
     }
 
     // ==================== 悬停 ====================
@@ -91,20 +82,29 @@ public abstract class UI_BaseSlot : MonoBehaviour, IPointerEnterHandler, IPointe
         if (itemInSlot != null && ui != null && ui.itemToolTip != null)
             ui.itemToolTip.ShowToolTip(true, rect, itemInSlot);
 
-        if (background != null)
-            background.color = highlightColor;
-
         if (hoverIndicator != null)
+        {
             hoverIndicator.SetActive(true);
+
+            var legacy = hoverIndicator.GetComponent<Animation>();
+            if (legacy != null) { legacy.Stop(); legacy.Rewind(); legacy.Play(); }
+            else
+            {
+                var mecAnim = hoverIndicator.GetComponent<Animator>();
+                if (mecAnim != null)
+                {
+                    mecAnim.updateMode = AnimatorUpdateMode.UnscaledTime;
+                    mecAnim.enabled = false;
+                    mecAnim.enabled = true;
+                }
+            }
+        }
     }
 
     public virtual void OnPointerExit(PointerEventData eventData)
     {
         if (ui != null && ui.itemToolTip != null)
             ui.itemToolTip.ShowToolTip(false, null);
-
-        if (background != null)
-            background.color = originalColor;
 
         if (hoverIndicator != null)
             hoverIndicator.SetActive(false);
@@ -124,7 +124,6 @@ public abstract class UI_BaseSlot : MonoBehaviour, IPointerEnterHandler, IPointe
             rarity = itemInSlot.itemData.rarity;
 
         Color rarityColor = RarityCalculator.GetRarityColor(rarity);
-        rarityColor.a = rarityBackgroundAlpha;
 
         rarityBackground.enabled = true;
         rarityBackground.color = rarityColor;

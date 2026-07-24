@@ -31,6 +31,7 @@ public class UI_ItemSlot : UI_BaseSlot, IPointerDownHandler, IBeginDragHandler, 
 
     protected void NotifyItemSlotClicked(Inventory_Item item)
     {
+        AudioManager.Instance?.PlayButtonSfx();
         OnItemSlotClicked?.Invoke(item, this);
     }
 

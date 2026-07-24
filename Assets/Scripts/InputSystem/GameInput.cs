@@ -29,6 +29,7 @@ public static class GameInput
         ToggleQuestPanel,
 
         Interact,
+        Escape,
     }
 
     public static event System.Action OnBindingsChanged;
@@ -82,7 +83,7 @@ public static class GameInput
     {
         Action.ToggleCharacterPanel or Action.ToggleSkillPanel or
         Action.ToggleSettingsPanel or Action.ToggleQuestPanel or
-        Action.Interact => true,
+        Action.Interact or Action.Escape => true,
         _ => false,
     };
 
@@ -134,6 +135,7 @@ public static class GameInput
         { Action.ToggleQuestPanel, KeyCode.M },
 
         { Action.Interact, KeyCode.F },
+        { Action.Escape, KeyCode.Escape },
     };
 
     private static void LoadBindings()
