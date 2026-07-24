@@ -233,8 +233,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rarityBackground: {fileID: 1900592899300610798}
   rarityBackgroundAlpha: 0.6
-  pushForce: 2
-  pushDistance: 0.6
+  groundCheckDistance: 0.7
 --- !u!50 &6527328550471139136
 Rigidbody2D:
   serializedVersion: 5
@@ -249,7 +248,7 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_AngularDamping: 0
   m_GravityScale: 3.5
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -278,7 +277,7 @@ CircleCollider2D:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1920
   m_LayerOverridePriority: 0
   m_ForceSendLayers:
     serializedVersion: 2
@@ -333,4 +332,4 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.8
+  m_Radius: 0.5

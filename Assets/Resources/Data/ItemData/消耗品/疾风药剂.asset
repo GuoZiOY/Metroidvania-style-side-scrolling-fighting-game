@@ -20,6 +20,7 @@ MonoBehaviour:
   allowRarityVariation: 1
   maxRaritySteps: 1
   canStackable: 1
+  value: 150
   consumableType: 2
   effectType: 3
   effectValue: 0.3

@@ -101,6 +101,7 @@ public static class ItemCSVImporter
             so.canStackable = CSVHelper.GetBool(row, "canStackable");
             so.allowRarityVariation = CSVHelper.GetBool(row, "allowRarityVariation", true);
             so.maxRaritySteps = CSVHelper.GetInt(row, "maxRaritySteps", 1);
+            so.value = CSVHelper.GetInt(row, "value");
 
             string iconPath = CSVHelper.GetString(row, "iconPath");
             string iconName = CSVHelper.GetString(row, "iconName");

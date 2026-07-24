@@ -20,6 +20,7 @@ MonoBehaviour:
   allowRarityVariation: 1
   maxRaritySteps: 2
   canStackable: 0
+  value: 500
   modifiers:
   - statType: 0
     value: 30

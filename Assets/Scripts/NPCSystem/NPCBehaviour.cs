@@ -1,9 +1,9 @@
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
-/// <summary>
-/// NPC 交互组件。进入触发区显示提示，按 F 打开商店或对话。
-/// </summary>
+// NPC 交互组件。进入触发区显示提示，按 F 打开商店。
+// 提示 UI 效果与存档点一致：淡入淡出 + 上下浮动。
 public class NPCBehaviour : MonoBehaviour
 {
     [Header("NPC 数据")]
@@ -15,14 +15,29 @@ public class NPCBehaviour : MonoBehaviour
 
     [Header("交互提示")]
     [SerializeField] private GameObject promptRoot;        // "按 F 交互" UI
-    [SerializeField] private TextMeshProUGUI promptText;
+
+    [Header("提示参数")]
+    [SerializeField] private float fadeDuration = 0.25f;
+    [SerializeField] private float floatHeight = 0.2f;
+    [SerializeField] private float floatSpeed = 2f;
 
     private bool playerInRange;
+    private CanvasGroup cg;
+    private Vector3 promptBasePos;
+    private Tween floatTween;
 
     private void Awake()
     {
         if (promptRoot != null)
+        {
             promptRoot.SetActive(false);
+
+            cg = promptRoot.GetComponent<CanvasGroup>();
+            if (cg == null) cg = promptRoot.AddComponent<CanvasGroup>();
+            cg.alpha = 0;
+
+            promptBasePos = promptRoot.transform.localPosition;
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -44,23 +59,65 @@ public class NPCBehaviour : MonoBehaviour
         if (!playerInRange) return;
         if (!GameInput.GetKeyDown(GameInput.Action.Interact)) return;
 
-        OnInteract();
-    }
+        // 商店已打开 → 关闭
+        if (UI_ShopPanel.Instance != null && UI_ShopPanel.Instance.gameObject.activeInHierarchy)
+        {
+            UI_ShopPanel.Instance.Close();
+            return;
+        }
 
-    private void OnInteract()
-    {
-        // 商店面板待实现
-        //if (shopData != null)
-        //{
-        //    var shopUI = FindAnyObjectByType<UI_ShopPanel>();
-        //    if (shopUI != null)
-        //        shopUI.Open(shopData);
-        //}
+        // 未打开 → 打开
+        if (shopData != null)
+        {
+            var shopUI = UI_ShopPanel.Instance;
+            if (shopUI != null)
+                shopUI.Open(shopData);
+        }
     }
 
     private void ShowPrompt(bool show)
     {
+        if (promptRoot == null || cg == null) return;
+
+        cg.DOKill();
+
+        if (show)
+        {
+            promptRoot.SetActive(true);
+            cg.alpha = 0;
+            cg.DOFade(1, fadeDuration);
+            StartFloating();
+        }
+        else
+        {
+            cg.DOFade(0, fadeDuration).OnComplete(() => promptRoot.SetActive(false));
+            StopFloating();
+        }
+    }
+
+    private void StartFloating()
+    {
+        StopFloating();
         if (promptRoot == null) return;
-        promptRoot.SetActive(show);
+
+        floatTween = DOTween.To(
+            () => 0f,
+            t => promptRoot.transform.localPosition = promptBasePos + Vector3.up * Mathf.Sin(t * floatSpeed) * floatHeight,
+            Mathf.PI * 2f,
+            Mathf.PI * 2f / floatSpeed
+        ).SetLoops(-1, LoopType.Restart).SetEase(Ease.Linear);
+    }
+
+    private void StopFloating()
+    {
+        floatTween?.Kill();
+        floatTween = null;
+        if (promptRoot != null)
+            promptRoot.transform.localPosition = promptBasePos;
+    }
+
+    private void OnDestroy()
+    {
+        floatTween?.Kill();
     }
 }

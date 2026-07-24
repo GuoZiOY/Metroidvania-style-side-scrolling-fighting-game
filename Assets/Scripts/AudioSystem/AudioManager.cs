@@ -81,6 +81,11 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private UiGroup UI音效;
     [SerializeField] private PlayerGroup 角色;
     [SerializeField] private CombatGroup 战斗;
+
+    [Header("拾取")]
+    [SerializeField] private AudioClip goldPickupSfxClip;
+    [SerializeField, Range(0, 1)] private float goldPickupVolume = 1f;
+
     [SerializeField] private SaveGroup 存档;
     [SerializeField] private TypewriterGroup 打字机;
 
@@ -251,6 +256,7 @@ public class AudioManager : MonoBehaviour
 
     // ==================== 存档 ====================
 
+    public void PlayGoldPickupSfx() => PlayClip(uiSource, goldPickupSfxClip, goldPickupVolume);
     public void PlaySaveSfx() => PlayClip(uiSource, 存档.saveSfxClip, 存档.saveVolume);
     public void PlayLoadSfx() => PlayClip(uiSource, 存档.loadSfxClip, 存档.loadVolume);
 

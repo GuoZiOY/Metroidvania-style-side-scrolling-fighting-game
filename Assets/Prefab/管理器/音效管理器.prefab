@@ -96,6 +96,8 @@ MonoBehaviour:
     counterSuccessVolume: 1
     counterHitSfxClip: {fileID: 8300000, guid: 6865ae8bd47ee764d97563bc14816c61, type: 3}
     counterHitVolume: 1
+  goldPickupSfxClip: {fileID: 8300000, guid: a24067ba9e6d84746a4fb6ee56a78706, type: 3}
+  goldPickupVolume: 1
   "\u5B58\u6863":
     saveSfxClip: {fileID: 8300000, guid: 6067cb60aec25044a9df1c8379af6867, type: 3}
     saveVolume: 1

@@ -243,6 +243,7 @@ public class Player_Combat : Entity_Combat
 
                 bool targetCanBeChased = counterable.CanBeChased;
 
+                AudioManager.Instance?.PlayCounterSuccessSfx();
                 AudioManager.Instance?.PlayCounterHitSfx();
 
                 if (player.VFX != null)

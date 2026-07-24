@@ -81,7 +81,8 @@ public static class GameInput
     private static bool IsToggleAction(Action action) => action switch
     {
         Action.ToggleCharacterPanel or Action.ToggleSkillPanel or
-        Action.ToggleSettingsPanel or Action.ToggleQuestPanel => true,
+        Action.ToggleSettingsPanel or Action.ToggleQuestPanel or
+        Action.Interact => true,
         _ => false,
     };
 

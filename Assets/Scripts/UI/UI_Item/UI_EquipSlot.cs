@@ -44,13 +44,14 @@ public class UI_EquipSlot : UI_ItemSlot, IPointerClickHandler, IItemDropTarget
 
     public override void OnPointerClick(PointerEventData eventData)
     {
-        if (itemInSlot == null)
-            return;
+        if (itemInSlot == null) return;
+
+        // 左键——通知点击（供商店面板监听选中，含槽位引用）
+        if (eventData.button == PointerEventData.InputButton.Left)
+            NotifyItemSlotClicked(itemInSlot); // 内部会传 this
 
         if (eventData.clickCount == 2)
-        {
             NotifyItemSlotDoubleClicked(itemInSlot);
-        }
     }
 
     public override void UpdateSlot(Inventory_Item item)

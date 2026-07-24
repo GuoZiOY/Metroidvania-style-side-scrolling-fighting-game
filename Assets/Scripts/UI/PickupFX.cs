@@ -18,8 +18,8 @@ public class PickupFX : MonoBehaviour
         Instance = this;
     }
 
-    // UI 目标对应的世界坐标
-    public Vector3 WorldPosition
+    // UI 目标实时对应的世界坐标（每帧刷新）
+    private Vector3 WorldPosition
     {
         get
         {
@@ -35,14 +35,22 @@ public class PickupFX : MonoBehaviour
         }
     }
 
-    // 供 Gold / ItemAbout 调用
+    // 供 Gold / ItemAbout 调用，动画期间实时追踪 UI 位置
     public void AnimatePickup(Transform item)
     {
-        Vector3 targetPos = WorldPosition;
-        if (targetPos == Vector3.zero) { Destroy(item.gameObject); return; }
+        if (WorldPosition == Vector3.zero) { Destroy(item.gameObject); return; }
 
-        item.DOScale(shrinkTo, flyDuration).SetEase(flyEase);
-        item.DOMove(targetPos, flyDuration).SetEase(flyEase).OnComplete(() =>
-            Destroy(item.gameObject));
+        Vector3 startPos = item.position;
+        Vector3 startScale = item.localScale;
+        float t = 0f;
+
+        DOTween.To(() => t, v => t = v, 1f, flyDuration)
+            .SetEase(flyEase)
+            .OnUpdate(() =>
+            {
+                item.position = Vector3.Lerp(startPos, WorldPosition, t);
+                item.localScale = Vector3.Lerp(startScale, Vector3.one * shrinkTo, t);
+            })
+            .OnComplete(() => Destroy(item.gameObject));
     }
 }

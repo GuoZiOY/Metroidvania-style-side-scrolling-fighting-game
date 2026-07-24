@@ -6,25 +6,28 @@ public class ItemAbout : MonoBehaviour
     [SerializeField] private SpriteRenderer rarityBackground;
     [SerializeField] private float rarityBackgroundAlpha = 0.5f;
 
-    [Header("物品推开设置")]
-    [SerializeField] private float pushForce = 2f;
-    [SerializeField] private float pushDistance = 0.6f;
-
     private Inventory_Base inventory;
     private SpriteRenderer sr;
-    private Animator anim;
     private Rigidbody2D rb;
     private ItemDataSo itemData;
     private LootedItem lootedItem;
     private Inventory_Item itemToAdd;
     private bool isPickedUp = false;
+    private bool hasLanded = false;
+
+    [Header("地面检测")]
+    [SerializeField] private float groundCheckDistance = 0.6f;
 
     private void Awake()
     {
         sr = GetComponentInChildren<SpriteRenderer>();
-        anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
         InitializeDefaultItem();
+    }
+
+    private void Update()
+    {
+        CheckLanding();
     }
 
     private void InitializeDefaultItem()
@@ -38,7 +41,6 @@ public class ItemAbout : MonoBehaviour
         itemData = data;
         lootedItem = null;
         itemToAdd = new Inventory_Item(itemData);
-
         if (itemData != null)
         {
             gameObject.name = itemData.itemName;
@@ -53,29 +55,34 @@ public class ItemAbout : MonoBehaviour
             Debug.LogError("[ItemAbout] InitializeLootedItem: 数据为空");
             return;
         }
-
         lootedItem = data;
         itemData = data.baseItemData;
         itemToAdd = new Inventory_Item(lootedItem);
         gameObject.name = lootedItem.GetDisplayName();
-
         if (sr != null)
         {
             sr.sprite = itemData.itemIcon;
             sr.color = Color.white;
         }
-
         UpdateRarityBackground();
+    }
+
+    private void CheckLanding()
+    {
+        if (hasLanded || rb == null) return;
+
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, LayerMask.GetMask("Ground"));
+        if (hit.collider != null)
+        {
+            hasLanded = true;
+            rb.linearVelocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         HandlePickup(other);
-    }
-
-    private void OnTriggerStay2D(Collider2D other)
-    {
-        HandleItemCollision(other);
     }
 
     private void OnValidate()
@@ -86,7 +93,7 @@ public class ItemAbout : MonoBehaviour
 
     private void HandlePickup(Collider2D other)
     {
-        if (isPickedUp || itemToAdd == null) return;
+        if (isPickedUp || itemToAdd == null || !hasLanded) return;
         if (!other.CompareTag("Player")) return;
 
         inventory = other.GetComponentInChildren<Inventory_Base>();
@@ -101,11 +108,9 @@ public class ItemAbout : MonoBehaviour
     {
         isPickedUp = true;
         targetInventory.AddItem(itemToAdd);
-
         if (itemData != null && !string.IsNullOrEmpty(itemData.itemId))
             QuestEvents.ReportItemCollected(itemData.itemId, 1);
 
-        // 飞向 UI 目标点
         var cols = GetComponents<Collider2D>();
         foreach (var c in cols) c.enabled = false;
         if (rb != null) rb.simulated = false;
@@ -116,25 +121,15 @@ public class ItemAbout : MonoBehaviour
             Destroy(gameObject);
     }
 
-    private void HandleItemCollision(Collider2D other)
+    private void OnDrawGizmosSelected()
     {
-        if (isPickedUp || rb == null) return;
-
-        ItemAbout otherItem = other.GetComponent<ItemAbout>();
-        if (otherItem == null || otherItem == this || otherItem.isPickedUp) return;
-
-        float distance = Vector2.Distance(transform.position, other.transform.position);
-        if (distance < pushDistance && distance > 0.01f)
-        {
-            Vector2 dir = (transform.position - other.transform.position).normalized;
-            otherItem.rb.linearVelocity = dir * pushForce;
-        }
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(transform.position, transform.position + Vector3.down * groundCheckDistance);
     }
 
     private void UpdateRarityBackground()
     {
         if (rarityBackground == null || lootedItem == null) return;
-
         Color rarityColor = lootedItem.GetRarityColor();
         rarityColor.a = rarityBackgroundAlpha;
         rarityBackground.enabled = true;

@@ -33,15 +33,10 @@ public class LootManager : MonoBehaviour
     [SerializeField] private GameObject goldPrefab;
 
     [Header("掉落效果")]
-    [SerializeField] private float dropSpreadRadius = 1.5f;
     [SerializeField] private float dropHeight = 2f;
     [SerializeField] private float dropForce = 3f;
-    [SerializeField] private float itemRadius = 0.4f;
-    [SerializeField] private float minItemDistance = 0.8f;
 
-    private const float RANDOM_ANGLE_RANGE = 15f;
-    private const float RANDOM_RADIUS_RANGE = 0.2f;
-    private const float VELOCITY_RANDOM_ANGLE_RANGE = 30f;
+    private int currencyCoinCount; // 货币生成计数器，用于左右分布
 
     #endregion
 
@@ -52,6 +47,7 @@ public class LootManager : MonoBehaviour
         if (lootable == null)
             return;
 
+        currencyCoinCount = 0;
         List<LootedItem> itemsToDrop = GenerateLoot(lootable);
 
         if (itemsToDrop.Count > 0)
@@ -125,12 +121,14 @@ public class LootManager : MonoBehaviour
         return items;
     }
 
+    private List<GameObject> spawnedItems = new List<GameObject>();
+
     private void SpawnItems(List<LootedItem> items, Vector3 position)
     {
-        if (items.Count == 0)
-            return;
+        if (items.Count == 0) return;
 
-        List<Vector3> dropPositions = CalculateCircularDropPositions(position, items.Count);
+        Vector3 origin = position + new Vector3(0, dropHeight, 0);
+        spawnedItems.Clear();
 
         for (int i = 0; i < items.Count; i++)
         {
@@ -147,14 +145,19 @@ public class LootManager : MonoBehaviour
             // 物品掉落
             if (lootedItem.baseItemData == null) continue;
 
-            Vector3 spawnPosition = dropPositions[i];
-            GameObject itemObject = Instantiate(itemPrefab, spawnPosition, Quaternion.identity);
-
+            GameObject itemObject = Instantiate(itemPrefab, origin, Quaternion.identity);
             ItemAbout itemAbout = itemObject.GetComponent<ItemAbout>();
             if (itemAbout != null)
             {
                 itemAbout.InitializeLootedItem(lootedItem);
-                ApplyDropPhysics(itemObject, spawnPosition - position);
+                // 与之前生成的掉落物互不碰撞
+                foreach (var prev in spawnedItems)
+                {
+                    if (prev != null)
+                        Physics2D.IgnoreCollision(itemObject.GetComponent<Collider2D>(), prev.GetComponent<Collider2D>());
+                }
+                spawnedItems.Add(itemObject);
+                ApplyDropPhysics(itemObject, i, items.Count);
             }
         }
     }
@@ -174,14 +177,26 @@ public class LootManager : MonoBehaviour
             int count = amount / d.worth;
             if (count <= 0) continue;
 
+            // 收集所有要生成的货币，统一左右散开
+            int coinStart = currencyCoinCount;
+            currencyCoinCount += count;
+
             for (int i = 0; i < count; i++)
             {
+                int idx = coinStart + i;
                 Vector3 spawnPos = position + new Vector3(0, dropHeight, 0);
                 var coin = Instantiate(d.prefab, spawnPos, Quaternion.identity).transform;
                 coin.localScale = Vector3.one * d.scale;
                 var gold = coin.GetComponent<Gold>();
                 gold.worth = d.worth;
-                ApplyDropPhysics(coin.gameObject, position);
+                // 与之前生成的掉落物/金币互不碰撞
+                foreach (var prev in spawnedItems)
+                {
+                    if (prev != null)
+                        Physics2D.IgnoreCollision(coin.GetComponent<Collider2D>(), prev.GetComponent<Collider2D>());
+                }
+                spawnedItems.Add(coin.gameObject);
+                ApplyDropPhysics(coin.gameObject, idx, currencyCoinCount);
             }
             amount -= count * d.worth;
         }
@@ -189,83 +204,21 @@ public class LootManager : MonoBehaviour
 
     #endregion
 
-    #region 私有方法 - 位置计算
-
-    private List<Vector3> CalculateCircularDropPositions(Vector3 centerPosition, int itemCount)
-    {
-        List<Vector3> positions = new List<Vector3>();
-
-        if (itemCount == 1)
-        {
-            positions.Add(centerPosition + new Vector3(0, dropHeight, 0));
-            return positions;
-        }
-
-        float angleStep = 360f / itemCount;
-        float radius = CalculateDropRadius(itemCount);
-
-        for (int i = 0; i < itemCount; i++)
-        {
-            float angle = i * angleStep * Mathf.Deg2Rad;
-            float randomAngleOffset = UnityEngine.Random.Range(-RANDOM_ANGLE_RANGE, RANDOM_ANGLE_RANGE) * Mathf.Deg2Rad;
-            float randomRadiusOffset = UnityEngine.Random.Range(-RANDOM_RADIUS_RANGE, RANDOM_RADIUS_RANGE);
-
-            float finalAngle = angle + randomAngleOffset;
-            float finalRadius = Mathf.Max(minItemDistance / 2f, radius + randomRadiusOffset);
-
-            float x = Mathf.Cos(finalAngle) * finalRadius;
-            float z = Mathf.Sin(finalAngle) * finalRadius;
-
-            Vector3 dropPosition = centerPosition + new Vector3(x, dropHeight, z);
-            positions.Add(dropPosition);
-        }
-
-        return positions;
-    }
-
-    private float CalculateDropRadius(int itemCount)
-    {
-        float radius = dropSpreadRadius;
-        if (itemCount > 3)
-        {
-            radius = dropSpreadRadius * (1f + (itemCount - 3) * 0.2f);
-        }
-        return radius;
-    }
-
-    #endregion
-
     #region 私有方法 - 物理效果
 
-    private void ApplyDropPhysics(GameObject itemObject, Vector3 directionFromCenter)
+    private void ApplyDropPhysics(GameObject itemObject, int index, int total)
     {
         Rigidbody2D rb = itemObject.GetComponent<Rigidbody2D>();
         if (rb == null) return;
 
-        Vector2 velocityDirection = CalculateVelocityDirection(directionFromCenter);
-        Vector2 rotatedDirection = ApplyRandomAngleOffset(velocityDirection);
-        rb.linearVelocity = rotatedDirection * dropForce;
-    }
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
 
-    private Vector2 CalculateVelocityDirection(Vector3 directionFromCenter)
-    {
-        Vector2 velocityDirection = new Vector2(directionFromCenter.x, directionFromCenter.z).normalized;
-        if (velocityDirection == Vector2.zero)
-        {
-            velocityDirection = UnityEngine.Random.insideUnitCircle.normalized;
-        }
-        return velocityDirection;
-    }
+        // 左右交替，排成一条线
+        float direction = (index % 2 == 0) ? -1f : 1f;
+        float speed = dropForce * (0.4f + (index / 2) * 0.5f);
+        float upSpeed = dropForce * 1.0f;
 
-    private Vector2 ApplyRandomAngleOffset(Vector2 direction)
-    {
-        float randomAngle = UnityEngine.Random.Range(-VELOCITY_RANDOM_ANGLE_RANGE, VELOCITY_RANDOM_ANGLE_RANGE) * Mathf.Deg2Rad;
-        float cosAngle = Mathf.Cos(randomAngle);
-        float sinAngle = Mathf.Sin(randomAngle);
-        return new Vector2(
-            direction.x * cosAngle - direction.y * sinAngle,
-            direction.x * sinAngle + direction.y * cosAngle
-        );
+        rb.linearVelocity = new Vector2(direction * speed, upSpeed);
     }
 
     #endregion
