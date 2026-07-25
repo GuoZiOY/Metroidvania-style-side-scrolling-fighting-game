@@ -10,29 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9e8ac0bf7d04aab46a5060af14b189e0, type: 3}
-  m_Name: "QuestData -\u51FB\u6740\u9AB7\u9AC5"
-  m_EditorClassIdentifier: 
-  questId: 310001
-  questName: "\u51FB\u6740\u9AB7\u9AC5"
-  questType: 0
-  description: "\u9B54\u738B\u519B\u6765\u88AD\uFF01\u9AB7\u9AC5\u5148\u9063\u5175\u9690\u85CF\u5728\u9634\u6697\u7684\u5C0F\u5DF7\u91CC\uFF0C\u89E3\u51B3\u5B83\u4EEC\uFF01"
+  m_Name: "\u65B0\u4EFB\u52A1"
+  m_EditorClassIdentifier: Assembly-CSharp::QuestData
+  questId: new_quest_639206106997285968
+  questName: "\u65B0\u4EFB\u52A1"
+  questType: 1
+  description: 
   trigger: 0
-  triggerNpcId: "020001 - \u6751\u957F"
+  triggerNpcId: 
   triggerItemId: 
   autoAccept: 0
   prerequisiteQuestIds: []
   stages:
-  - stageId: stage_3
+  - stageId: stage_1
     description: "\u65B0\u9636\u6BB5"
-    objectives:
-    - type: 1
-      targetId: "110101 - \u76AE\u515C\u5E3D"
-      requiredCount: 1
-      description: 
-    - type: 0
-      targetId: "000001 - \u89D2\u8272"
-      requiredCount: 1
-      description: 
+    objectives: []
     startDialogue: 
     inProgressDialogue: 
     completeDialogue: 
@@ -47,6 +39,5 @@ MonoBehaviour:
     skillPoints: 0
     goldAmount: 0
     items: []
-  followUpQuestIds:
-  - 310002
+  followUpQuestIds: []
   setWorldFlags: []

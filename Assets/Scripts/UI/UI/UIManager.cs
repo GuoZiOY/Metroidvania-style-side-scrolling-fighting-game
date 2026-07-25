@@ -73,6 +73,8 @@ public class UIManager : MonoBehaviour
     /// <summary>主面板显示时：背景/技能槽/提示框/小任务/子面板复位</summary>
     private void OnMainPanelShown(int index)
     {
+        // 面板切换时 HideAllPanels 不触发 OnAllHidden，先清理旧 panel 条码
+        ModalStack.PopAll("panel");
         ModalStack.Push("panel");
 
         // 背景

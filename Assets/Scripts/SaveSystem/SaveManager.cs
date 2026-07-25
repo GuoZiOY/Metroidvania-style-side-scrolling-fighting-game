@@ -245,7 +245,7 @@ public class SaveManager : MonoBehaviour
         var d = new PlayerSaveData();
         d.currentHP = player.health != null ? player.health.GetCurrentHP() : 100;
 
-        var inv = player.GetComponent<PlayerInventorySystem>();
+        var inv = player.GetComponentInChildren<PlayerInventorySystem>();
         if (inv != null) d.currency = inv.GetCurrency();
 
         var lm = player.GetComponent<PlayerLevelManager>();
@@ -396,10 +396,13 @@ public class SaveManager : MonoBehaviour
         QuestManager qm = QuestManager.Instance ?? FindAnyObjectByType<QuestManager>();
         if (qm == null) return d;
 
+        var stageIds = qm.GetActiveQuestStageIdsForSave();
         d.active = new List<QuestSaveEntry>();
         foreach (var kvp in qm.GetActiveQuestsForSave())
         {
-            var entry = new QuestSaveEntry { questId = kvp.Key };
+            var stageId = stageIds.TryGetValue(kvp.Key, out var sid) ? sid : "";
+            var entry = new QuestSaveEntry { questId = kvp.Key, currentStageId = stageId };
+            entry.objectiveProgress = kvp.Value;
             entry.objectives = new List<QuestObjectiveData>();
             if (kvp.Value != null)
             {
@@ -471,7 +474,7 @@ public class SaveManager : MonoBehaviour
 
         player.health?.SetCurrentHP(d.currentHP);
 
-        var inv = player.GetComponent<PlayerInventorySystem>();
+        var inv = player.GetComponentInChildren<PlayerInventorySystem>();
         if (inv != null) inv.SetCurrency(d.currency);
 
         var lm = player.GetComponent<PlayerLevelManager>();

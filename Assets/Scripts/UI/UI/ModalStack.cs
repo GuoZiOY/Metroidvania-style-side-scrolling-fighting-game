@@ -34,6 +34,17 @@ public static class ModalStack
         }
     }
 
+    // 移除栈中所有指定 id 的条目（面板切换时使用）
+    public static void PopAll(string id)
+    {
+        var temp = new List<string>(stack);
+        temp.RemoveAll(item => item == id);
+        stack.Clear();
+        for (int i = temp.Count - 1; i >= 0; i--)
+            stack.Push(temp[i]);
+        OnChanged?.Invoke();
+    }
+
     // 清空栈（场景切换时使用）
     public static void Clear()
     {

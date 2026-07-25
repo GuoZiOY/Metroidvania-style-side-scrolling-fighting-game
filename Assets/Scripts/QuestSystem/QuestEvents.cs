@@ -1,7 +1,11 @@
 using System;
 
+// 任务事件中心。
+// 各系统在对应行为发生时调用 ReportXXX，QuestManager 监听并更新任务进度。
 public static class QuestEvents
 {
+    // ─── 已有事件 ───
+
     /// <summary>敌人被击杀时调用</summary>
     public static event Action<string> OnEnemyKilled;
     public static void ReportEnemyKilled(string enemyId)
@@ -16,10 +20,12 @@ public static class QuestEvents
         OnItemCollected?.Invoke(itemId, count);
     }
 
-    /// <summary>任务完成时调用（仅供 QuestManager 内部使用）</summary>
-    internal static event Action<string> OnQuestCompleted;
-    internal static void ReportQuestCompleted(string questId)
+    // ─── 新增事件 ───
+
+    /// <summary>和 NPC 对话时调用（含任务对话/问候等所有交互）</summary>
+    public static event Action<string> OnNpcTalked;
+    public static void ReportNpcTalked(string npcId)
     {
-        OnQuestCompleted?.Invoke(questId);
+        OnNpcTalked?.Invoke(npcId);
     }
 }

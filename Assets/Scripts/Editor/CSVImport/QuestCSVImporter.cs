@@ -34,7 +34,7 @@ public static class QuestCSVImporter
                 string folderPath = SO_DIR;
                 string fileName = SanitizeFileName(CSVHelper.GetString(row, "name"));
                 if (!AssetDatabase.IsValidFolder(folderPath))
-                    AssetDatabase.CreateFolder("Assets/Data", "QuestData");
+                    AssetDatabase.CreateFolder("Assets/Resources/Data", "QuestData");
                 AssetDatabase.CreateAsset(so, $"{folderPath}/{fileName}.asset");
                 created++;
             }
@@ -45,14 +45,30 @@ public static class QuestCSVImporter
             so.questType = CSVHelper.GetString(row, "type") == "Main" ? QuestType.Main : QuestType.Side;
             so.description = CSVHelper.GetString(row, "description");
 
-                so.objectives = new List<ObjectiveConfig>();
+            // 确保有第一阶段
+            if (so.stages == null)
+                so.stages = new List<QuestStage>();
+            if (so.stages.Count == 0)
+            {
+                so.stages.Add(new QuestStage
+                {
+                    stageId = "stage_1",
+                    description = so.description,
+                    objectives = new List<ObjectiveConfig>(),
+                });
+            }
+
+            var stage = so.stages[0];
+            if (stage.objectives == null)
+                stage.objectives = new List<ObjectiveConfig>();
+
             for (int i = 1; i <= 2; i++)
             {
                 string t = CSVHelper.GetString(row, $"obj{i}_type");
                 string targetId = CSVHelper.GetId(row, $"obj{i}_targetId");
                 if (string.IsNullOrWhiteSpace(t) || string.IsNullOrWhiteSpace(targetId)) continue;
                 int count = CSVHelper.GetInt(row, $"obj{i}_count", 1);
-                so.objectives.Add(new ObjectiveConfig
+                stage.objectives.Add(new ObjectiveConfig
                 {
                     type = t == "Kill" ? ObjectiveType.Kill : ObjectiveType.Collect,
                     targetId = targetId,
@@ -60,8 +76,8 @@ public static class QuestCSVImporter
                 });
             }
 
-            // 奖励
-            so.reward = new QuestReward
+            // 最终奖励
+            so.finalReward = new QuestReward
             {
                 expAmount = CSVHelper.GetInt(row, "rewardExp"),
                 skillPoints = CSVHelper.GetInt(row, "rewardSkillPoints"),
@@ -74,7 +90,7 @@ public static class QuestCSVImporter
                 int amount = CSVHelper.GetInt(row, $"rewardItem{i}_amount", 1);
                 ItemDataSo itemSo = FindItemById(itemId);
                 if (itemSo != null)
-                    so.reward.items.Add(new RewardItem { itemData = itemSo, amount = amount });
+                    so.finalReward.items.Add(new RewardItem { itemData = itemSo, amount = amount });
             }
 
             // 前置
@@ -124,6 +140,4 @@ public static class QuestCSVImporter
         }
         return null;
     }
-
-
 }

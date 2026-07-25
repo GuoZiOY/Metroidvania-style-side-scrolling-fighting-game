@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 任务管理器（单例）。管理所有任务的接受、进度追踪、领取奖励等。
+// 任务管理器（单例）。
+// 管理所有任务的生命周期：接取、阶段推进、进度追踪、领奖、存档。
 public class QuestManager : MonoBehaviour
 {
     public static QuestManager Instance { get; private set; }
@@ -13,21 +14,37 @@ public class QuestManager : MonoBehaviour
     [Header("所有可接任务")]
     [SerializeField] private List<QuestData> allQuestData;
 
-    // 任务状态集合
-    private Dictionary<string, QuestProgress> activeQuests = new();          // 进行中的任务 + 进度
-    private Dictionary<string, QuestProgress> completedQuestProgress = new(); // 已完成任务的最终进度（用于面板显示）
-    private HashSet<string> readyToClaimQuests = new();                       // 已完成条件、等待领取奖励
-    private HashSet<string> completedQuests = new();                          // 已领取奖励
-    private HashSet<string> failedQuests = new();
-    private string trackedQuestId = null;                             // 已失败
+    // ─── 任务运行时状态 ───
 
-    // 事件：任务状态变更时通知 UI
-    public event Action<string> OnQuestAccepted;
-    public event Action<string> OnQuestReadyToClaim;
-    public event Action<string> OnQuestClaimed;
-    public event Action<string> OnQuestFailed;
-    public event Action<string, int, int> OnObjectiveUpdated;
-    public event Action<string> OnTrackChanged; // questId, objectiveIndex, currentCount
+    // 进行中的任务（任务ID → 进度）
+    private Dictionary<string, QuestProgress> activeQuests = new();
+
+    // 已完成但尚未领取最终奖励的任务
+    private HashSet<string> readyToClaimQuests = new();
+
+    // 已完成的最终任务进度（供面板查阅）
+    private Dictionary<string, QuestProgress> completedQuestProgress = new();
+
+    // 已领取奖励
+    private HashSet<string> completedQuests = new();
+
+    // 已失败
+    private HashSet<string> failedQuests = new();
+
+    // 正在追踪的任务ID
+    private string trackedQuestId = null;
+
+    // ─── 事件 ───
+
+    public event Action<string> OnQuestAccepted;              // questId
+    public event Action<string> OnQuestStageChanged;          // questId → 新 stageId
+    public event Action<string> OnQuestReadyToClaim;          // 最终阶段完成
+    public event Action<string> OnQuestClaimed;               // 奖励已领取
+    public event Action<string> OnQuestFailed;                // 任务失败
+    public event Action<string, int, int> OnObjectiveUpdated; // questId, objIndex, currentCount
+    public event Action<string> OnTrackChanged;               // 追踪变更
+
+    // ─── 初始化 ───
 
     private void Awake()
     {
@@ -49,87 +66,92 @@ public class QuestManager : MonoBehaviour
     {
         QuestEvents.OnEnemyKilled += HandleEnemyKilled;
         QuestEvents.OnItemCollected += HandleItemCollected;
+        QuestEvents.OnNpcTalked += HandleNpcTalked;
     }
 
     private void OnDisable()
     {
         QuestEvents.OnEnemyKilled -= HandleEnemyKilled;
         QuestEvents.OnItemCollected -= HandleItemCollected;
+        QuestEvents.OnNpcTalked -= HandleNpcTalked;
     }
+
+    // ─── 事件处理 ───
 
     private void HandleEnemyKilled(string enemyId)
     {
-        if (string.IsNullOrEmpty(enemyId))
-            return;
-
-        TryProgressAll(ObjectiveType.Kill, enemyId, 1);
+        if (string.IsNullOrEmpty(enemyId)) return;
+        TryProgressObjective(ObjectiveType.Kill, enemyId, 1);
     }
 
     private void HandleItemCollected(string itemId, int count)
     {
-        if (string.IsNullOrEmpty(itemId))
-            return;
-
-        TryProgressAll(ObjectiveType.Collect, itemId, count);
+        if (string.IsNullOrEmpty(itemId)) return;
+        TryProgressObjective(ObjectiveType.Collect, itemId, count);
     }
 
-    private void TryProgressAll(ObjectiveType type, string targetId, int count)
+    private void HandleNpcTalked(string npcId)
     {
-        List<string> keys = CopyActiveKeys();
+        if (string.IsNullOrEmpty(npcId)) return;
+        TryProgressObjective(ObjectiveType.TalkToNPC, npcId, 1);
+    }
 
-        foreach (var questId in keys)
+    // ─── 进度更新（核心） ───
+
+    // 对所有进行中任务的当前阶段，匹配目标类型+ID并增加进度
+    private void TryProgressObjective(ObjectiveType type, string targetId, int count)
+    {
+        foreach (var questId in CopyActiveKeys())
         {
             var quest = GetQuestData(questId);
-            if (quest == null)
-                continue;
+            if (quest == null) continue;
 
             var progress = activeQuests[questId];
+            var stage = quest.GetStage(progress.currentStageId);
+            if (stage == null || stage.objectives == null) continue;
 
-            for (int i = 0; i < quest.objectives.Count; i++)
+            bool anyUpdated = false;
+
+            for (int i = 0; i < stage.objectives.Count; i++)
             {
-                var obj = quest.objectives[i];
+                var obj = stage.objectives[i];
+                if (obj.type != type || obj.targetId != targetId) continue;
 
-                if (obj.type != type || obj.targetId != targetId)
-                    continue;
-                if (progress.objectiveProgress[i] >= obj.requiredCount)
-                    continue;
+                // 确保进度数组长度匹配
+                if (i >= progress.objectiveProgress.Length)
+                    Array.Resize(ref progress.objectiveProgress, stage.objectives.Count);
+
+                if (progress.objectiveProgress[i] >= obj.requiredCount) continue;
 
                 progress.objectiveProgress[i] = Mathf.Min(
                     progress.objectiveProgress[i] + count, obj.requiredCount);
 
-                OnObjectiveUpdated?.Invoke(quest.questId, i, progress.objectiveProgress[i]);
+                OnObjectiveUpdated?.Invoke(questId, i, progress.objectiveProgress[i]);
+                anyUpdated = true;
+            }
+
+            // 当前阶段所有目标完成 → 标记「阶段完成」（仅记录，等待 NPC 对话推进）
+            if (anyUpdated && IsCurrentStageComplete(quest, progress))
+            {
+                // 检查是否是最终阶段 → 标记为可领奖
+                if (string.IsNullOrEmpty(stage.nextStageId))
+                {
+                    SetQuestReadyToClaim(questId);
+                }
+                // 非最终阶段：等待 NPC 对话调用 AdvanceToNextStage 推进
             }
         }
     }
 
     private List<string> CopyActiveKeys()
     {
-        List<string> keys = new List<string>();
+        var keys = new List<string>();
         foreach (var kvp in activeQuests)
             keys.Add(kvp.Key);
         return keys;
     }
 
-    private bool CheckQuestComplete(QuestData quest, QuestProgress progress)
-    {
-        for (int i = 0; i < quest.objectives.Count; i++)
-        {
-            if (progress.objectiveProgress[i] < quest.objectives[i].requiredCount)
-                return false;
-        }
-        return true;
-    }
-
-    private void SetQuestReadyToClaim(string questId)
-    {
-        if (readyToClaimQuests.Contains(questId))
-            return;
-
-        readyToClaimQuests.Add(questId);
-        OnQuestReadyToClaim?.Invoke(questId);
-        eventTip?.ShowQuestCompleted(GetQuestData(questId)?.questName ?? questId);
-        Debug.Log($"[任务] 可领取奖励: {GetQuestData(questId)?.questName}");
-    }
+    // ─── 接取任务 ───
 
     public bool AcceptQuest(string questId)
     {
@@ -139,48 +161,119 @@ public class QuestManager : MonoBehaviour
             return false;
 
         var quest = GetQuestData(questId);
-        if (quest == null)
-            return false;
+        if (quest == null) return false;
 
-        if (quest.prerequisiteQuestIds != null)
+        // 前置任务检查
+        if (!ArePrerequisitesMet(quest)) return false;
+
+        // 初始化为第一阶段
+        var firstStage = quest.GetFirstStage();
+        if (firstStage == null)
         {
-            foreach (var prereq in quest.prerequisiteQuestIds)
-            {
-                if (!completedQuests.Contains(prereq))
-                    return false;
-            }
+            Debug.LogWarning($"[任务] {quest.questName} 没有配置阶段");
+            return false;
         }
 
-        var progress = new QuestProgress(quest.objectives.Count);
+        var progress = new QuestProgress(firstStage.stageId, firstStage.objectives?.Count ?? 0);
         activeQuests[questId] = progress;
 
-        // 接受任务时检查背包，更新已有物品的收集进度
+        // 接受时同步背包已有的收集进度
         SyncCollectProgressFromInventory(quest, progress);
 
         OnQuestAccepted?.Invoke(questId);
-        eventTip?.ShowQuestAccepted(GetQuestData(questId)?.questName ?? questId);
+        eventTip?.ShowQuestAccepted(quest.questName ?? questId);
         Debug.Log($"[任务] 接受: {quest.questName}");
         return true;
     }
 
-    public bool ClaimQuest(string questId)
+    // ─── 阶段推进 ───
+
+    // 推进到下一阶段（NPC 对话中调用）
+    public bool AdvanceToNextStage(string questId)
     {
-        if (!readyToClaimQuests.Contains(questId))
-            return false;
+        if (!activeQuests.ContainsKey(questId)) return false;
 
         var quest = GetQuestData(questId);
-        if (quest == null)
+        if (quest == null) return false;
+
+        var progress = activeQuests[questId];
+        var currentStage = quest.GetStage(progress.currentStageId);
+        if (currentStage == null) return false;
+
+        // 检查当前阶段是否真的完成了
+        if (!IsCurrentStageComplete(quest, progress))
+        {
+            Debug.Log($"[任务] 阶段未完成，无法推进");
             return false;
+        }
+
+        // 发放阶段奖励
+        GrantReward(currentStage.stageReward);
+
+        // 自动找到下一阶段（按列表顺序）
+        int currentIdx = quest.stages.IndexOf(currentStage);
+        if (currentIdx < 0 || currentIdx >= quest.stages.Count - 1)
+        {
+            Debug.LogWarning("[任务] 已是最终阶段，无法推进");
+            return false;
+        }
+
+        var nextStage = quest.stages[currentIdx + 1];
+        progress.currentStageId = nextStage.stageId;
+        progress.objectiveProgress = new int[nextStage.objectives?.Count ?? 0];
+
+        OnQuestStageChanged?.Invoke(questId);
+        Debug.Log($"[任务] 推进到阶段 {nextStage.stageId}: {quest.questName}");
+        return true;
+    }
+
+    // ─── 领取最终奖励 ───
+
+    public bool ClaimFinalReward(string questId)
+    {
+        if (!readyToClaimQuests.Contains(questId)) return false;
+
+        var quest = GetQuestData(questId);
+        if (quest == null) return false;
 
         readyToClaimQuests.Remove(questId);
         completedQuests.Add(questId);
 
         if (activeQuests.TryGetValue(questId, out var finalProgress))
             completedQuestProgress[questId] = finalProgress;
-
         activeQuests.Remove(questId);
 
-        var reward = quest.reward;
+        // 发放最终奖励
+        GrantReward(quest.finalReward);
+
+        // 设置世界状态
+        if (quest.setWorldFlags != null)
+        {
+            foreach (var flag in quest.setWorldFlags)
+                WorldState.Set(flag, true);
+        }
+
+        // 自动接取后续任务
+        if (quest.followUpQuestIds != null)
+        {
+            foreach (var nextId in quest.followUpQuestIds)
+            {
+                if (GetQuestData(nextId)?.autoAccept == true)
+                    AcceptQuest(nextId);
+            }
+        }
+
+        OnQuestClaimed?.Invoke(questId);
+        eventTip?.ShowQuestCompleted(quest.questName ?? questId);
+        Debug.Log($"[任务] 已完成并领取奖励: {quest.questName}");
+        return true;
+    }
+
+    // ─── 奖励发放 ───
+
+    private void GrantReward(QuestReward reward)
+    {
+        if (reward == null) return;
 
         if (reward.expAmount > 0 && PlayerLevelManager.Instance != null)
             PlayerLevelManager.Instance.AddExp(reward.expAmount);
@@ -193,14 +286,21 @@ public class QuestManager : MonoBehaviour
                 SkillPointManager.Instance.AddSkillPoints(reward.skillPoints, "任务奖励");
         }
 
-        if (reward.items != null && reward.items.Count > 0)
+        if (reward.goldAmount > 0)
+        {
+            var invSys = FindAnyObjectByType<PlayerInventorySystem>();
+            if (invSys != null)
+                invSys.AddCurrency(reward.goldAmount);
+        }
+
+        if (reward.items != null)
         {
             var inventory = FindAnyObjectByType<Inventory_Player>();
             if (inventory != null)
             {
                 foreach (var rewardItem in reward.items)
                 {
-                    if (rewardItem != null && rewardItem.itemData != null)
+                    if (rewardItem?.itemData != null)
                     {
                         for (int i = 0; i < rewardItem.amount; i++)
                             inventory.AddItem(new Inventory_Item(rewardItem.itemData));
@@ -208,72 +308,104 @@ public class QuestManager : MonoBehaviour
                 }
             }
         }
-
-        OnQuestClaimed?.Invoke(questId);
-        Debug.Log($"[任务] 已领取奖励: {quest.questName}");
-        return true;
     }
 
-    /// <summary>手动提交任务：检查进度 → 收集任务扣除物品 → 完成</summary>
-    public bool SubmitQuest(string questId)
+    // ─── 查询 ───
+
+    public bool IsQuestAvailable(string questId)
     {
-        if (!activeQuests.ContainsKey(questId))
+        if (activeQuests.ContainsKey(questId) ||
+            readyToClaimQuests.Contains(questId) ||
+            completedQuests.Contains(questId) ||
+            failedQuests.Contains(questId))
             return false;
 
         var quest = GetQuestData(questId);
-        if (quest == null)
-            return false;
+        return quest != null && ArePrerequisitesMet(quest);
+    }
 
-        var progress = activeQuests[questId];
+    public QuestStage GetCurrentStage(string questId)
+    {
+        if (!activeQuests.TryGetValue(questId, out var progress)) return null;
+        var quest = GetQuestData(questId);
+        return quest?.GetStage(progress.currentStageId);
+    }
 
-        // 收集目标 → 检查并扣除背包物品
-        var inventory = FindAnyObjectByType<Inventory_Player>();
-        for (int i = 0; i < quest.objectives.Count; i++)
+    public string GetCurrentStageId(string questId)
+    {
+        return activeQuests.TryGetValue(questId, out var progress) ? progress.currentStageId : null;
+    }
+
+    public int[] GetStageProgress(string questId)
+    {
+        return activeQuests.TryGetValue(questId, out var progress) ? progress.objectiveProgress : null;
+    }
+
+    public bool IsCurrentStageComplete(QuestData quest, QuestProgress progress)
+    {
+        var stage = quest.GetStage(progress.currentStageId);
+        if (stage?.objectives == null) return false;
+
+        // 确保进度数组长度匹配
+        if (progress.objectiveProgress.Length < stage.objectives.Count)
+            Array.Resize(ref progress.objectiveProgress, stage.objectives.Count);
+
+        for (int i = 0; i < stage.objectives.Count; i++)
         {
-            if (quest.objectives[i].type != ObjectiveType.Collect)
-                continue;
-
-            int required = quest.objectives[i].requiredCount;
-            if (inventory == null || CountItemsInInventory(inventory, quest.objectives[i].targetId) < required)
-            {
-                Debug.LogWarning("[任务] 背包中物品不足，无法提交");
+            if (progress.objectiveProgress[i] < stage.objectives[i].requiredCount)
                 return false;
-            }
-
-            RemoveItemsFromInventory(inventory, quest.objectives[i].targetId, required);
-            progress.objectiveProgress[i] = required;
-            OnObjectiveUpdated?.Invoke(questId, i, progress.objectiveProgress[i]);
         }
-
-        // 检查所有目标是否完成
-        if (!CheckQuestComplete(quest, progress))
-        {
-            Debug.Log("[任务] 目标尚未全部完成，无法提交");
-            return false;
-        }
-
-        SetQuestReadyToClaim(quest.questId);
-        Debug.Log($"[任务] 提交完成: {quest.questName}");
         return true;
     }
 
-    /// <summary>接受任务时：检查背包已有物品，同步收集进度</summary>
+    public bool IsCurrentStageComplete(string questId)
+    {
+        if (!activeQuests.TryGetValue(questId, out var progress)) return false;
+        var quest = GetQuestData(questId);
+        return quest != null && IsCurrentStageComplete(quest, progress);
+    }
+
+    private bool ArePrerequisitesMet(QuestData quest)
+    {
+        if (quest.prerequisiteQuestIds != null)
+        {
+            foreach (var id in quest.prerequisiteQuestIds)
+            {
+                if (!completedQuests.Contains(id))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    // ─── 标记为可领奖 ───
+
+    private void SetQuestReadyToClaim(string questId)
+    {
+        if (readyToClaimQuests.Contains(questId)) return;
+        readyToClaimQuests.Add(questId);
+        OnQuestReadyToClaim?.Invoke(questId);
+    }
+
+    // ─── 同步背包收集进度 ───
+
     private void SyncCollectProgressFromInventory(QuestData quest, QuestProgress progress)
     {
+        var stage = quest.GetStage(progress.currentStageId);
+        if (stage?.objectives == null) return;
+
         var inventory = FindAnyObjectByType<Inventory_Player>();
-        if (inventory == null)
-            return;
+        if (inventory == null) return;
 
-        for (int i = 0; i < quest.objectives.Count; i++)
+        for (int i = 0; i < stage.objectives.Count; i++)
         {
-            if (quest.objectives[i].type != ObjectiveType.Collect)
-                continue;
+            if (stage.objectives[i].type != ObjectiveType.Collect) continue;
+            if (i >= progress.objectiveProgress.Length) break;
 
-            int count = CountItemsInInventory(inventory, quest.objectives[i].targetId);
-            if (count <= 0)
-                continue;
+            int count = CountItemsInInventory(inventory, stage.objectives[i].targetId);
+            if (count <= 0) continue;
 
-            progress.objectiveProgress[i] = Mathf.Min(count, quest.objectives[i].requiredCount);
+            progress.objectiveProgress[i] = Mathf.Min(count, stage.objectives[i].requiredCount);
             OnObjectiveUpdated?.Invoke(quest.questId, i, progress.objectiveProgress[i]);
         }
     }
@@ -284,127 +416,53 @@ public class QuestManager : MonoBehaviour
         foreach (var kvp in inventory.itemDictionary)
         {
             var item = kvp.Value;
-            if (item != null && item.itemData != null && item.itemData.itemId == itemId)
+            if (item?.itemData != null && item.itemData.itemId == itemId)
                 total += item.currentStackSize;
         }
         return total;
     }
 
-    private void RemoveItemsFromInventory(Inventory_Base inventory, string itemId, int count)
-    {
-        int remaining = count;
-        var keysToRemove = new List<int>();
-
-        foreach (var kvp in inventory.itemDictionary)
-        {
-            if (remaining <= 0)
-                break;
-
-            var item = kvp.Value;
-            if (item == null || item.itemData == null || item.itemData.itemId != itemId)
-                continue;
-
-            if (item.currentStackSize <= remaining)
-            {
-                remaining -= item.currentStackSize;
-                keysToRemove.Add(kvp.Key);
-            }
-            else
-            {
-                item.currentStackSize -= remaining;
-                remaining = 0;
-            }
-        }
-
-        foreach (var key in keysToRemove)
-            inventory.RemoveItemAtSlot(key);
-
-        inventory.TriggerInventoryUpdate();
-    }
-
-    public void ToggleTrack(string questId)
-    {
-        if (trackedQuestId == questId)
-            trackedQuestId = null;
-        else
-            trackedQuestId = questId;
-        OnTrackChanged?.Invoke(questId);
-    }
-
-    public bool IsTracked(string questId) => trackedQuestId == questId;
-
-    public List<string> GetTrackedQuestIds()
-    {
-        if (trackedQuestId == null) return new List<string>();
-        return new List<string> { trackedQuestId };
-    }
+    // ─── 失败 / 追踪 ───
 
     public void MarkQuestFailed(string questId)
     {
-        if (failedQuests.Contains(questId))
-            return;
+        if (failedQuests.Contains(questId)) return;
 
         activeQuests.Remove(questId);
         readyToClaimQuests.Remove(questId);
         failedQuests.Add(questId);
         OnQuestFailed?.Invoke(questId);
-        eventTip?.ShowQuestFailed(GetQuestData(questId)?.questName ?? questId);
-        Debug.Log($"[任务] 失败: {GetQuestData(questId)?.questName}");
+
+        var quest = GetQuestData(questId);
+        eventTip?.ShowQuestFailed(quest?.questName ?? questId);
+        Debug.Log($"[任务] 失败: {quest?.questName}");
     }
 
-    public List<QuestData> GetAvailableQuests()
+    public void ToggleTrack(string questId)
     {
-        List<QuestData> available = new List<QuestData>();
-
-        foreach (var quest in allQuestData)
-        {
-            if (activeQuests.ContainsKey(quest.questId))
-                continue;
-            if (readyToClaimQuests.Contains(quest.questId))
-                continue;
-            if (completedQuests.Contains(quest.questId))
-                continue;
-            if (failedQuests.Contains(quest.questId))
-                continue;
-            if (!ArePrerequisitesMet(quest))
-                continue;
-
-            available.Add(quest);
-        }
-
-        return available;
+        trackedQuestId = trackedQuestId == questId ? null : questId;
+        OnTrackChanged?.Invoke(questId);
     }
 
-    private bool ArePrerequisitesMet(QuestData quest)
-    {
-        if (quest.prerequisiteQuestIds == null)
-            return true;
+    public bool IsTracked(string questId) => trackedQuestId == questId;
+    public string GetTrackedQuestId() => trackedQuestId;
 
-        foreach (var id in quest.prerequisiteQuestIds)
-        {
-            if (!completedQuests.Contains(id))
-                return false;
-        }
-        return true;
-    }
+    // ─── 状态查询 ───
 
     public QuestData GetQuestData(string questId)
     {
         foreach (var quest in allQuestData)
         {
-            if (quest.questId == questId)
-                return quest;
+            if (quest.questId == questId) return quest;
         }
         return null;
     }
 
     public QuestProgress GetProgress(string questId)
     {
-        if (activeQuests.TryGetValue(questId, out var progress))
-            return progress;
-
-        completedQuestProgress.TryGetValue(questId, out var completed);
-        return completed;
+        if (activeQuests.TryGetValue(questId, out var p)) return p;
+        completedQuestProgress.TryGetValue(questId, out var cp);
+        return cp;
     }
 
     public bool IsActive(string questId)       => activeQuests.ContainsKey(questId);
@@ -412,33 +470,59 @@ public class QuestManager : MonoBehaviour
     public bool IsCompleted(string questId)    => completedQuests.Contains(questId);
     public bool IsFailed(string questId)       => failedQuests.Contains(questId);
 
+    public QuestData[] GetAllQuestData()       => allQuestData?.ToArray();
+
     public List<string> GetActiveQuestIds()
     {
-        List<string> ids = new List<string>();
-        foreach (var kvp in activeQuests)
-            ids.Add(kvp.Key);
+        var ids = new List<string>();
+        foreach (var kvp in activeQuests) ids.Add(kvp.Key);
         return ids;
     }
 
     public List<string> GetReadyToClaimQuestIds()
     {
-        List<string> ids = new List<string>();
-        foreach (var id in readyToClaimQuests)
-            ids.Add(id);
-        return ids;
+        return new List<string>(readyToClaimQuests);
     }
 
     public List<string> GetCompletedQuestIds()
     {
-        List<string> ids = new List<string>();
-        foreach (var id in completedQuests)
-            ids.Add(id);
-        return ids;
+        return new List<string>(completedQuests);
     }
 
-    public List<QuestData> GetAllQuestData() => allQuestData;
+    public List<string> GetFailedQuestIds()
+    {
+        return new List<string>(failedQuests);
+    }
 
-    // ==================== 存档接口 ====================
+    // ─── 获取可接取的任务列表（供面板和 NPC 使用） ───
+
+    public List<QuestData> GetAvailableQuests()
+    {
+        var available = new List<QuestData>();
+        if (allQuestData == null) return available;
+
+        foreach (var quest in allQuestData)
+        {
+            if (!IsQuestAvailable(quest.questId)) continue;
+            available.Add(quest);
+        }
+        return available;
+    }
+
+    // ─── 存档 ───
+
+    [Serializable]
+    public class QuestProgress
+    {
+        public string currentStageId;
+        public int[] objectiveProgress;
+
+        public QuestProgress(string stageId, int objectiveCount)
+        {
+            currentStageId = stageId;
+            objectiveProgress = new int[objectiveCount];
+        }
+    }
 
     public Dictionary<string, int[]> GetActiveQuestsForSave()
     {
@@ -448,55 +532,39 @@ public class QuestManager : MonoBehaviour
         return result;
     }
 
-    public List<string> GetReadyToClaimQuestsForSave()
+    public Dictionary<string, string> GetActiveQuestStageIdsForSave()
     {
-        return new List<string>(readyToClaimQuests);
+        var result = new Dictionary<string, string>();
+        foreach (var kvp in activeQuests)
+            result[kvp.Key] = kvp.Value.currentStageId;
+        return result;
     }
 
-    public List<string> GetCompletedQuestsForSave()
-    {
-        return new List<string>(completedQuests);
-    }
-
-    public List<string> GetFailedQuestsForSave()
-    {
-        return new List<string>(failedQuests);
-    }
-
-    public string GetTrackedQuestIdForSave()
-    {
-        return trackedQuestId;
-    }
+    public List<string> GetReadyToClaimQuestsForSave() => new(readyToClaimQuests);
+    public List<string> GetCompletedQuestsForSave()    => new(completedQuests);
+    public List<string> GetFailedQuestsForSave()       => new(failedQuests);
+    public string GetTrackedQuestIdForSave()            => trackedQuestId;
 
     public void LoadFromSave(QuestSaveData d)
     {
         if (d == null) return;
 
-        // 清空当前状态
         activeQuests.Clear();
         readyToClaimQuests.Clear();
         completedQuests.Clear();
         failedQuests.Clear();
 
-        // 恢复进行中
         if (d.active != null)
         {
             foreach (var entry in d.active)
             {
-                var progress = new QuestProgress(entry.objectives?.Count ?? 0);
-                if (entry.objectives != null)
-                {
-                    for (int i = 0; i < entry.objectives.Count; i++)
-                    {
-                        if (i < progress.objectiveProgress.Length)
-                            progress.objectiveProgress[i] = entry.objectives[i].currentCount;
-                    }
-                }
+                var progress = new QuestProgress(entry.currentStageId, entry.objectiveProgress?.Length ?? 0);
+                if (entry.objectiveProgress != null)
+                    progress.objectiveProgress = (int[])entry.objectiveProgress.Clone();
                 activeQuests[entry.questId] = progress;
             }
         }
 
-        // 恢复其他状态
         if (d.readyToClaim != null)
             foreach (var id in d.readyToClaim) readyToClaimQuests.Add(id);
         if (d.completed != null)
@@ -505,16 +573,5 @@ public class QuestManager : MonoBehaviour
             foreach (var id in d.failed) failedQuests.Add(id);
 
         trackedQuestId = d.trackedQuestId;
-    }
-
-    [Serializable]
-    public class QuestProgress
-    {
-        public int[] objectiveProgress;
-
-        public QuestProgress(int objectiveCount)
-        {
-            objectiveProgress = new int[objectiveCount];
-        }
     }
 }

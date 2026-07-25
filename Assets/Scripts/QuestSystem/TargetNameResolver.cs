@@ -55,7 +55,13 @@ public static class TargetNameResolver
         if (string.IsNullOrEmpty(targetId)) return targetId;
         if (!initialized) Initialize();
 
-        var dict = type == ObjectiveType.Kill ? entityNames : itemNames;
+        var dict = type switch
+        {
+            ObjectiveType.Kill => entityNames,
+            ObjectiveType.Collect => itemNames,
+            ObjectiveType.TalkToNPC => entityNames,  // NPC ID 暂用实体表
+            _ => itemNames,
+        };
         return dict.TryGetValue(targetId, out var name) ? name : targetId;
     }
 }

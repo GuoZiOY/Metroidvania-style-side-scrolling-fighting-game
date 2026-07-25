@@ -3811,6 +3811,7 @@ RectTransform:
   - {fileID: 211090430}
   - {fileID: 485087639}
   - {fileID: 1259315878}
+  - {fileID: 1214}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -1, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3832,10 +3833,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1214}
   m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 210, y: -166.26}
-  m_SizeDelta: {x: 380, y: 44.22}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &1182
 RectTransform:
@@ -4365,12 +4366,12 @@ RectTransform:
   - {fileID: 1270}
   - {fileID: 1264}
   - {fileID: 1180}
-  m_Father: {fileID: 1268}
+  m_Father: {fileID: 1179}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1786, y: 0}
-  m_SizeDelta: {x: 420, y: 188.37}
+  m_AnchoredPosition: {x: 2527.5, y: -729.37506}
+  m_SizeDelta: {x: 420, y: 0}
   m_Pivot: {x: 0.49999997, y: 0.5}
 --- !u!114 &1215
 MonoBehaviour:
@@ -5226,10 +5227,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1214}
   m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 210, y: -117.47}
-  m_SizeDelta: {x: 380, y: 53.36}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &1265
 RectTransform:
@@ -5327,7 +5328,6 @@ RectTransform:
   - {fileID: 1285}
   - {fileID: 6740967886184861440}
   - {fileID: 1386354933}
-  - {fileID: 1214}
   - {fileID: 1184}
   - {fileID: 1319}
   m_Father: {fileID: 1179}
@@ -5351,10 +5351,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1214}
   m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 210, y: -60.395}
-  m_SizeDelta: {x: 380, y: 60.79}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &1272
 RectTransform:
@@ -7573,11 +7573,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -182.20015
+      value: -182.20018
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.10003662
+      value: 0.099975586
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -21296,7 +21296,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.10003662
+      value: 0.099975586
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -29499,7 +29499,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.09994507
+      value: 0.099975586
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -31523,7 +31523,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.1000061
+      value: -0.099975586
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -35314,6 +35314,7 @@ MonoBehaviour:
   buyButton: {fileID: 1962044667}
   sellButton: {fileID: 200056824}
   closeButton: {fileID: 2103273812}
+  animDuration: 0.3
 --- !u!222 &1259315881
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -35408,7 +35409,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.8241, y: 96}
+  m_AnchoredPosition: {x: 4.8242188, y: 96}
   m_SizeDelta: {x: -43.1061, y: -450}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1267506193
@@ -36110,7 +36111,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.1000061
+      value: -0.099975586
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -48133,7 +48134,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.1000061
+      value: -0.099975586
       objectReference: {fileID: 0}
     - target: {fileID: 1509666252932768257, guid: dbb0a0373acc5104697b0e935e748416, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -50242,14 +50243,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   panelRoot: {fileID: 2097910626}
-  questScrollView: {fileID: 619581181}
+  questListContent: {fileID: 0}
   questEntryPrefab: {fileID: 1430443371752615539, guid: cb57c55e441b32e43bb389a25fbb6dc3, type: 3}
+  tabMain: {fileID: 0}
+  tabSide: {fileID: 0}
+  tabTemporary: {fileID: 0}
+  tabAvailable: {fileID: 0}
   detailNameText: {fileID: 2103185475}
   detailDescText: {fileID: 1930776014}
   objectiveText: {fileID: 1006516099}
-  rewardText: {fileID: 1752162178}
-  claimButton: {fileID: 138116909}
-  acceptButton: {fileID: 136367357}
+  hintText: {fileID: 0}
   trackButton: {fileID: 1996745103}
   detailContent: {fileID: 1611932855}
 --- !u!114 &2097910629
@@ -53010,9 +53013,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50f0b83b278fffc4e901e3fd8e60eecc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCBehaviour
-  npcId: 010011
-  npcName: "\u96D5\u50CF"
+  npcId: 020001
+  npcName: "\u6751\u957F"
   shopData: {fileID: 11400000, guid: e4afbbd914e45ed48b6fd056990ae062, type: 2}
+  npcMenuPrefab: {fileID: 0}
+  uiCanvas: {fileID: 0}
   promptRoot: {fileID: 8841520026965330895}
   fadeDuration: 0.25
   floatHeight: 0.2

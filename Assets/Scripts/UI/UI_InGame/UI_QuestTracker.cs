@@ -98,8 +98,8 @@ public class UI_QuestTracker : MonoBehaviour
         var qm = QuestManager.Instance;
         if (qm == null) return;
 
-        var tracked = qm.GetTrackedQuestIds();
-        bool hasAny = tracked.Count > 0;
+        string trackedId = qm.GetTrackedQuestId();
+        bool hasAny = !string.IsNullOrEmpty(trackedId);
 
         if (nameText != null)
             nameText.gameObject.SetActive(hasAny);
@@ -108,33 +108,41 @@ public class UI_QuestTracker : MonoBehaviour
 
         if (!hasAny) return;
 
-        string questId = tracked[0];
-        var quest = qm.GetQuestData(questId);
-        var progress = qm.GetProgress(questId);
-
+        var quest = qm.GetQuestData(trackedId);
         if (quest == null) return;
 
         // 任务名：显示名称 + 状态
         if (nameText != null)
         {
-            string status = GetStatusText(qm, questId);
+            string status = GetStatusText(qm, trackedId);
             nameText.text = $"{quest.questName} {status}";
         }
 
-        // 任务进度：显示各个目标进度
+        // 任务进度：显示当前阶段的各个目标进度
         if (progressText != null)
         {
+            var stage = qm.GetCurrentStage(trackedId);
+            var stageProgress = qm.GetStageProgress(trackedId);
+
             string str = "";
-            for (int i = 0; i < quest.objectives.Count; i++)
+            if (stage?.objectives != null)
             {
-                var obj = quest.objectives[i];
-                int current = progress?.objectiveProgress[i] ?? 0;
-                string action = obj.type == ObjectiveType.Kill ? "击杀" : "提交";
-                string name = TargetNameResolver.Resolve(obj.type, obj.targetId);
-                str += $"{action} {name} x{obj.requiredCount} <color=#FFD700>{current}</color>/{obj.requiredCount}";
-                if (i < quest.objectives.Count - 1) str += "\n";
+                for (int i = 0; i < stage.objectives.Count; i++)
+                {
+                    var obj = stage.objectives[i];
+                    int current = (stageProgress != null && i < stageProgress.Length) ? stageProgress[i] : 0;
+                    string action = obj.type switch
+                    {
+                        ObjectiveType.Kill => "击杀",
+                        ObjectiveType.Collect => "提交",
+                        ObjectiveType.TalkToNPC => "对话",
+                        _ => "完成",
+                    };
+                    string name = TargetNameResolver.Resolve(obj.type, obj.targetId);
+                    str += $"{action} {name}  <color=#FFD700>{current}</color>/{obj.requiredCount}\n";
+                }
             }
-            progressText.text = str;
+            progressText.text = str.TrimEnd('\n');
         }
     }
 

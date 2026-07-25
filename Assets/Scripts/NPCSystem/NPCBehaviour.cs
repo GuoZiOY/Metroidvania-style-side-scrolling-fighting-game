@@ -11,7 +11,11 @@ public class NPCBehaviour : MonoBehaviour
     [SerializeField] private string npcName;
 
     [Header("商店（可选）")]
-    [SerializeField] private ShopSO shopData;
+    public ShopSO shopData;               // public 供 UI_NpcMenu 读取
+
+    [Header("对话菜单")]
+    [SerializeField] private UI_NpcMenu npcMenuPrefab;  // 菜单预制体引用
+    [SerializeField] private Canvas uiCanvas;            // 菜单实例化的目标 Canvas
 
     [Header("交互提示")]
     [SerializeField] private GameObject promptRoot;        // "按 F 交互" UI
@@ -59,19 +63,23 @@ public class NPCBehaviour : MonoBehaviour
         if (!playerInRange) return;
         if (!GameInput.GetKeyDown(GameInput.Action.Interact)) return;
 
-        // 商店已打开 → 关闭
+        // 已打开 → 关闭
         if (UI_ShopPanel.IsShopOpen)
         {
             UI_ShopPanel.Instance.Close();
             return;
         }
 
-        // 未打开 → 打开
-        if (shopData != null)
+        // 打开对话菜单（菜单内部判断显示哪些选项）
+        var giver = GetComponent<NPCQuestGiver>();
+        if (giver != null || shopData != null)
         {
-            var shopUI = UI_ShopPanel.Instance;
-            if (shopUI != null)
-                shopUI.Open(shopData, npcName);
+            if (npcMenuPrefab != null)
+            {
+                var parent = uiCanvas != null ? uiCanvas.transform : transform.root;
+                var menu = Instantiate(npcMenuPrefab, parent);
+                menu.Open(this, giver);
+            }
         }
     }
 

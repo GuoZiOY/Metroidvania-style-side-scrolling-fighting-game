@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -64,6 +65,11 @@ public class UI_ShopPanel : MonoBehaviour
     [SerializeField] private Button sellButton;
     [SerializeField] private Button closeButton;
 
+    [Header("弹出动画")]
+    [SerializeField] private float animDuration = 0.3f;
+
+    private CanvasGroup canvasGroup;
+
     // ==================== 系统 ====================
 
     private readonly ShopSystem shopSystem = new();
@@ -93,6 +99,10 @@ public class UI_ShopPanel : MonoBehaviour
         buyButton.interactable = false;
         sellButton.interactable = false;
         gameObject.SetActive(false);
+
+        canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
         buyButton.onClick.AddListener(OnBuyClicked);
         sellButton.onClick.AddListener(OnSellClicked);
@@ -127,6 +137,12 @@ public class UI_ShopPanel : MonoBehaviour
 
         transform.root.gameObject.SetActive(true);
         gameObject.SetActive(true);
+        canvasGroup.alpha = 0f;
+        canvasGroup.blocksRaycasts = true;
+        transform.localScale = Vector3.one * 0.85f;
+        transform.DOKill();
+        transform.DOScale(Vector3.one, animDuration).SetEase(Ease.OutBack, 1.3f).SetUpdate(true);
+        canvasGroup.DOFade(1f, animDuration * 0.7f).SetUpdate(true);
         Time.timeScale = 0f;
 
         if (shopNameText != null)
@@ -157,6 +173,7 @@ public class UI_ShopPanel : MonoBehaviour
 
     public void Close()
     {
+        transform.DOKill();
         SetHiddenObjects(false);
         if (panelBackground != null) panelBackground.SetActive(false);
 

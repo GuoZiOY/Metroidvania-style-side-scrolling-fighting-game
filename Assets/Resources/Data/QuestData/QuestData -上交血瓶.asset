@@ -14,18 +14,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   questId: 310002
   questName: "\u4E0A\u4EA4\u8840\u74F6"
-  questType: 1
+  questType: 0
   description: "\u8BB8\u591A\u9547\u6C11\u53D7\u4F24\u4E86\uFF0C\u6025\u9700\u533B\u7597\u7269\u54C1"
-  objectives:
-  - type: 1
-    targetId: 120003
-    requiredCount: 1
-    description: "\u6536\u96C6 \u8840\u74F6 x1"
-    targetName: "\u8840\u74F6"
-  reward:
-    expAmount: 100
+  trigger: 0
+  triggerNpcId: "020003 - \u533B\u751F"
+  triggerItemId: 
+  autoAccept: 0
+  prerequisiteQuestIds:
+  - 310001
+  stages:
+  - stageId: stage_1
+    description: "\u65B0\u9636\u6BB5"
+    objectives:
+    - type: 1
+      targetId: 
+      requiredCount: 1
+      description: 
+    startDialogue: 
+    inProgressDialogue: 
+    completeDialogue: 
+    stageReward:
+      expAmount: 0
+      skillPoints: 0
+      goldAmount: 0
+      items: []
+    nextStageId: 
+  finalReward:
+    expAmount: 0
     skillPoints: 0
-    items:
-    - itemData: {fileID: 11400000, guid: 2acc9834da1cbe54f8fcfa95b4786198, type: 2}
-      amount: 1
-  prerequisiteQuestIds: []
+    goldAmount: 0
+    items: []
+  followUpQuestIds: []
+  setWorldFlags: []

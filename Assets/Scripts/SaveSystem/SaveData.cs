@@ -109,7 +109,9 @@ public class QuestSaveData
 public class QuestSaveEntry
 {
     public string questId;
+    public string currentStageId;                    // 当前阶段 ID
     public List<QuestObjectiveData> objectives;
+    public int[] objectiveProgress;                  // 平铺进度数组（与 List 二选一）
 }
 
 [Serializable]
