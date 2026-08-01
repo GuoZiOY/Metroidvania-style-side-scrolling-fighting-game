@@ -175,20 +175,23 @@ public class PanelSwitcher : MonoBehaviour
         switch (animationType)
         {
             case PanelAnimation.ScaleFade:
+                // 动画加 SetUpdate(true)：面板在暂停（timeScale=0，如铁匠/商店工作台）时也能正常淡入
                 cg.alpha = 0;
                 panel.transform.localScale = originalScales[index] * 0.85f;
                 var seq = DOTween.Sequence();
-                seq.Join(cg.DOFade(1, 0.2f));
-                seq.Join(panel.transform.DOScale(originalScales[index], 0.3f).SetEase(Ease.OutBack, 1.3f));
+                seq.SetUpdate(true);
+                seq.Join(cg.DOFade(1, 0.2f).SetUpdate(true));
+                seq.Join(panel.transform.DOScale(originalScales[index], 0.3f).SetEase(Ease.OutBack, 1.3f).SetUpdate(true));
                 break;
 
             case PanelAnimation.SlideFromRight:
                 cg.alpha = 0;
                 float slideDist = Mathf.Max(rt.rect.width * 0.3f, 50f);
                 var seq2 = DOTween.Sequence();
-                seq2.Join(cg.DOFade(1, 0.15f));
+                seq2.SetUpdate(true);
+                seq2.Join(cg.DOFade(1, 0.15f).SetUpdate(true));
                 seq2.Join(rt.DOAnchorPosX(originalPositions[index].x + slideDist, 0.25f)
-                    .SetEase(Ease.OutCubic).From());
+                    .SetEase(Ease.OutCubic).From().SetUpdate(true));
                 break;
 
             case PanelAnimation.None:
@@ -225,7 +228,8 @@ public class PanelSwitcher : MonoBehaviour
             else
             {
                 btn.transform.DOKill();
-                btn.transform.DOScale(targetScale, 0.2f).SetEase(Ease.OutQuad);
+                // SetUpdate 忽略 timeScale：商店/工作台暂停时按钮选中放大也正常恢复
+                btn.transform.DOScale(targetScale, 0.2f).SetEase(Ease.OutQuad).SetUpdate(true);
             }
         }
     }

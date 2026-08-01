@@ -38,14 +38,30 @@ namespace Networking
 
         private readonly Queue<GameObject> messageQueue = new();
         private bool _isOpen;
+        private bool chatInitialized; // 惰性初始化标记
+
+        void Awake()
+        {
+            EnsureInitialized();
+        }
 
         void Start()
         {
+            EnsureInitialized(); // 兜底：active 场景也保证初始化（幂等）
+        }
+
+        // 惰性初始化：面板初始 inactive 时 Awake 不执行，首次激活/显隐前保证订阅与布局完成
+        private void EnsureInitialized()
+        {
+            if (chatInitialized)
+                return;
+
             if (chatManager == null)
             {
                 Debug.LogError("[UI_Chat] chatManager 未赋值");
-                return;
+                return; // 未接线不置初始化标记，后续可重试
             }
+            chatInitialized = true;
 
             chatManager.OnChatReceived += AddMessage;
 
@@ -94,8 +110,7 @@ namespace Networking
             if (Input.GetKeyDown(sendKey) && !Input.imeIsSelected)
                 SendMessage();
 
-            if (Input.GetKeyDown(KeyCode.Escape))
-                ShowChat(false);
+            // Escape 由 UIManager 统一处理（IsChatFocused 优先关闭聊天）
         }
 
         void OnDestroy()

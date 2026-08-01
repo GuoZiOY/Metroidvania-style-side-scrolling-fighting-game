@@ -5,41 +5,42 @@ using UnityEngine.UI;
 // 放在 UI 系统 Canvas 下，开局隐藏。
 public class UI_NpcMenu : MonoBehaviour
 {
-    public static UI_NpcMenu Instance { get; private set; }
-
-    /// <summary>最后一个交互的 NPC，供子面板关闭后重开菜单使用</summary>
+    // 最后一个交互的 NPC，供子面板关闭后重开菜单使用
     public static NPCBehaviour LastNpc { get; private set; }
 
-    /// <summary>子面板关闭时调用，若没有其他面板打开则自动重开 NPC 菜单</summary>
+    // 子面板关闭时调用，若没有其他面板打开则自动重开 NPC 菜单（经 UIManager 访问，不依赖面板单例）
     public static void TryReopen()
     {
-        if (Instance == null || LastNpc == null) return;
-        if (Instance.gameObject.activeSelf) return;
-        bool anyOpen = UI_ShopPanel.IsShopOpen ||
-            (UI_QuestDialogue.Instance != null && UI_QuestDialogue.Instance.gameObject.activeInHierarchy);
+        var mgr = UIManager.Instance;
+        if (mgr == null || mgr.NpcMenuComponent == null || LastNpc == null)
+            return;
+        if (mgr.NpcMenuComponent.gameObject.activeSelf)
+            return;
+        bool anyOpen = mgr.IsShopOpen ||
+            (mgr.QuestDialogueComponent != null && mgr.QuestDialogueComponent.gameObject.activeInHierarchy);
         if (!anyOpen)
-        {
-            Instance.Open(LastNpc);
-        }
+            mgr.NpcMenuComponent.Open(LastNpc);
     }
 
     [SerializeField] private Button questButton;
     [SerializeField] private Button shopButton;
+    [SerializeField] private Button workbenchButton;
     [SerializeField] private Button dialogueButton;
     [SerializeField] private Button leaveButton;
 
     [SerializeField] private GameObject questButtonRoot;
     [SerializeField] private GameObject shopButtonRoot;
+    [SerializeField] private GameObject workbenchButtonRoot;
 
     private NPCBehaviour currentNpc;
 
     private void Awake()
     {
-        Instance = this;
-        gameObject.SetActive(false);
-
+        // 注意：不在 Awake 里 SetActive(false)——面板收编后初始 inactive，
+        // 首次 Open 的 SetActive(true) 会触发 Awake，若这里再关闭会抵消激活。开局关闭由 UIManager 统一处理。
         questButton.onClick.AddListener(OnQuestClicked);
         shopButton.onClick.AddListener(OnShopClicked);
+        workbenchButton.onClick.AddListener(OnWorkbenchClicked);
         dialogueButton.onClick.AddListener(OnDialogueClicked);
         leaveButton.onClick.AddListener(OnLeaveClicked);
     }
@@ -65,6 +66,10 @@ public class UI_NpcMenu : MonoBehaviour
         if (shopButtonRoot != null)
             shopButtonRoot.SetActive(npc != null && npc.shopData != null);
 
+        // 工作台按钮：铁匠（hasWorkbench）才显示
+        if (workbenchButtonRoot != null)
+            workbenchButtonRoot.SetActive(npc != null && npc.hasWorkbench);
+
         gameObject.SetActive(true);
         ModalStack.Push("npc_menu");
     }
@@ -88,28 +93,28 @@ public class UI_NpcMenu : MonoBehaviour
         if (npc.HasStageToSubmit())
         {
             var quest = npc.GetFirstStageToSubmit();
-            if (quest != null) UI_QuestDialogue.Instance?.ShowForStageComplete(npc, quest);
+            if (quest != null) UIManager.Instance?.QuestDialogueComponent?.ShowForStageComplete(npc, quest);
             return;
         }
 
         if (npc.HasFinalRewardToClaim())
         {
             var quest = npc.GetFirstReadyToClaimQuest();
-            if (quest != null) UI_QuestDialogue.Instance?.ShowForFinalClaim(npc, quest);
+            if (quest != null) UIManager.Instance?.QuestDialogueComponent?.ShowForFinalClaim(npc, quest);
             return;
         }
 
         if (npc.HasAvailableQuest())
         {
             var quest = npc.GetFirstAvailableQuest();
-            if (quest != null) UI_QuestDialogue.Instance?.ShowForAccept(npc, quest);
+            if (quest != null) UIManager.Instance?.QuestDialogueComponent?.ShowForAccept(npc, quest);
             return;
         }
 
         if (npc.HasActiveQuest())
         {
             var quest = npc.GetFirstActiveQuest();
-            if (quest != null) UI_QuestDialogue.Instance?.ShowForInProgress(npc, quest);
+            if (quest != null) UIManager.Instance?.QuestDialogueComponent?.ShowForInProgress(npc, quest);
             return;
         }
     }
@@ -121,7 +126,19 @@ public class UI_NpcMenu : MonoBehaviour
         gameObject.SetActive(false);
         ModalStack.Pop("npc_menu");
 
-        UI_ShopPanel.Instance?.Open(npc.shopData, npc.npcName ?? "");
+        // 统一走 UIManager 打开商店
+        UIManager.Instance?.ShowShop(npc.shopData, npc.npcName ?? "");
+    }
+
+    private void OnWorkbenchClicked()
+    {
+        var npc = currentNpc;
+        if (npc == null) return;
+        gameObject.SetActive(false);
+        ModalStack.Pop("npc_menu");
+
+        // 统一走 UIManager 打开铁匠工作台
+        UIManager.Instance?.ShowBlacksmith();
     }
 
     private void OnDialogueClicked()

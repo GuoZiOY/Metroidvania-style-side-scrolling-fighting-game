@@ -114,6 +114,14 @@ public class UI_EquipSlot : UI_ItemSlot, IPointerClickHandler, IItemDropTarget
             background.color = originalColor;
     }
 
+    // 槽位隐藏时恢复背景色（面板开关不触发 OnPointerExit，防悬停高亮残留）
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        if (background != null)
+            background.color = originalColor;
+    }
+
     public void OnItemDropped(Inventory_Item item, UI_ItemSlot sourceSlot)
     {
         PlayerInventorySystem playerInventorySystem = FindAnyObjectByType<PlayerInventorySystem>();

@@ -160,8 +160,8 @@ public class Entity_Stats : MonoBehaviour
         float reductionMutliplier = Mathf.Clamp(1 - armorReduction, 0, 1);//护甲减免系数 = 1 - 护甲穿透
         float effectiveArmor = GetBaseArmor() * reductionMutliplier;//有效护甲 = 护甲值 * 护甲减免系数   
 
-        float mitigation = effectiveArmor / (effectiveArmor + 100);//护甲减免 = 有效护甲 / (有效护甲 + 100)
-        float mitigationCap = 0.75f;//护甲减免上限 = 0.85f  
+        float mitigation = effectiveArmor / (effectiveArmor + 200);//护甲减免 = 有效护甲 / (有效护甲 + 200)，分母加大降低免伤强度
+        float mitigationCap = 0.6f;//护甲减免上限（原 0.75 过高，下调）
 
         float finalMitigation = Mathf.Clamp(mitigation, 0, mitigationCap);
 

@@ -204,7 +204,12 @@ public static class EquipmentAffixGenerator
                 AffixStatModifier sm = entry.statModifiers[i];
 
                 // 该段独立 roll：负值段（min<0）roll 出负数 = 负面效果
-                float value = Mathf.Round(Random.Range(sm.minValue, sm.maxValue));
+                // 词缀范围含小数（如生命值恢复 0.2~0.5）时保留一位小数（四舍五入）；
+                // 整数范围（攻击等）取整。避免随机出多位小数（如 0.3237033）显示难看
+                float rawValue = Random.Range(sm.minValue, sm.maxValue);
+                bool hasDecimalRange = Mathf.Abs(sm.minValue - Mathf.Round(sm.minValue)) > 0.001f ||
+                                       Mathf.Abs(sm.maxValue - Mathf.Round(sm.maxValue)) > 0.001f;
+                float value = hasDecimalRange ? Mathf.Round(rawValue * 10f) / 10f : Mathf.Round(rawValue);
 
                 // 百分比词缀存为小数（8% → 0.08，-8% → -0.08），固定值存绝对值
                 if (sm.isPercentage)
@@ -230,15 +235,28 @@ public static class EquipmentAffixGenerator
     }
 
     // 根据稀有度确定最大词缀总数（前+后）
+    // 每个稀有度都有概率完全不带词缀（普通60%、精良50%、稀有40%、史诗30%、传说20%），带则按稀有度决定数量
     private static int GetMaxAffixCount(LootRarity rarity)
     {
+        float noAffixChance = rarity switch
+        {
+            LootRarity.普通 => 0.6f,
+            LootRarity.精良 => 0.5f,
+            LootRarity.稀有 => 0.4f,
+            LootRarity.史诗 => 0.3f,
+            LootRarity.传说 => 0.2f,
+            _ => 0.5f
+        };
+        if (Random.value < noAffixChance)
+            return 0; // 完全不带词缀
+
         return rarity switch
         {
-            LootRarity.普通 => Random.value < 0.5f ? 1 : 0, // 50% 概率 1 个词缀
-            LootRarity.精良 => Random.Range(1, 3),          // 1-2 个
-            LootRarity.稀有 => Random.Range(2, 4),          // 2-3 个
-            LootRarity.史诗 => Random.Range(3, 5),          // 3-4 个（至少1前+1后）
-            LootRarity.传说 => 4,                            // 固定 4 个（2前+2后）
+            LootRarity.普通 => 1,              // 带则 1 个
+            LootRarity.精良 => Random.Range(1, 3),  // 1-2 个
+            LootRarity.稀有 => Random.Range(2, 4),  // 2-3 个
+            LootRarity.史诗 => Random.Range(3, 5),  // 3-4 个
+            LootRarity.传说 => 4,                   // 固定 4 个
             _ => 0
         };
     }

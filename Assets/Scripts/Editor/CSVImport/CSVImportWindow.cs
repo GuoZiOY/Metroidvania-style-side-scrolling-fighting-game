@@ -31,5 +31,10 @@ public class CSVImportWindow : EditorWindow
         if (GUILayout.Button("导入属性配置", GUILayout.Height(25))) StatSetupImporter.Import();
         // if (GUILayout.Button("导入任务", GUILayout.Height(25))) QuestCSVImporter.Import(); // 已改用任务树编辑器
         if (GUILayout.Button("导入掉落表", GUILayout.Height(25))) LootTableCSVImporter.Import();
+
+        GUILayout.Space(5);
+        EditorGUILayout.LabelField("词缀/配方", EditorStyles.boldLabel);
+        if (GUILayout.Button("导入词缀", GUILayout.Height(25))) { ItemCSVImporter.SyncXlsxToCsv(); EquipmentAffixCSVImporter.Import(); }
+        if (GUILayout.Button("导入配方", GUILayout.Height(25))) { ItemCSVImporter.SyncXlsxToCsv(); CraftingRecipeCSVImporter.Import(); }
     }
 }

@@ -6,15 +6,18 @@ using UnityEngine;
 // 分解是制作的逆过程：材料产出有损耗（产出量低于制作所需）
 public static class DismantleSystem
 {
+    private const float LossRatio = 0.5f; // 分解损耗：只返还制作所需材料的一半（分解=制作逆过程）
+
+    private static CraftingRecipeDB cachedDB; // 配方数据库缓存（配方反推用）
+    private static CraftingRecipeDB DB => cachedDB != null ? cachedDB : cachedDB = Resources.Load<CraftingRecipeDB>("Data/CraftingRecipeDB");
+
     // 计算单件装备的分解产出（不执行，供 UI 预览）
-    public static List<DismantleOutput> CalculateOutput(Inventory_Item item, DismantleTable table)
+    // 纯配方表反推：查 CraftingRecipeDB 该装备的制作配方，产出配方材料的 50% × 稀有度倍率
+    // 未在配方表中的装备不可分解（返回空）
+    public static List<DismantleOutput> CalculateOutput(Inventory_Item item)
     {
         var result = new List<DismantleOutput>();
-        if (item?.itemData == null || table == null)
-            return result;
-
-        var entry = FindEntry(table, item.itemData.itemType);
-        if (entry == null || entry.materials == null)
+        if (item?.itemData == null)
             return result;
 
         // 稀有度倍率：实际稀有度优先，否则用物品基准稀有度
@@ -22,28 +25,45 @@ public static class DismantleSystem
             ? RarityCalculator.GetBaseMultiplier(item.actualRarity.Value)
             : RarityCalculator.GetBaseMultiplier(item.itemData.rarity);
 
-        foreach (var m in entry.materials)
+        // 配方反推：该装备有制作配方则按配方材料产出（损耗一半）
+        var recipe = FindRecipe(DB, item.itemData);
+        if (recipe == null || recipe.materials == null)
+            return result;
+
+        foreach (var m in recipe.materials)
         {
             if (m?.material == null)
                 continue;
-
-            int count = Mathf.Max(1, Mathf.RoundToInt(m.baseCount * rarityMult));
+            int count = Mathf.Max(1, Mathf.RoundToInt(m.count * LossRatio * rarityMult));
             result.Add(new DismantleOutput { material = m.material, count = count });
         }
         return result;
     }
 
-    // 执行分解：产出材料入背包 + 移除被分解装备；成功返回 true
-    public static bool TryDismantle(Inventory_Item item, PlayerInventorySystem invSys, DismantleTable table)
+    // 查找装备对应的制作配方（resultItem 匹配）
+    private static CraftingRecipe FindRecipe(CraftingRecipeDB db, ItemDataSo itemData)
     {
-        if (item == null || invSys == null || table == null)
+        if (db == null || db.recipes == null)
+            return null;
+        foreach (var r in db.recipes)
+        {
+            if (r != null && r.resultItem == itemData)
+                return r;
+        }
+        return null;
+    }
+
+    // 执行分解：产出材料入背包 + 移除被分解装备；成功返回 true
+    public static bool TryDismantle(Inventory_Item item, PlayerInventorySystem invSys)
+    {
+        if (item == null || invSys == null)
             return false;
 
         var inv = invSys.GetInventory();
         if (inv == null)
             return false;
 
-        var output = CalculateOutput(item, table);
+        var output = CalculateOutput(item);
         if (output.Count == 0)
             return false;
 
@@ -68,19 +88,6 @@ public static class DismantleSystem
         // 移除被分解装备
         inv.RemoveItem(item);
         return true;
-    }
-
-    // 查找装备类型对应的分解配置
-    private static DismantleEntry FindEntry(DismantleTable table, ItemType type)
-    {
-        if (table.entries == null)
-            return null;
-        foreach (var e in table.entries)
-        {
-            if (e != null && e.itemType == type)
-                return e;
-        }
-        return null;
     }
 
     // 背包容量检查：已有同种可堆叠材料则不占新槽

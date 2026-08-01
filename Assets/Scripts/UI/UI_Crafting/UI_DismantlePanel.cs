@@ -1,85 +1,86 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 分解面板（F10）— 列出背包装备，选中后预览分解产出并执行分解
-// 接线：Canvas 面板挂此脚本，装备行用 itemRowPrefab 实例化
+// 分解面板（F10）— 由铁匠面板打开，右侧背包/装备格子点击选中物品 → 预览分解产出 → 分解
+// 分解产出 = 配方表反推（CraftingRecipeDB，损耗50%），无需单独配置分解产出表
 public class UI_DismantlePanel : MonoBehaviour
 {
-    [Header("数据")]
-    [SerializeField] private DismantleTable dismantleTable; // 分解产出表（Inspector 拖入）
-
-    [Header("列表")]
-    [SerializeField] private Transform itemListRoot;       // 装备行父节点（ScrollView Content）
-    [SerializeField] private GameObject itemRowPrefab;     // 装备行 prefab（名称 + 稀有度 + Button）
-
     [Header("详情/按钮")]
-    [SerializeField] private TextMeshProUGUI detailText;  // 选中装备的分解产出预览
-    [SerializeField] private Button dismantleButton;      // 分解按钮
+    [SerializeField] private TextMeshProUGUI detailText;      // 选中装备的分解产出预览
+    [SerializeField] private Button dismantleButton;          // 分解按钮
     [SerializeField] private TextMeshProUGUI dismantleButtonText;
 
-    private Inventory_Item selectedItem;   // 当前选中装备
+    private static UI_DismantlePanel instance;
+
+    // 单例（惰性查找：面板未激活时 Awake 不执行，首次访问用 FindAnyObjectByType 找到 inactive 实例）
+    public static UI_DismantlePanel Instance
+    {
+        get
+        {
+            if (instance == null)
+                instance = Object.FindAnyObjectByType<UI_DismantlePanel>(FindObjectsInactive.Include);
+            return instance;
+        }
+    }
+
+    private Inventory_Item selectedItem;   // 当前选中装备（由 UI_BlacksmithPanel 分发）
     private PlayerInventorySystem invSys;  // 背包系统引用
+
+    private void Awake()
+    {
+        instance = this;
+        if (dismantleButton != null)
+            dismantleButton.onClick.AddListener(OnClickDismantle); // 分解按钮绑定
+    }
+
+    // 打开/关闭面板（由铁匠面板 PanelSwitcher 控制显示）
+    public void Open() => gameObject.SetActive(true);
+    public void Close() => gameObject.SetActive(false);
 
     private void OnEnable()
     {
         invSys = FindAnyObjectByType<PlayerInventorySystem>();
-        RefreshList();
+        OnSlotDeselected(); // 切到分解 tab 时重置选中预览（槽位视觉由 UI_BlacksmithPanel 统一清，防止切换残留）
     }
 
-    // 刷新背包装备列表
-    public void RefreshList()
+    // 由 UI_BlacksmithPanel 分发：右栏背包/装备格子点击选中该物品（分解）
+    public void OnSlotClicked(Inventory_Item item)
     {
-        if (itemListRoot == null)
+        if (item == null)
             return;
-
-        foreach (Transform child in itemListRoot)
-            Destroy(child.gameObject);
-
-        var inv = invSys != null ? invSys.GetInventory() : null;
-        if (inv == null)
-            return;
-
-        foreach (var kvp in inv.itemDictionary)
-        {
-            var item = kvp.Value;
-            if (item == null || !item.IsEquipment)
-                continue;
-
-            if (itemRowPrefab == null)
-                continue;
-
-            var row = Instantiate(itemRowPrefab, itemListRoot);
-            var rowScript = row.GetComponent<UI_DismantleRow>();
-            if (rowScript != null)
-                rowScript.Setup(this, item);
-        }
-    }
-
-    // 选中装备（由行回调）
-    public void SelectItem(Inventory_Item item)
-    {
         selectedItem = item;
         RefreshDetail();
     }
 
-    // 刷新产出预览 + 分解按钮
+    // 取消选中（同一槽再点或切换）：清除预览
+    public void OnSlotDeselected()
+    {
+        selectedItem = null;
+        if (detailText != null)
+            detailText.text = "";
+        if (dismantleButton != null)
+            dismantleButton.interactable = false;
+        if (dismantleButtonText != null)
+            dismantleButtonText.text = "未选择";
+    }
+
+    // 刷新产出预览 + 分解按钮（分解 = 配方表反推）
     public void RefreshDetail()
     {
         if (selectedItem == null)
             return;
 
-        bool canDismantle = invSys != null && dismantleTable != null;
+        bool canDismantle = invSys != null;
 
         if (detailText != null)
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine($"分解: {selectedItem.itemData.itemName}");
-            var output = DismantleSystem.CalculateOutput(selectedItem, dismantleTable);
+            var output = DismantleSystem.CalculateOutput(selectedItem);
             if (output.Count == 0)
             {
-                sb.AppendLine("（此装备无分解产出）");
+                sb.AppendLine("（此装备无配方，不可分解）");
                 canDismantle = false;
             }
             else
@@ -99,40 +100,13 @@ public class UI_DismantlePanel : MonoBehaviour
     // 点击分解
     public void OnClickDismantle()
     {
-        if (selectedItem == null || invSys == null || dismantleTable == null)
+        if (selectedItem == null || invSys == null)
             return;
 
-        if (DismantleSystem.TryDismantle(selectedItem, invSys, dismantleTable))
+        if (DismantleSystem.TryDismantle(selectedItem, invSys))
         {
             selectedItem = null;
-            RefreshList();
             RefreshDetail();
         }
-    }
-}
-
-// 单个装备行 — 由 UI_DismantlePanel 实例化
-public class UI_DismantleRow : MonoBehaviour
-{
-    [SerializeField] private TextMeshProUGUI nameText;  // 装备名
-    [SerializeField] private Button rowButton;          // 行点击
-
-    private Inventory_Item item;        // 本行装备
-    private UI_DismantlePanel panel;    // 父面板
-
-    public void Setup(UI_DismantlePanel panel, Inventory_Item item)
-    {
-        this.panel = panel;
-        this.item = item;
-
-        if (nameText != null)
-        {
-            string rarityName = item.actualRarity.HasValue ? RarityCalculator.GetRarityName(item.actualRarity.Value) : "";
-            nameText.text = $"{(rarityName.Length > 0 ? $"[{rarityName}] " : "")}{item.itemData.itemName}";
-            nameText.color = item.actualRarity.HasValue ? RarityCalculator.GetRarityColor(item.actualRarity.Value) : Color.white;
-        }
-
-        if (rowButton != null)
-            rowButton.onClick.AddListener(() => panel.SelectItem(item));
     }
 }

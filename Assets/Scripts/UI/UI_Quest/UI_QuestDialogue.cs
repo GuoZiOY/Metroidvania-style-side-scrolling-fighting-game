@@ -6,17 +6,6 @@ using UnityEngine.UI;
 // 五种模式：接取 / 进行中 / 阶段完成 / 最终领奖 / 问候
 public class UI_QuestDialogue : MonoBehaviour
 {
-    private static UI_QuestDialogue instance;
-    public static UI_QuestDialogue Instance
-    {
-        get
-        {
-            if (instance == null)
-                instance = FindAnyObjectByType<UI_QuestDialogue>(FindObjectsInactive.Include);
-            return instance;
-        }
-    }
-
     [Header("UI 组件")]
     [SerializeField] private TextMeshProUGUI npcNameText;
     [SerializeField] private TextMeshProUGUI dialogueText;
@@ -40,9 +29,8 @@ public class UI_QuestDialogue : MonoBehaviour
 
     private void Awake()
     {
-        instance = this;
-        gameObject.SetActive(false);
-
+        // 注意：不在 Awake 里 SetActive(false)——面板收编后初始 inactive，
+        // 首次 Open 的 SetActive(true) 会触发 Awake，若这里再关闭会抵消激活。开局关闭由 UIManager 统一处理。
         if (primaryButton != null)
             primaryButton.onClick.AddListener(OnPrimaryClicked);
         if (secondaryButton != null)

@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -18,6 +19,10 @@ public abstract class UI_BaseSlot : MonoBehaviour, IPointerEnterHandler, IPointe
 
     [Header("悬停指示器")]
     [SerializeField] private GameObject hoverIndicator; // 鼠标悬停时显示的边框/发光框
+
+    [Header("选中指示器")]
+    [SerializeField] protected GameObject selectedIndicator; // 点击选中时显示的金色边框/发光框
+    [SerializeField] private float selectedScale = 1.05f;      // 选中放大倍率
 
     [Header("稀有度背景设置")]
     [SerializeField] protected Image rarityBackground;
@@ -45,6 +50,7 @@ public abstract class UI_BaseSlot : MonoBehaviour, IPointerEnterHandler, IPointe
             itemIcon.enabled = false;
             if (rarityBackground != null)
                 rarityBackground.enabled = false;
+            ClearIndicators(); // 物品移除时清除悬停/选中指示器 + 复位缩放（防残留）
         }
         else
         {
@@ -57,10 +63,41 @@ public abstract class UI_BaseSlot : MonoBehaviour, IPointerEnterHandler, IPointe
         }
     }
 
-    // 选中状态，子类可追加额外视觉效果（如商店的 selectionBorder）
+    // 选中状态：显示金色选中边框 + 轻微放大（区别于悬停指示器的白色淡光），子类可追加额外效果
     public virtual void SetSelected(bool selected)
     {
-        // 基类不做默认表现，子类覆写
+        if (selectedIndicator != null)
+            selectedIndicator.SetActive(selected);
+
+        // 放大/恢复动画（SetUpdate 忽略 timeScale，商店/工作台暂停时也正常）
+        transform.DOKill();
+        if (selected)
+            transform.DOScale(Vector3.one * selectedScale, 0.15f).SetEase(Ease.OutQuad).SetUpdate(true);
+        else
+            transform.DOScale(Vector3.one, 0.15f).SetEase(Ease.OutQuad).SetUpdate(true);
+    }
+
+    // 槽位激活/隐藏时复位指示器与缩放：面板开关、槽位移动后 SetActive 切换不触发 OnPointerExit，
+    // 若不强制清除，悬停/选中指示器会在重新激活后残留（子类可覆写追加额外复位逻辑）
+    protected virtual void OnEnable()
+    {
+        ClearIndicators();
+    }
+
+    protected virtual void OnDisable()
+    {
+        ClearIndicators();
+    }
+
+    // 清除悬停/选中指示器 + 复位缩放（防残留的统一入口）
+    protected void ClearIndicators()
+    {
+        if (hoverIndicator != null)
+            hoverIndicator.SetActive(false);
+        if (selectedIndicator != null)
+            selectedIndicator.SetActive(false);
+        transform.DOKill();
+        transform.localScale = Vector3.one;
     }
 
     public virtual bool CanAcceptItem(Inventory_Item item)

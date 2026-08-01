@@ -28,7 +28,50 @@ public class Inventory_Item
     {
         this.itemData = itemData;//物品数据
         currentStackSize = 1;//初始化物品数量为1
-        Modifiers = EquipmentData()?.modifiers;//获取装备数据
+
+        EquipmentDataSo equipmentData = itemData as EquipmentDataSo;
+        if (equipmentData != null)
+        {
+            // 稀有度 = 底材稀有度（商店/制作/任务奖励的装备获得稀有度，可参与合成/稀有度显示）
+            actualRarity = equipmentData.rarity;
+            rarityMultiplier = 1f;
+
+            // 基础属性填充：商店装备/制作产物等无词缀装备，tooltip 也能显示底材属性
+            if (equipmentData.modifiers != null && equipmentData.modifiers.Length > 0)
+            {
+                baseModifiers = new ItemModifier[equipmentData.modifiers.Length];
+                for (int i = 0; i < equipmentData.modifiers.Length; i++)
+                {
+                    baseModifiers[i] = new ItemModifier
+                    {
+                        statType = equipmentData.modifiers[i].statType,
+                        value = equipmentData.modifiers[i].value,
+                        isPercentage = equipmentData.modifiers[i].isPercentage
+                    };
+                }
+            }
+
+            // 词缀系统：按底材稀有度生成（非百分百，普通可能 0 个，精良+按词缀系统规则）
+            affixes = EquipmentAffixGenerator.GenerateAffixes(equipmentData.itemType, equipmentData.rarity);
+
+            // Modifiers = 基础属性 + 词缀效果（实际装备生效）
+            var allMods = new List<ItemModifier>();
+            if (baseModifiers != null)
+                allMods.AddRange(baseModifiers);
+            if (affixes != null)
+            {
+                foreach (var affix in affixes)
+                {
+                    if (affix.modifiers != null)
+                        allMods.AddRange(affix.modifiers);
+                }
+            }
+            Modifiers = allMods.Count > 0 ? allMods.ToArray() : null;
+        }
+        else
+        {
+            Modifiers = null; // 非装备无修饰符
+        }
 
         //生成物品ID，包含稀有度信息
         string rarityName = RarityCalculator.GetRarityName(itemData.rarity);

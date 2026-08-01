@@ -40,6 +40,18 @@ public class UI_SkillSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         skillSlotManager = SkillSlotManager.Instance;
         skillManager = Player_SkillManager.Instance;
 
+        // 读档时序防御：读档恢复可能早于本组件 Start 订阅事件（OnSkillSlotChanged 已错过），
+        // 直接从管理器读取当前槽位绑定，确保读档后槽位仍能显示已恢复的技能
+        if (skillSlotManager != null)
+        {
+            SkillUpgradeType boundType = skillSlotManager.GetUpgradeTypeInSlot(slotIndex);
+            if (boundType != SkillUpgradeType.None)
+            {
+                currentUpgradeType = boundType;
+                currentSkill = GetSkillByUpgradeType(boundType);
+            }
+        }
+
         UpdateSlotDisplay();
         UpdateKeyText();
 

@@ -130,7 +130,15 @@ public class UI_StatSlot : MonoBehaviour, IPointerClickHandler, IPointerExitHand
                 break;
         }
 
-        statValue.text = IsPercentageStat(statType) ? value + "%" : value.ToString();
+        statValue.text = IsPercentageStat(statType) ? FormatStatValue(value) + "%" : FormatStatValue(value);
+    }
+
+        // 属性值格式化：整数显示整数，小数显示一位（避免多位小数如 0.3237033）
+        private string FormatStatValue(float v)
+    {
+        if (Mathf.Abs(v - Mathf.Round(v)) < 0.001f)
+            return Mathf.Round(v).ToString("F0");
+        return v.ToString("F1");
     }
 
         private bool IsPercentageStat(StatType type)

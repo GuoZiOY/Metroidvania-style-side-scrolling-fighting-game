@@ -54,10 +54,10 @@ public class UI_ItemToolTip : UI_ToolTip
         return sb.ToString();
     }
 
-    // 词缀名富文本：英文方括号 [名字] 着色（含负面效果的双刃/垃圾词缀用橙色警示）
+    // 词缀名富文本：英文方括号 [名字] 按 Tier 着色（负面不整体灰，只有数值段灰）
     private string RichAffixName(GeneratedEquipmentAffix affix)
     {
-        string hex = ColorUtility.ToHtmlStringRGB(GetAffixColor(affix));
+        string hex = ColorUtility.ToHtmlStringRGB(GetAffixTierColor(affix.tier));
         return $"<color=#{hex}>[{affix.displayName}]</color>";
     }
 
@@ -102,7 +102,7 @@ public class UI_ItemToolTip : UI_ToolTip
             }
         }
 
-        // 词缀效果（紧随基础属性之后，整行富文本着色：词缀名 + 全部效果；含负面词缀用橙色警示）
+        // 词缀效果（紧随基础属性之后）：词缀名按 Tier 着色，只有负面数值段用灰色
         if (item.affixes != null && item.affixes.Length > 0)
         {
             foreach (var affix in item.affixes)
@@ -110,27 +110,19 @@ public class UI_ItemToolTip : UI_ToolTip
                 if (affix == null || affix.modifiers == null)
                     continue;
 
-                // 词缀名 + 效果整体着色：普通按 Tier，含负面效果(双刃/垃圾)用橙色警示
-                string hex = ColorUtility.ToHtmlStringRGB(GetAffixColor(affix));
-                sb.Append($"<color=#{hex}>[{affix.displayName}]");
+                string nameHex = ColorUtility.ToHtmlStringRGB(GetAffixTierColor(affix.tier));
+                sb.Append($"<color=#{nameHex}>[{affix.displayName}]</color>");
                 foreach (var mod in affix.modifiers)
                 {
-                    sb.Append("  " + FormatSignedModValue(mod) + " " + GetStatNameByType(mod.statType));
+                    // 只有负值（负面效果）用灰色，正值保持词缀 Tier 色
+                    string modHex = mod.value < 0 ? ColorUtility.ToHtmlStringRGB(Color.gray) : nameHex;
+                    sb.Append($"  <color=#{modHex}>{FormatSignedModValue(mod)} {GetStatNameByType(mod.statType)}</color>");
                 }
-                sb.Append("</color>");
                 sb.AppendLine();
             }
         }
 
         return sb.ToString();
-    }
-
-    // 词缀整体颜色：含负面效果(双刃/垃圾)用橙色警示，否则按 Tier 着色
-    private Color GetAffixColor(GeneratedEquipmentAffix affix)
-    {
-        if (affix.hasNegative)
-            return new Color(1f, 0.5f, 0f); // 橙色 — 警示"带负面代价"
-        return GetAffixTierColor(affix.tier);
     }
 
     // 带正负号格式化：正值 +X，负值 -X（百分比存小数，显示时乘回 100）

@@ -48,11 +48,31 @@ public class UI_TreeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         }
 
         UpdateIconColor(GetColorByHex(lockedColorHex));
-        // 记录初始缩放比例
+        // 记录初始缩放比例（防御：读档时序中 LoadStateFromSave 已把图标缩放到 0，
+        // 若当前缩放为 0 则回退正常尺寸，避免 originalScale 永远为 0 导致图标消失）
         originalScale = skillIcom.rectTransform.localScale;
+        if (originalScale.sqrMagnitude <= 0.0001f)
+            originalScale = Vector3.one;
 
 
         InitConflictingNodes();//初始化冲突节点
+
+        // 读档时序防御：技能树面板 inactive 时 Awake 延迟执行，读档已先调用 LoadStateFromSave
+        // 设置白色图标；本 Awake 若重置为锁定灰色会覆盖还原状态。管理器已有等级则恢复已解锁视觉。
+        // 注意：这里只做图标/连线等单节点视觉恢复，不调用 LockConflictNodes —— 冲突锁定会访问
+        // 其他节点的 connectHandler，而 Awake 跨节点执行顺序未定，此时其字段可能尚未初始化
+        if (skillData != null && SkillDataManager.Instance != null)
+        {
+            int restoredLevel = SkillDataManager.Instance.GetCurrentLevel(skillData.upgradeType);
+            if (restoredLevel > 0)
+            {
+                isUnlocked = true;
+                CurrentLevel = restoredLevel;
+                UpdateIconColor(Color.white);
+                connectHandler?.UnlockConnectionImage(true);
+                SkillIconScale(true); // 恢复图标为已解锁放大尺寸（SkillIconScale 内部已防御零缩放）
+            }
+        }
 
         if (levelUpButton != null)
         {
@@ -334,7 +354,12 @@ public class UI_TreeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     {
         isLocked = true;//锁定自己
 
-        foreach(var node in connectHandler.GetChildNodes())
+        // 防御：connectHandler 可能为 null（节点未挂 UI_TreeConnectHandler，或 Awake 顺序未初始化），
+        // 直接跳过子节点递归，避免 NRE
+        if (connectHandler == null)
+            return;
+
+        foreach (var node in connectHandler.GetChildNodes())
             node.LockChildNodes();//递归锁定自己及其子节点
     }
 
@@ -393,7 +418,10 @@ public class UI_TreeNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     public void SkillIconScale(bool isBig)
     {
         // 悬停/取消悬停时图标平滑缩放（DOTween 替代原硬切）
-        Vector3 target = isBig ? originalScale * scaleMultiplier : originalScale;
+        // 防御：节点 Awake 未执行（技能树 inactive）时 originalScale 为默认 (0,0,0)，
+        // 直接乘会缩放归零导致图标消失；退化为正常尺寸
+        Vector3 baseScale = originalScale.sqrMagnitude > 0.0001f ? originalScale : Vector3.one;
+        Vector3 target = isBig ? baseScale * scaleMultiplier : baseScale;
         skillIcom.rectTransform.DOScale(target, 0.12f).SetEase(Ease.OutQuad);
     }
 

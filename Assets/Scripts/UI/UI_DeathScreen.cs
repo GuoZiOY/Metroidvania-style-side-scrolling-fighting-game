@@ -4,9 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>
-/// 死亡画面 UI。只负责显示面板和打字机，世界效果由 Player 处理。
-/// </summary>
+// 死亡画面 UI。只负责显示面板和打字机，世界效果由 Player 处理。
 public class UI_DeathScreen : MonoBehaviour
 {
     [Header("UI 组件")]
@@ -22,16 +20,9 @@ public class UI_DeathScreen : MonoBehaviour
     [SerializeField] private float typeCharInterval = 0.1f;
     [SerializeField] private float typePunctuationDelay = 0.3f;
 
-    public static UI_DeathScreen Instance { get; private set; }
-
     private bool isShowing;
     private Player player;
     private string killerName = "未知";
-
-    private void Awake()
-    {
-        Instance = this;
-    }
 
     private void Start()
     {

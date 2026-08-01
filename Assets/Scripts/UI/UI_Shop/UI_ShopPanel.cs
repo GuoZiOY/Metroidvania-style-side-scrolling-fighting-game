@@ -8,20 +8,6 @@ using UnityEngine.UI;
 // 职责：打开/关闭动画、槽位生成、按钮绑定、视觉状态同步。
 public class UI_ShopPanel : MonoBehaviour
 {
-    private static UI_ShopPanel instance;
-    public static UI_ShopPanel Instance
-    {
-        get
-        {
-            if (instance == null)
-                instance = FindAnyObjectByType<UI_ShopPanel>(FindObjectsInactive.Include);
-            return instance;
-        }
-        private set => instance = value;
-    }
-
-    public static bool IsShopOpen => instance != null && instance.gameObject.activeInHierarchy;
-
     [Header("商店名称")]
     [SerializeField] private TextMeshProUGUI shopNameText;
 
@@ -35,8 +21,7 @@ public class UI_ShopPanel : MonoBehaviour
     [SerializeField] private Transform equipSlotParent;
 
     [Header("面板关联")]
-    [SerializeField] private GameObject panelBackground;
-    [SerializeField] private GameObject[] hiddenOnOpen;
+    [SerializeField] private GameObject[] hiddenOnOpen; // 打开时隐藏的干扰对象（背景由 UIManager 统一管理）
 
     [Header("数量控件")]
     [SerializeField] private Slider quantitySlider;
@@ -94,11 +79,10 @@ public class UI_ShopPanel : MonoBehaviour
 
     private void Awake()
     {
-        instance = this;
-
+        // 注意：不在 Awake 里 SetActive(false)——面板收编后初始 inactive，
+        // 首次 Open 的 SetActive(true) 会触发 Awake，若这里再关闭会抵消激活。开局关闭由 UIManager 统一处理。
         buyButton.interactable = false;
         sellButton.interactable = false;
-        gameObject.SetActive(false);
 
         canvasGroup = GetComponent<CanvasGroup>();
         if (canvasGroup == null)
@@ -106,7 +90,7 @@ public class UI_ShopPanel : MonoBehaviour
 
         buyButton.onClick.AddListener(OnBuyClicked);
         sellButton.onClick.AddListener(OnSellClicked);
-        closeButton.onClick.AddListener(Close);
+        closeButton.onClick.AddListener(() => UIManager.Instance?.CloseShop()); // 关闭按钮走 UIManager 统一关闭
 
         minusButton.onClick.AddListener(OnMinusClicked);
         plusButton.onClick.AddListener(OnPlusClicked);
@@ -119,23 +103,15 @@ public class UI_ShopPanel : MonoBehaviour
         shopSystem.OnDataChanged += RefreshUI;
     }
 
-    private void Update()
-    {
-        if (GameInput.GetKeyDown(GameInput.Action.Escape))
-            Close();
-    }
+    // Escape 由 UIManager 统一处理（收编模态面板）
 
     // ==================== 打开 / 关闭 ====================
 
+    // 打开：UIManager.ShowShop 调用。UI 级操作（隐藏主面板/激活根/入栈/暂停/背景）已在 UIManager 完成，本方法只负责内容与动画
     public void Open(ShopSO shopData, string npcName = "")
     {
         if (shopData == null) return;
 
-        // 关闭所有已打开的面板，避免 IsAnyPanelOpen 状态错乱
-        var uiMgr = FindAnyObjectByType<UIManager>();
-        if (uiMgr != null) uiMgr.HideAllPanels();
-
-        transform.root.gameObject.SetActive(true);
         gameObject.SetActive(true);
         canvasGroup.alpha = 0f;
         canvasGroup.blocksRaycasts = true;
@@ -143,7 +119,6 @@ public class UI_ShopPanel : MonoBehaviour
         transform.DOKill();
         transform.DOScale(Vector3.one, animDuration).SetEase(Ease.OutBack, 1.3f).SetUpdate(true);
         canvasGroup.DOFade(1f, animDuration * 0.7f).SetUpdate(true);
-        Time.timeScale = 0f;
 
         if (shopNameText != null)
         {
@@ -160,31 +135,27 @@ public class UI_ShopPanel : MonoBehaviour
 
         ClearVisualSelection();
 
-        if (panelBackground != null) panelBackground.SetActive(true);
+        // 背景由 UIManager 统一显示
         SetHiddenObjects(true);
 
         GenerateNpcItems(shopData);
         MovePlayerSlotsToShop();
         SubscribePlayerSlots();
 
-        ModalStack.Push("shop");
         RefreshUI();
     }
 
+    // 关闭：UIManager.CloseShop 调用。UI 级操作（出栈/恢复/背景/重开菜单）已在 UIManager 完成，本方法只负责内容与动画
     public void Close()
     {
         transform.DOKill();
         SetHiddenObjects(false);
-        if (panelBackground != null) panelBackground.SetActive(false);
 
         // 清理可能残留的拖拽状态
         if (UI_ItemDragHandler.Instance != null)
             UI_ItemDragHandler.Instance.CleanupDrag();
 
         shopSystem.Close();
-
-        Time.timeScale = 1f;
-        ModalStack.Pop("shop");
 
         UnsubscribePlayerSlots();
         RestorePlayerSlots();
@@ -196,7 +167,6 @@ public class UI_ShopPanel : MonoBehaviour
 
         quantitySlider.SetValueWithoutNotify(0);
         gameObject.SetActive(false);
-        UI_NpcMenu.TryReopen();
     }
 
     // ==================== 背景显隐 ====================

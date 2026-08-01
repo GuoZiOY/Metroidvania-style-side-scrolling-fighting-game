@@ -1,0 +1,419 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 747a4eaecf14efe4386a2d76fc7cce5f, type: 3}
+  m_Name: CraftingRecipeDB
+  m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipeDB
+  recipes:
+  - recipeId: recipe_100101
+    recipeName: "\u6728\u5251"
+    resultItem: {fileID: 11400000, guid: e510f8cc2cdcf294d98a575ecd13b601, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 17c0676b849433346a253b1a5d866982, type: 2}
+      count: 3
+    goldCost: 20
+    minResultRarity: 0
+  - recipeId: recipe_100102
+    recipeName: "\u8FC7\u65F6\u7684\u82F1\u96C4\u4E4B\u5251"
+    resultItem: {fileID: 11400000, guid: 726e80db10ae1dc4b8f2f006d1d6cc44, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 3
+    - material: {fileID: 11400000, guid: 17c0676b849433346a253b1a5d866982, type: 2}
+      count: 1
+    goldCost: 40
+    minResultRarity: 0
+  - recipeId: recipe_110101
+    recipeName: "\u76AE\u515C\u5E3D"
+    resultItem: {fileID: 11400000, guid: c58d3924dda8b7947b57c9c404fc29ef, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 6381f6f258e905f49b4f57f0f9a72f93, type: 2}
+      count: 3
+    goldCost: 20
+    minResultRarity: 0
+  - recipeId: recipe_110102
+    recipeName: "\u8FC7\u65F6\u7684\u82F1\u96C4\u5934\u76D4"
+    resultItem: {fileID: 11400000, guid: 6f3dfbd7168fbb04586b5bc41492821c, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 2
+    - material: {fileID: 11400000, guid: 17c0676b849433346a253b1a5d866982, type: 2}
+      count: 1
+    goldCost: 40
+    minResultRarity: 0
+  - recipeId: recipe_110201
+    recipeName: "\u76AE\u7532"
+    resultItem: {fileID: 11400000, guid: 70cdf52d3eb7d994b9f71075bf112a50, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 6381f6f258e905f49b4f57f0f9a72f93, type: 2}
+      count: 4
+    goldCost: 25
+    minResultRarity: 0
+  - recipeId: recipe_110202
+    recipeName: "\u8FC7\u65F6\u7684\u82F1\u96C4\u80F8\u7532"
+    resultItem: {fileID: 11400000, guid: 5afca2fae6277f6458263aa8457ad70a, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 2
+    - material: {fileID: 11400000, guid: 17c0676b849433346a253b1a5d866982, type: 2}
+      count: 1
+    goldCost: 40
+    minResultRarity: 0
+  - recipeId: recipe_110301
+    recipeName: "\u76AE\u9774"
+    resultItem: {fileID: 11400000, guid: 96088e7422306c348a7010f7eea5ff71, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 6381f6f258e905f49b4f57f0f9a72f93, type: 2}
+      count: 2
+    goldCost: 20
+    minResultRarity: 0
+  - recipeId: recipe_110302
+    recipeName: "\u8FC7\u65F6\u7684\u82F1\u96C4\u9774\u5B50"
+    resultItem: {fileID: 11400000, guid: 1f4a77d154d63b245b759ed4494ed227, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 2
+    goldCost: 40
+    minResultRarity: 0
+  - recipeId: recipe_110401
+    recipeName: "\u76AE\u624B\u5957"
+    resultItem: {fileID: 11400000, guid: d40b6567a33409e4e959ae399464f127, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 6381f6f258e905f49b4f57f0f9a72f93, type: 2}
+      count: 2
+    goldCost: 20
+    minResultRarity: 0
+  - recipeId: recipe_110402
+    recipeName: "\u8FC7\u65F6\u7684\u82F1\u96C4\u624B\u5957"
+    resultItem: {fileID: 11400000, guid: d6a7941216b641448a7c25443e9a3788, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 2
+    goldCost: 40
+    minResultRarity: 0
+  - recipeId: recipe_110501
+    recipeName: "\u51B0\u6676\u9879\u94FE"
+    resultItem: {fileID: 11400000, guid: 52119dacb24c0bc449b376bf82e25ae6, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 17c0676b849433346a253b1a5d866982, type: 2}
+      count: 3
+    goldCost: 3000
+    minResultRarity: 0
+  - recipeId: recipe_110502
+    recipeName: "\u706B\u7130\u9879\u94FE"
+    resultItem: {fileID: 11400000, guid: 97f722ad44956694a9201d4d3b0c1fc8, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 17c0676b849433346a253b1a5d866982, type: 2}
+      count: 3
+    goldCost: 3000
+    minResultRarity: 0
+  - recipeId: recipe_110503
+    recipeName: "\u96F7\u7535\u9879\u94FE"
+    resultItem: {fileID: 11400000, guid: 0a00a6892ab222a4e8df0a643ce16ac7, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 17c0676b849433346a253b1a5d866982, type: 2}
+      count: 3
+    goldCost: 3000
+    minResultRarity: 0
+  - recipeId: recipe_110504
+    recipeName: "\u751F\u547D\u9879\u94FE"
+    resultItem: {fileID: 11400000, guid: 6bb9e9a38ba33f240b595b95fa659207, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 17c0676b849433346a253b1a5d866982, type: 2}
+      count: 3
+    - material: {fileID: 11400000, guid: 6381f6f258e905f49b4f57f0f9a72f93, type: 2}
+      count: 1
+    goldCost: 3500
+    minResultRarity: 0
+  - recipeId: recipe_110505
+    recipeName: "\u8FC7\u65F6\u7684\u7EA6\u5B9A\u4E4B\u7EF3"
+    resultItem: {fileID: 11400000, guid: 2acc9834da1cbe54f8fcfa95b4786198, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 17c0676b849433346a253b1a5d866982, type: 2}
+      count: 3
+    goldCost: 3000
+    minResultRarity: 0
+  - recipeId: recipe_100103
+    recipeName: "\u94DC\u5251"
+    resultItem: {fileID: 11400000, guid: 58d5b435fb0cc1d4daf9c4d79d37c7db, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: af95154b46200174fb1a2bb7b7776d3c, type: 2}
+      count: 3
+    goldCost: 5000
+    minResultRarity: 0
+  - recipeId: recipe_110103
+    recipeName: "\u94DC\u76D4"
+    resultItem: {fileID: 11400000, guid: 40b2cc8368a062d4f9a01cc1164b5a81, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: af95154b46200174fb1a2bb7b7776d3c, type: 2}
+      count: 3
+    goldCost: 5000
+    minResultRarity: 0
+  - recipeId: recipe_110203
+    recipeName: "\u94DC\u7532"
+    resultItem: {fileID: 11400000, guid: eeddbf0c43893b44dbd405a266f73e57, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: af95154b46200174fb1a2bb7b7776d3c, type: 2}
+      count: 4
+    goldCost: 6000
+    minResultRarity: 0
+  - recipeId: recipe_110303
+    recipeName: "\u94DC\u9774"
+    resultItem: {fileID: 11400000, guid: 84ffc8add4b621140a44fe72625813f1, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: af95154b46200174fb1a2bb7b7776d3c, type: 2}
+      count: 2
+    goldCost: 5000
+    minResultRarity: 0
+  - recipeId: recipe_110403
+    recipeName: "\u94DC\u624B\u5957"
+    resultItem: {fileID: 11400000, guid: 26382b87db72f254c89430b287ca84cc, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: af95154b46200174fb1a2bb7b7776d3c, type: 2}
+      count: 2
+    goldCost: 5000
+    minResultRarity: 0
+  - recipeId: recipe_110506
+    recipeName: "\u94DC\u9879\u94FE"
+    resultItem: {fileID: 11400000, guid: 3e0175fd626324c4f859794e68541e8a, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: af95154b46200174fb1a2bb7b7776d3c, type: 2}
+      count: 2
+    goldCost: 5000
+    minResultRarity: 0
+  - recipeId: recipe_110507
+    recipeName: "\u94DC\u624B\u956F"
+    resultItem: {fileID: 11400000, guid: 84016afa9589b1d44914466ea8a2db69, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: af95154b46200174fb1a2bb7b7776d3c, type: 2}
+      count: 2
+    goldCost: 5000
+    minResultRarity: 0
+  - recipeId: recipe_110508
+    recipeName: "\u94DC\u6212\u6307"
+    resultItem: {fileID: 11400000, guid: f030356cdb0b29e4f8070f170584a015, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: af95154b46200174fb1a2bb7b7776d3c, type: 2}
+      count: 2
+    goldCost: 5000
+    minResultRarity: 0
+  - recipeId: recipe_100104
+    recipeName: "\u94C1\u5251"
+    resultItem: {fileID: 11400000, guid: 5bfc64026b76fac419493e234ce3ff1e, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 4
+    goldCost: 10000
+    minResultRarity: 0
+  - recipeId: recipe_110104
+    recipeName: "\u94C1\u76D4"
+    resultItem: {fileID: 11400000, guid: 4a9945b4ee8e2ca4f98dd2f4f869e6d2, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 3
+    goldCost: 10000
+    minResultRarity: 0
+  - recipeId: recipe_110204
+    recipeName: "\u94C1\u7532"
+    resultItem: {fileID: 11400000, guid: 3888129f562bc9545974ac761963e365, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 5
+    goldCost: 12000
+    minResultRarity: 0
+  - recipeId: recipe_110304
+    recipeName: "\u94C1\u9774"
+    resultItem: {fileID: 11400000, guid: 54b2691fed233ca4fbbe1bdd6208b6d0, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 3
+    goldCost: 10000
+    minResultRarity: 0
+  - recipeId: recipe_110404
+    recipeName: "\u94C1\u624B\u5957"
+    resultItem: {fileID: 11400000, guid: 42f765240038698488cb4eca7ee920d6, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 3
+    goldCost: 10000
+    minResultRarity: 0
+  - recipeId: recipe_110509
+    recipeName: "\u94C1\u9879\u94FE"
+    resultItem: {fileID: 11400000, guid: 267aa6d7753700d4480784b3bcb339c8, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 3
+    goldCost: 10000
+    minResultRarity: 0
+  - recipeId: recipe_110510
+    recipeName: "\u94C1\u624B\u956F"
+    resultItem: {fileID: 11400000, guid: d7465ea7090ada546b8516a4bf45f08d, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 3
+    goldCost: 10000
+    minResultRarity: 0
+  - recipeId: recipe_110511
+    recipeName: "\u94C1\u6212\u6307"
+    resultItem: {fileID: 11400000, guid: c377869a2c19ec042a70310e596f9fb6, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 0c83199937cba574e961bbd808673683, type: 2}
+      count: 3
+    goldCost: 10000
+    minResultRarity: 0
+  - recipeId: recipe_100105
+    recipeName: "\u91D1\u5251"
+    resultItem: {fileID: 11400000, guid: f34ae61d1e15262489e305a25d49bb71, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+      count: 5
+    goldCost: 20000
+    minResultRarity: 0
+  - recipeId: recipe_110105
+    recipeName: "\u91D1\u76D4"
+    resultItem: {fileID: 11400000, guid: 9636be97919282242afcdb25dcb8cec0, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+      count: 4
+    goldCost: 20000
+    minResultRarity: 0
+  - recipeId: recipe_110205
+    recipeName: "\u91D1\u7532"
+    resultItem: {fileID: 11400000, guid: 1b30f58bf930d1d4a93ce42724673185, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+      count: 6
+    goldCost: 24000
+    minResultRarity: 0
+  - recipeId: recipe_110305
+    recipeName: "\u91D1\u9774"
+    resultItem: {fileID: 11400000, guid: 4dacd2303cb9aff4d8176240abb0aede, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+      count: 4
+    goldCost: 20000
+    minResultRarity: 0
+  - recipeId: recipe_110405
+    recipeName: "\u91D1\u624B\u5957"
+    resultItem: {fileID: 11400000, guid: a41057ec981781f48976f5049ee2af20, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+      count: 4
+    goldCost: 20000
+    minResultRarity: 0
+  - recipeId: recipe_110512
+    recipeName: "\u91D1\u9879\u94FE"
+    resultItem: {fileID: 11400000, guid: c5d8717ffbcce3b4d97ba7e25e7bb327, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+      count: 4
+    goldCost: 20000
+    minResultRarity: 0
+  - recipeId: recipe_110513
+    recipeName: "\u91D1\u624B\u956F"
+    resultItem: {fileID: 11400000, guid: 76acec1b7beb13b4d81fdd4d83a0a768, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+      count: 4
+    goldCost: 20000
+    minResultRarity: 0
+  - recipeId: recipe_110514
+    recipeName: "\u91D1\u6212\u6307"
+    resultItem: {fileID: 11400000, guid: ec86d47f5d7aa7148afb0478cdaae920, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+      count: 4
+    goldCost: 20000
+    minResultRarity: 0
+  - recipeId: recipe_100106
+    recipeName: "\u94BB\u77F3\u5251"
+    resultItem: {fileID: 11400000, guid: 498b8c4fa66f4fb4a9974bdd7efa7363, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 5291b5763e323de41b5c1d4a71b597d6, type: 2}
+      count: 6
+    goldCost: 40000
+    minResultRarity: 0
+  - recipeId: recipe_110106
+    recipeName: "\u94BB\u77F3\u76D4"
+    resultItem: {fileID: 11400000, guid: 4ec1ab1506e82eb4795d0ee6ed3f7aab, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 5291b5763e323de41b5c1d4a71b597d6, type: 2}
+      count: 5
+    goldCost: 40000
+    minResultRarity: 0
+  - recipeId: recipe_110206
+    recipeName: "\u94BB\u77F3\u7532"
+    resultItem: {fileID: 11400000, guid: 1fa5ddae577941247b95ee0b6a142e1a, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 5291b5763e323de41b5c1d4a71b597d6, type: 2}
+      count: 7
+    goldCost: 48000
+    minResultRarity: 0
+  - recipeId: recipe_110306
+    recipeName: "\u94BB\u77F3\u9774"
+    resultItem: {fileID: 11400000, guid: dd10f3748cdd25c43a230f693bd66b26, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 5291b5763e323de41b5c1d4a71b597d6, type: 2}
+      count: 5
+    goldCost: 40000
+    minResultRarity: 0
+  - recipeId: recipe_110406
+    recipeName: "\u94BB\u77F3\u624B\u5957"
+    resultItem: {fileID: 11400000, guid: b25ab02d29a0cc24eaf2f1dfd62f46a1, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 5291b5763e323de41b5c1d4a71b597d6, type: 2}
+      count: 5
+    goldCost: 40000
+    minResultRarity: 0
+  - recipeId: recipe_110515
+    recipeName: "\u94BB\u77F3\u9879\u94FE"
+    resultItem: {fileID: 11400000, guid: 6016af0f38b181e4f9e4e86fd0e69cd8, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 5291b5763e323de41b5c1d4a71b597d6, type: 2}
+      count: 5
+    goldCost: 40000
+    minResultRarity: 0
+  - recipeId: recipe_110516
+    recipeName: "\u94BB\u77F3\u624B\u956F"
+    resultItem: {fileID: 11400000, guid: f716ef22cf942a645bac2fc5eaf34ec3, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 5291b5763e323de41b5c1d4a71b597d6, type: 2}
+      count: 5
+    goldCost: 40000
+    minResultRarity: 0
+  - recipeId: recipe_110517
+    recipeName: "\u94BB\u77F3\u6212\u6307"
+    resultItem: {fileID: 11400000, guid: 6d7ae0411331d5a4c95f37327aa9e7d5, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 5291b5763e323de41b5c1d4a71b597d6, type: 2}
+      count: 5
+    goldCost: 40000
+    minResultRarity: 0
+  - recipeId: recipe_100107
+    recipeName: "\u4F20\u8BF4\u4E4B\u5203"
+    resultItem: {fileID: 11400000, guid: 7bcee3730aed36a4ba6bab449129cc64, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 5291b5763e323de41b5c1d4a71b597d6, type: 2}
+      count: 5
+    - material: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+      count: 5
+    goldCost: 60000
+    minResultRarity: 0
+  - recipeId: recipe_110207
+    recipeName: "\u8FDC\u53E4\u9F99\u9CDE\u7532"
+    resultItem: {fileID: 11400000, guid: 2abe28226d47dac4a9d76fea1d4c1c19, type: 2}
+    materials:
+    - material: {fileID: 11400000, guid: 5291b5763e323de41b5c1d4a71b597d6, type: 2}
+      count: 6
+    - material: {fileID: 11400000, guid: 42db0276da7f66148b6b359ff341f0e9, type: 2}
+      count: 4
+    goldCost: 60000
+    minResultRarity: 0

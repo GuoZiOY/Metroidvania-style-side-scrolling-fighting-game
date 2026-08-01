@@ -143,6 +143,11 @@ public class SaveManager : MonoBehaviour
         }
         Debug.Log($"[SaveManager] 系统就绪（等待了 {5f - timeout:F1}s），开始恢复数据");
 
+        // 关键时序修复：强制等一帧，确保场景内所有 MonoBehaviour 的 Start() 已执行。
+        // 读档恢复会触发技能槽绑定等事件，UI 组件在 Start 中订阅；若场景系统立即就绪，
+        // 本协程不 yield 会同步执行（早于 Start），事件在订阅前触发导致 UI 永久丢失还原状态
+        yield return null;
+
         ApplySaveData(data);
         yield return new WaitForSeconds(0.1f);  // 短暂等待让装备/技能生效
         RefreshAllUI();

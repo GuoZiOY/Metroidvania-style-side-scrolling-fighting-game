@@ -6,13 +6,13 @@ using UnityEngine;
 
 // 装备词缀 CSV 导入器 — 从 Resources/CSV/EquipmentAffixes.csv 读取词缀数据生成 EquipmentAffixDatabase
 // 策划工作流：编辑 xlsx → sync_xlsx_to_csv.ps1 → 本菜单导入 → SO 更新
-// 菜单: Tools/破碎之城/导入词缀CSV
+// 菜单: Tools/CSV导入/导入词缀（正式纳入 CSV 系统，F5 一键同步含词缀）
 public static class EquipmentAffixCSVImporter
 {
     private const string CsvPath = "Assets/Resources/CSV/EquipmentAffixes.csv";
     private const string OutputPath = "Assets/Resources/Data/EquipmentAffixDatabase.asset";
 
-    [MenuItem("Tools/破碎之城/导入词缀CSV")]
+    [MenuItem("Tools/CSV导入/导入词缀")]
     public static void Import()
     {
         if (!File.Exists(CsvPath))

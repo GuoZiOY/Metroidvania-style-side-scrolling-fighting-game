@@ -206,6 +206,12 @@ public class SkillSlotManager : MonoBehaviour
     {
         if (upgradeType == SkillUpgradeType.None) return;
 
+        // 防御：读档协程可能早于 Start 初始化，重新获取技能管理器（玩家就绪后即有值）
+        if (skillManager == null)
+            skillManager = Player_SkillManager.Instance ?? FindAnyObjectByType<Player_SkillManager>();
+        if (skillManager == null)
+            return;
+
         SkillType skillType = SkillDataManager.Instance?.GetSkillType(upgradeType) ?? SkillType.None;
         if (skillType == SkillType.None) return;
 
@@ -222,6 +228,12 @@ public class SkillSlotManager : MonoBehaviour
     private void DeactivateUpgradeType(SkillUpgradeType upgradeType) // 停用指定的技能升阶类型
     {
         if (upgradeType == SkillUpgradeType.None) return;
+
+        // 防御：重新获取技能管理器
+        if (skillManager == null)
+            skillManager = Player_SkillManager.Instance ?? FindAnyObjectByType<Player_SkillManager>();
+        if (skillManager == null)
+            return;
 
         SkillType skillType = SkillDataManager.Instance?.GetSkillType(upgradeType) ?? SkillType.None;
         if (skillType == SkillType.None) return;

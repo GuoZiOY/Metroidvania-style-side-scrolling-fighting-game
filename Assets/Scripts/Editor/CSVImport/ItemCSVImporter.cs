@@ -52,6 +52,8 @@ public static class ItemCSVImporter
         ImportEquipmentInternal();
         LootTableCSVImporter.Import();
         ImportConsumablesInternal();
+        EquipmentAffixCSVImporter.Import(); // 词缀（正式纳入 CSV 一键导入）
+        CraftingRecipeCSVImporter.Import(); // 配方（正式纳入 CSV 一键导入）
     }
 
     [MenuItem("Tools/CSV导入/导入物品")]

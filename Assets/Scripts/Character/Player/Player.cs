@@ -334,7 +334,7 @@ public override void StartHitStop(float duration)
         DOTween.Kill(Camera.main?.transform);
         Time.timeScale = 0;
 
-        UI_DeathScreen.Instance?.Show();
+        UIManager.Instance?.ShowDeathScreen();
     }
 
     public void Revive()

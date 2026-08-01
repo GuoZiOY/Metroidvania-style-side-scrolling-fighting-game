@@ -53,7 +53,7 @@ MonoBehaviour:
       minValue: 3
       maxValue: 5
       isPercentage: 0
-    - statType: 15
+    - statType: 6
       minValue: -2
       maxValue: -1
       isPercentage: 1
@@ -97,7 +97,7 @@ MonoBehaviour:
       minValue: 4
       maxValue: 6
       isPercentage: 1
-    - statType: 15
+    - statType: 7
       minValue: -4
       maxValue: -2
       isPercentage: 1
@@ -122,12 +122,12 @@ MonoBehaviour:
     pool: 0
     statModifiers:
     - statType: 7
-      minValue: 10
-      maxValue: 14
+      minValue: 16
+      maxValue: 20
       isPercentage: 1
-    - statType: 15
-      minValue: -6
-      maxValue: -3
+    - statType: 6
+      minValue: -8
+      maxValue: -6
       isPercentage: 1
   - affixId: prefix_bloodsurge_wp
     displayName: "\u8840\u6D8C"
@@ -136,13 +136,13 @@ MonoBehaviour:
     pool: 0
     statModifiers:
     - statType: 6
-      minValue: 5
-      maxValue: 8
+      minValue: 10
+      maxValue: 14
       isPercentage: 1
-    - statType: 16
-      minValue: -4
-      maxValue: -3
-      isPercentage: 0
+    - statType: 12
+      minValue: -14
+      maxValue: -10
+      isPercentage: 1
   - affixId: prefix_ruin_wp
     displayName: "\u6BC1\u706D"
     tier: 2
@@ -241,9 +241,9 @@ MonoBehaviour:
       minValue: 18
       maxValue: 25
       isPercentage: 1
-    - statType: 15
-      minValue: -20
-      maxValue: -10
+    - statType: 6
+      minValue: -10
+      maxValue: -6
       isPercentage: 1
   - affixId: prefix_doom_wp
     displayName: "\u7EC8\u672B"
@@ -559,10 +559,10 @@ MonoBehaviour:
     weight: 2
     pool: 2
     statModifiers:
-    - statType: 2
+    - statType: 6
       minValue: -6
       maxValue: -3
-      isPercentage: 0
+      isPercentage: 1
   - affixId: prefix_mighty_ac
     displayName: "\u5DE8\u529B"
     tier: 1
@@ -621,7 +621,7 @@ MonoBehaviour:
       minValue: 3
       maxValue: 5
       isPercentage: 0
-    - statType: 15
+    - statType: 7
       minValue: -6
       maxValue: -3
       isPercentage: 1
@@ -771,9 +771,9 @@ MonoBehaviour:
       minValue: 12
       maxValue: 18
       isPercentage: 1
-    - statType: 13
-      minValue: 12
-      maxValue: 18
+    - statType: 6
+      minValue: -10
+      maxValue: -6
       isPercentage: 1
     - statType: 14
       minValue: 12
@@ -824,7 +824,7 @@ MonoBehaviour:
       minValue: 3
       maxValue: 5
       isPercentage: 1
-    - statType: 15
+    - statType: 7
       minValue: -2
       maxValue: -1
       isPercentage: 1
@@ -868,7 +868,7 @@ MonoBehaviour:
       minValue: 8
       maxValue: 12
       isPercentage: 1
-    - statType: 15
+    - statType: 6
       minValue: -4
       maxValue: -2
       isPercentage: 1
@@ -893,12 +893,12 @@ MonoBehaviour:
     pool: 0
     statModifiers:
     - statType: 7
-      minValue: 10
-      maxValue: 14
+      minValue: 16
+      maxValue: 20
       isPercentage: 1
-    - statType: 15
-      minValue: -6
-      maxValue: -3
+    - statType: 14
+      minValue: -14
+      maxValue: -10
       isPercentage: 1
   - affixId: suffix_overload_wp
     displayName: "\u8D85\u8F7D"
@@ -907,13 +907,13 @@ MonoBehaviour:
     pool: 0
     statModifiers:
     - statType: 6
-      minValue: 5
-      maxValue: 8
+      minValue: 10
+      maxValue: 14
       isPercentage: 1
-    - statType: 16
-      minValue: -4
-      maxValue: -3
-      isPercentage: 0
+    - statType: 13
+      minValue: -14
+      maxValue: -10
+      isPercentage: 1
   - affixId: suffix_ruin_wp
     displayName: "\u6BC1\u706D"
     tier: 2
@@ -1008,9 +1008,9 @@ MonoBehaviour:
       minValue: 18
       maxValue: 25
       isPercentage: 1
-    - statType: 15
-      minValue: -20
-      maxValue: -10
+    - statType: 6
+      minValue: -10
+      maxValue: -6
       isPercentage: 1
   - affixId: suffix_doom_wp
     displayName: "\u7EC8\u672B"
@@ -1384,7 +1384,7 @@ MonoBehaviour:
       minValue: 12
       maxValue: 20
       isPercentage: 0
-    - statType: 15
+    - statType: 7
       minValue: -6
       maxValue: -3
       isPercentage: 1
@@ -1534,7 +1534,7 @@ MonoBehaviour:
       minValue: 7
       maxValue: 10
       isPercentage: 0
-    - statType: 16
+    - statType: 6
       minValue: -10
       maxValue: -6
-      isPercentage: 0
+      isPercentage: 1

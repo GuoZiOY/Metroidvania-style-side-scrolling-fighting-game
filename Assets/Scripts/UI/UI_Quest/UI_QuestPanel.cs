@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,6 +30,7 @@ public class UI_QuestPanel : MonoBehaviour
 
     private string selectedQuestId;
     private QuestType currentTab = QuestType.Main;
+    private Button selectedEntryButton; // 当前选中的任务条目（点击放大保持，切换/刷新时恢复）
 
     private void Awake()
     {
@@ -135,6 +137,7 @@ public class UI_QuestPanel : MonoBehaviour
     {
         foreach (Transform child in questListContent)
             Destroy(child.gameObject);
+        selectedEntryButton = null; // 旧条目销毁，清选中引用防残留
 
         var qm = QuestManager.Instance;
         if (qm == null)
@@ -156,7 +159,8 @@ public class UI_QuestPanel : MonoBehaviour
                 text.text = $"{quest.questName}  {status}";
 
             string capturedId = quest.questId;
-            entry.GetComponent<Button>().onClick.AddListener(() => OnEntryClicked(capturedId));
+            var btn = entry.GetComponent<Button>();
+            btn.onClick.AddListener(() => OnEntryClicked(capturedId, btn));
         }
     }
 
@@ -194,10 +198,34 @@ public class UI_QuestPanel : MonoBehaviour
 
     // ─── 条目点击 ───
 
-    private void OnEntryClicked(string questId)
+    // 选中视觉：点击后当前条目保持放大，切换条目时恢复上一个（关闭/刷新由 RebuildList 清引用防残留）
+    private void OnEntryClicked(string questId, Button btn)
     {
+        if (selectedEntryButton != null && selectedEntryButton != btn)
+            SetEntrySelected(selectedEntryButton, false);
+        selectedEntryButton = btn;
+        SetEntrySelected(btn, true);
+
         selectedQuestId = questId;
         UpdateDetailPanel();
+    }
+
+    // 条目选中视觉：走 UI_ButtonEffect（hover 感知选中态），无 effect 时直接缩放
+    private void SetEntrySelected(Button btn, bool selected)
+    {
+        if (btn == null)
+            return;
+        var effect = btn.GetComponent<UI_ButtonEffect>();
+        if (effect != null)
+        {
+            effect.SetSelected(selected);
+            return;
+        }
+        btn.transform.DOKill();
+        if (selected)
+            btn.transform.DOScale(Vector3.one * 1.05f, 0.15f).SetEase(Ease.OutQuad);
+        else
+            btn.transform.DOScale(Vector3.one, 0.15f).SetEase(Ease.OutQuad);
     }
 
     // ─── 详情面板 ───
