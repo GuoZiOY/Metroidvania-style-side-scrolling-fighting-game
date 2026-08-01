@@ -4,38 +4,37 @@ using UnityEngine;
 // NPC 头顶任务标识。
 // ! 金黄感叹号 = 有可接取的任务
 // ? 蓝色问号   = 有待提交/领奖的任务
-// 无标记       = 没有任务交互
 public class QuestIndicator : MonoBehaviour
 {
-    [SerializeField] private GameObject exclamationMark;   // !
-    [SerializeField] private GameObject questionMark;      // ?
+    [SerializeField] private GameObject exclamationMark;
+    [SerializeField] private GameObject questionMark;
     [SerializeField] private float floatHeight = 0.3f;
     [SerializeField] private float floatSpeed = 2f;
 
-    private NPCQuestGiver giver;
+    private NPCBehaviour npcBehaviour;
     private bool wasActive;
     private Tween floatTween;
 
     private void Awake()
     {
-        giver = GetComponent<NPCQuestGiver>();
+        npcBehaviour = GetComponent<NPCBehaviour>();
         if (exclamationMark != null) exclamationMark.SetActive(false);
         if (questionMark != null) questionMark.SetActive(false);
     }
 
     private void Update()
     {
-        if (giver == null) return;
+        if (npcBehaviour == null) return;
 
         bool show = false;
 
-        if (giver.HasFinalRewardToClaim() || giver.HasStageToSubmit())
+        if (npcBehaviour.HasFinalRewardToClaim() || npcBehaviour.HasStageToSubmit())
         {
             SetIndicator(questionMark, true);
             SetIndicator(exclamationMark, false);
             show = true;
         }
-        else if (giver.HasAvailableQuest())
+        else if (npcBehaviour.HasAvailableQuest())
         {
             SetIndicator(questionMark, false);
             SetIndicator(exclamationMark, true);
@@ -48,10 +47,8 @@ public class QuestIndicator : MonoBehaviour
             show = false;
         }
 
-        if (show && !wasActive)
-            StartFloat();
-        else if (!show && wasActive)
-            StopFloat();
+        if (show && !wasActive) StartFloat();
+        else if (!show && wasActive) StopFloat();
 
         wasActive = show;
     }
@@ -65,17 +62,13 @@ public class QuestIndicator : MonoBehaviour
     private void StartFloat()
     {
         StopFloat();
-        if (exclamationMark != null && exclamationMark.activeSelf)
-            floatTween = FloatAnimation(exclamationMark.transform);
-        else if (questionMark != null && questionMark.activeSelf)
-            floatTween = FloatAnimation(questionMark.transform);
-    }
+        var target = (exclamationMark != null && exclamationMark.activeSelf)
+            ? exclamationMark.transform
+            : questionMark?.transform;
+        if (target == null) return;
 
-    private Tween FloatAnimation(Transform target)
-    {
-        if (target == null) return null;
         Vector3 basePos = target.localPosition;
-        return DOTween.To(
+        floatTween = DOTween.To(
             () => 0f,
             t => target.localPosition = basePos + Vector3.up * Mathf.Sin(t * floatSpeed) * floatHeight,
             Mathf.PI * 2f,
@@ -87,14 +80,9 @@ public class QuestIndicator : MonoBehaviour
     {
         floatTween?.Kill();
         floatTween = null;
-        if (exclamationMark != null)
-            exclamationMark.transform.localPosition = Vector3.zero;
-        if (questionMark != null)
-            questionMark.transform.localPosition = Vector3.zero;
+        if (exclamationMark != null) exclamationMark.transform.localPosition = Vector3.zero;
+        if (questionMark != null) questionMark.transform.localPosition = Vector3.zero;
     }
 
-    private void OnDestroy()
-    {
-        StopFloat();
-    }
+    private void OnDestroy() => StopFloat();
 }

@@ -8,6 +8,7 @@ public class Player_CounterChaseState : PlayerState
     private float chaseSpeed;
     private float stopDistance;
     private float originalGravityScale;
+    private bool originalHitStopEnabled; // 进入追击前的顿帧开关状态
     private int chaseDir;
     private bool hasReachedTarget;
 
@@ -30,8 +31,19 @@ public class Player_CounterChaseState : PlayerState
             return;
         }
 
+        // 追击状态接管无敌管理：清除反击无敌计时，避免到期提前恢复受伤
+        player.combat.CancelCounterInvincibility();
         player.health.canBeTakedDamage = false;
         hasReachedTarget = false;
+
+        // 追击期间禁用顿帧：顿帧会 FreezeAll 冻结物理 + SetAnimationSpeed 冻结动画，
+        // 导致追击突进被卡住（空中悬浮或移动停下）。追击突进不应被顿帧打断
+        originalHitStopEnabled = player.HitStopEnabled;
+        player.HitStopEnabled = false;
+
+        // 结束残留顿帧（防御：禁用开关只阻止新的顿帧，已触发的需主动结束）
+        if (player.IsHitStopActive)
+            player.EndHitStop();
 
         chaseSpeed = player.dashSpeed * player.combat.ChaseSpeedMultiplier;
         stopDistance = player.combat.ChaseStopDistance;
@@ -54,10 +66,13 @@ public class Player_CounterChaseState : PlayerState
             return;
         }
 
+        // 顿帧不应打断追击突进：反击命中触发的顿帧是延迟协程（等1帧），可能在本状态内触发。
+        // 每帧强制结束顿帧，避免 FreezeAll 冻结物理 + SetVelocity 被拒导致空中悬浮落下
         if (player.IsHitStopActive)
-            return;
+            player.EndHitStop();
 
-        float currentDistance = Vector2.Distance(player.transform.position, targetEnemy.position);
+        // 距离判定：只比较 X 轴（追击是水平冲刺，Y 差不应导致永远追不上）
+        float currentDistance = Mathf.Abs(player.transform.position.x - targetEnemy.position.x);
 
         if (currentDistance > stopDistance)
         {
@@ -76,6 +91,9 @@ public class Player_CounterChaseState : PlayerState
     public override void Exit()
     {
         base.Exit();
+
+        // 恢复顿帧开关（追击结束，后续状态可正常顿帧）
+        player.HitStopEnabled = originalHitStopEnabled;
 
         rb.gravityScale = originalGravityScale;
         rb.linearVelocity = Vector2.zero;

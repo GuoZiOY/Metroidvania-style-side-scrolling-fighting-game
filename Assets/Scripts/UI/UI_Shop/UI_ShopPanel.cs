@@ -196,6 +196,7 @@ public class UI_ShopPanel : MonoBehaviour
 
         quantitySlider.SetValueWithoutNotify(0);
         gameObject.SetActive(false);
+        UI_NpcMenu.TryReopen();
     }
 
     // ==================== 背景显隐 ====================

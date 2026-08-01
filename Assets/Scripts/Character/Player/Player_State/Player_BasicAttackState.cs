@@ -82,9 +82,14 @@ public class Player_BasicAttackState : PlayerState
     public override void Update()
     {
         base.Update();
+
+        // 更新土狼时间（修复：地面攻击时 lastGroundedTime 不更新导致攻击后跳跃手感变差）
+        if (player.isOnGround)
+            player.UpdateLastGroundedTime();
+
         HandleAttack_Input_PlayerVelocity();
 
-        if (UnityEngine.Input.GetKeyDown(KeyCode.Mouse0))
+        if (GameInput.GetKeyDown(GameInput.Action.Attack))
             QueueNextAttack();
 
         if (triggerCalled)

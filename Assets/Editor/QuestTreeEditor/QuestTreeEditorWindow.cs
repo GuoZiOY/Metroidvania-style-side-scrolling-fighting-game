@@ -135,7 +135,6 @@ public class QuestTreeEditorWindow : EditorWindow
         // 默认添加一个阶段
         quest.stages.Add(new QuestStage
         {
-            stageId = "stage_1",
             description = "新阶段",
             objectives = new List<ObjectiveConfig>(),
         });

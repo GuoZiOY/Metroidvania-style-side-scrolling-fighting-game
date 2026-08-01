@@ -21,10 +21,7 @@ namespace Networking
 
         void Start()
         {
-            // 联机模式必须后台运行，否则失去焦点时网络会断开
-            Application.runInBackground = true;
-
-            // 确保场景中有 NetworkManager
+            // 确保场景中有 NetworkManager（runInBackground 已由 NetworkManager 设置）
             _netManager = FindAnyObjectByType<NetworkManager>();
             if (_netManager == null)
             {

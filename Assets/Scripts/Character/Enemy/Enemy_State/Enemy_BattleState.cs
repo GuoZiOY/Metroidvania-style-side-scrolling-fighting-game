@@ -32,6 +32,9 @@ public class Enemy_BattleState : EnemyState
     {
         base.Update();
 
+        // V2: 驱动精英词缀逐帧行为（光环/AoE/召唤等）
+        enemy.UpdateAffixes();
+
         RaycastHit2D playerHit = enemy.PlayerDetected();
         bool hasDetectedPlayer = playerHit;
 

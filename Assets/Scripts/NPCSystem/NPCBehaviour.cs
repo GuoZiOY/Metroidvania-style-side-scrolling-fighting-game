@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -8,14 +9,13 @@ public class NPCBehaviour : MonoBehaviour
 {
     [Header("NPC 数据")]
     [SerializeField] private string npcId;
-    [SerializeField] private string npcName;
+    public string npcName;
+
+    [Header("关联任务")]
+    public List<QuestData> questsToGive;
 
     [Header("商店（可选）")]
-    public ShopSO shopData;               // public 供 UI_NpcMenu 读取
-
-    [Header("对话菜单")]
-    [SerializeField] private UI_NpcMenu npcMenuPrefab;  // 菜单预制体引用
-    [SerializeField] private Canvas uiCanvas;            // 菜单实例化的目标 Canvas
+    public ShopSO shopData;
 
     [Header("交互提示")]
     [SerializeField] private GameObject promptRoot;        // "按 F 交互" UI
@@ -70,16 +70,14 @@ public class NPCBehaviour : MonoBehaviour
             return;
         }
 
-        // 打开对话菜单（菜单内部判断显示哪些选项）
-        var giver = GetComponent<NPCQuestGiver>();
-        if (giver != null || shopData != null)
+        // 通知任务系统：玩家与此 NPC 对话（推进 TalkToNPC 目标）
+        if (!string.IsNullOrEmpty(npcId))
+            QuestEvents.ReportNpcTalked(npcId);
+
+        // 打开公用的对话菜单（场景中一份，所有 NPC 共享）
+        if (HasAnyInteraction())
         {
-            if (npcMenuPrefab != null)
-            {
-                var parent = uiCanvas != null ? uiCanvas.transform : transform.root;
-                var menu = Instantiate(npcMenuPrefab, parent);
-                menu.Open(this, giver);
-            }
+            UI_NpcMenu.Instance?.Open(this);
         }
     }
 
@@ -128,4 +126,52 @@ public class NPCBehaviour : MonoBehaviour
     {
         floatTween?.Kill();
     }
+
+    // ═════════════════════════════════════════════
+    //  任务交互（原 NPCQuestGiver）
+    // ═════════════════════════════════════════════
+
+    private QuestManager qm => QuestManager.Instance;
+
+    public bool HasAnyInteraction() => (questsToGive?.Count > 0) || shopData != null;
+
+    // ─── 简化查询：用谓词过滤任务列表 ───
+
+    private QuestData FirstQuestWhere(System.Func<QuestData, bool> predicate)
+    {
+        if (questsToGive == null) return null;
+        foreach (var q in questsToGive)
+            if (q != null && predicate(q)) return q;
+        return null;
+    }
+
+    private bool AnyQuestWhere(System.Func<QuestData, bool> predicate)
+    {
+        return FirstQuestWhere(predicate) != null;
+    }
+
+    public bool HasAvailableQuest()     => AnyQuestWhere(q => qm != null && qm.IsQuestAvailable(q.questId));
+    public bool HasActiveQuest()        => AnyQuestWhere(q => qm != null && qm.IsActive(q.questId));
+    public bool HasFinalRewardToClaim() => AnyQuestWhere(q => qm != null && qm.IsReadyToClaim(q.questId));
+
+    public QuestData GetFirstAvailableQuest()    => FirstQuestWhere(q => qm != null && qm.IsQuestAvailable(q.questId));
+    public QuestData GetFirstActiveQuest()       => FirstQuestWhere(q => qm != null && qm.IsActive(q.questId));
+    public QuestData GetFirstReadyToClaimQuest() => FirstQuestWhere(q => qm != null && qm.IsReadyToClaim(q.questId));
+
+    private bool IsStageCompleteAndRewardable(QuestData q)
+    {
+        if (qm == null || !qm.IsCurrentStageComplete(q.questId)) return false;
+        var stage = qm.GetCurrentStage(q.questId);
+        if (stage == null || q.stages == null) return false;
+        int idx = q.stages.IndexOf(stage);
+
+        // 非最终阶段 → 必须提交
+        if (idx < q.stages.Count - 1) return true;
+
+        // 最终阶段 → 有阶段奖励或收集目标都需要先提交物品
+        return (stage.stageReward != null && stage.stageReward.HasReward) || stage.HasCollectObjective;
+    }
+
+    public bool HasStageToSubmit()        => AnyQuestWhere(IsStageCompleteAndRewardable);
+    public QuestData GetFirstStageToSubmit() => FirstQuestWhere(IsStageCompleteAndRewardable);
 }

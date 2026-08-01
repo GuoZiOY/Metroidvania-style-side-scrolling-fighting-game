@@ -44,6 +44,9 @@ namespace Networking
                 return;
             }
             Instance = this;
+
+            // 联机模式必须后台运行，否则失去焦点时网络断开
+            Application.runInBackground = true;
         }
 
         void Update()

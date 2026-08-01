@@ -23,6 +23,7 @@ public class SaveData
     public List<EquipSlotData> equipment;
     public SkillSaveData skills;
     public QuestSaveData quests;
+    public List<string> worldFlags;      // WorldState 持久化 (key=true 的列表)
 }
 
 #endregion
@@ -61,6 +62,7 @@ public class InventorySlotData
     public int slotIndex;
     public int rarity;               // (int)LootRarity
     public float rarityMultiplier;
+    public List<AffixSaveData> affixes;   // 词缀存档（V2 后生效；旧存档为 null 时读档重新生成）
 }
 
 [Serializable]
@@ -71,6 +73,26 @@ public class EquipSlotData
     public int slotIndex;
     public int rarity;
     public float rarityMultiplier;
+    public List<AffixSaveData> affixes;   // 词缀存档（V2 后生效；旧存档为 null 时读档重新生成）
+}
+
+// 单个词缀的存档数据（与 GeneratedEquipmentAffix 一一对应）
+[Serializable]
+public class AffixSaveData
+{
+    public string displayName;            // 词缀显示名
+    public int tier;                      // (int)AffixTier
+    public bool isPrefix;                 // true=前缀, false=后缀
+    public List<ModifierSaveData> modifiers; // 每段效果（含负值=负面效果）
+}
+
+// 单段词缀效果的存档数据（与 ItemModifier 一一对应）
+[Serializable]
+public class ModifierSaveData
+{
+    public int statType;                  // (int)StatType
+    public float value;                   // 最终数值（百分比存小数如 -0.08）
+    public bool isPercentage;             // true=百分比, false=固定值
 }
 
 #endregion
@@ -103,13 +125,21 @@ public class QuestSaveData
     public List<string> completed;
     public List<string> failed;
     public string trackedQuestId;
+    public List<ClaimedStageEntry> claimedStageRewards;  // 已领取的阶段奖励
+}
+
+[Serializable]
+public class ClaimedStageEntry
+{
+    public string questId;
+    public int stageIndex;
 }
 
 [Serializable]
 public class QuestSaveEntry
 {
     public string questId;
-    public string currentStageId;                    // 当前阶段 ID
+    public int currentStageIndex;                    // 当前阶段索引
     public List<QuestObjectiveData> objectives;
     public int[] objectiveProgress;                  // 平铺进度数组（与 List 二选一）
 }

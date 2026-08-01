@@ -1,5 +1,5 @@
 ﻿$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$files = @("Items.xlsx", "Equipment.xlsx", "Consumables.xlsx", "LootTables.xlsx", "Entities.xlsx", "Quests.xlsx")
+$files = @("Items.xlsx", "Equipment.xlsx", "EquipmentAffixes.xlsx", "Consumables.xlsx", "LootTables.xlsx", "Entities.xlsx", "Quests.xlsx")
 
 $excel = New-Object -ComObject Excel.Application
 $excel.Visible = $false

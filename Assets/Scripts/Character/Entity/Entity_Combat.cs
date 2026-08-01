@@ -49,6 +49,14 @@ protected virtual void Awake()
             OnTargetHit(target, attackData);//触发目标命中事件
             ApplyElementalEffect(target, attackData);//应用元素效果
             CreateHitVFX(target, attackData.isCrit, attackData.element);
+
+            // V2: 通知自身 Enemy 的词缀（如吸血、闪电导体）
+            var dealerEnemy = GetComponentInParent<Enemy>();
+            if (dealerEnemy != null)
+            {
+                float totalDmg = attackData.phyiscalDamage + attackData.elementalDamage;
+                dealerEnemy.ReportDealtDamage(totalDmg);
+            }
         }
     }
 

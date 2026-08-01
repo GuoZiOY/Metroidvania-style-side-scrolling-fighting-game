@@ -139,6 +139,8 @@ public class NetworkClient
     }
 
     private DateTime lastHeartbeat = DateTime.UtcNow;
+    private DateTime lastServerData = DateTime.UtcNow; // 最后一次收到服务端数据的时间
+    private const double ServerTimeoutSeconds = 10.0;  // 服务端超时阈值
 
     // 每帧调用，驱动 ReliableChannel 重传定时器
     public void Update()
@@ -158,6 +160,14 @@ public class NetworkClient
         {
             lastHeartbeat = DateTime.UtcNow;
             channel.SendUnreliable(new byte[] { 0 }); // 1 字节的心跳
+        }
+
+        // 服务端超时检测：超过10秒未收到任何数据则判定断线
+        if (State == ConnectionState.Connected &&
+            (DateTime.UtcNow - lastServerData).TotalSeconds > ServerTimeoutSeconds)
+        {
+            OnLog?.Invoke($"[NetworkClient] 服务端超时（{ServerTimeoutSeconds}秒未收到数据），断开连接");
+            Disconnect();
         }
     }
 
@@ -181,6 +191,7 @@ public class NetworkClient
                 byte[]? received = udpClient?.Receive(ref remote);
                 if (received != null && received.Length > 0)
                 {
+                    lastServerData = DateTime.UtcNow; // 更新最后收到数据的时间
                     channel.OnRawDataReceived(received);
                 }
             }

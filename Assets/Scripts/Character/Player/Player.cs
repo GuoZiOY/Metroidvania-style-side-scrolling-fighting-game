@@ -289,10 +289,13 @@ public override void StartHitStop(float duration)
 
         // 启动死亡序列（慢动作 → 相机聚焦 → 停时间 → 死亡面板）
         if (gameObject.activeInHierarchy)
-            StartCoroutine(DeathSequence());
+            deathSequenceCoroutine = StartCoroutine(DeathSequence());
     }
 
     private Tween timeScaleTween;
+    private Tween cameraZoomTween;
+    private Tween cameraMoveTween;
+    private Coroutine deathSequenceCoroutine;
 
     [Header("死亡效果")]
     [SerializeField] private float slomoDuration = 2f;
@@ -314,11 +317,11 @@ public override void StartHitStop(float duration)
 
             // 相机聚焦
             if (cam.orthographic)
-                DOTween.To(() => cam.orthographicSize, v => cam.orthographicSize = v, originalSize / cameraZoom, focusDuration).SetUpdate(true);
+                cameraZoomTween = DOTween.To(() => cam.orthographicSize, v => cam.orthographicSize = v, originalSize / cameraZoom, focusDuration).SetUpdate(true);
             else
-                DOTween.To(() => cam.fieldOfView, v => cam.fieldOfView = v, originalSize / cameraZoom, focusDuration).SetUpdate(true);
+                cameraZoomTween = DOTween.To(() => cam.fieldOfView, v => cam.fieldOfView = v, originalSize / cameraZoom, focusDuration).SetUpdate(true);
 
-            cam.transform.DOMove(targetPos, focusDuration).SetUpdate(true);
+            cameraMoveTween = cam.transform.DOMove(targetPos, focusDuration).SetUpdate(true);
         }
 
         // 等慢动作播完
@@ -326,6 +329,8 @@ public override void StartHitStop(float duration)
 
         // 停止 → 通知死亡面板
         timeScaleTween?.Kill();
+        cameraZoomTween?.Kill();
+        cameraMoveTween?.Kill();
         DOTween.Kill(Camera.main?.transform);
         Time.timeScale = 0;
 
@@ -334,6 +339,17 @@ public override void StartHitStop(float duration)
 
     public void Revive()
     {
+        // 清理死亡序列（防止 DOTween 泄漏）
+        if (deathSequenceCoroutine != null)
+        {
+            StopCoroutine(deathSequenceCoroutine);
+            deathSequenceCoroutine = null;
+        }
+        timeScaleTween?.Kill();
+        cameraZoomTween?.Kill();
+        cameraMoveTween?.Kill();
+        Time.timeScale = 1f;
+
         IsDead = false;
         health?.Revive();
         stateMachine.ChangeState(idleState);

@@ -24,7 +24,10 @@ MonoBehaviour:
   modifiers:
   - statType: 15
     value: 6
+    isPercentage: 0
   - statType: 5
     value: 5
+    isPercentage: 0
   - statType: 2
     value: 2
+    isPercentage: 0

@@ -1,0 +1,1540 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27eb9640de2a73c45adc1cf92906e460, type: 3}
+  m_Name: EquipmentAffixDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::EquipmentAffixDatabase
+  prefixes:
+  - affixId: prefix_sharp_wp
+    displayName: "\u950B\u5229"
+    tier: 0
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 2
+      maxValue: 3
+      isPercentage: 0
+  - affixId: prefix_blazing_wp
+    displayName: "\u70BD\u7130"
+    tier: 0
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 12
+      minValue: 2
+      maxValue: 3
+      isPercentage: 0
+  - affixId: prefix_accurate_wp
+    displayName: "\u7CBE\u51C6"
+    tier: 0
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 8
+      minValue: 1
+      maxValue: 2
+      isPercentage: 0
+  - affixId: prefix_reckless_wp
+    displayName: "\u9C81\u83BD"
+    tier: 0
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 3
+      maxValue: 5
+      isPercentage: 0
+    - statType: 15
+      minValue: -2
+      maxValue: -1
+      isPercentage: 1
+  - affixId: prefix_blunt_wp
+    displayName: "\u949D\u5316"
+    tier: 0
+    weight: 2
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: -8
+      maxValue: -5
+      isPercentage: 1
+  - affixId: prefix_keen_wp
+    displayName: "\u950B\u9510"
+    tier: 1
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 4
+      maxValue: 6
+      isPercentage: 0
+  - affixId: prefix_pierce_wp
+    displayName: "\u7A7F\u900F"
+    tier: 1
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 10
+      minValue: 2
+      maxValue: 3
+      isPercentage: 0
+  - affixId: prefix_surge_wp
+    displayName: "\u72C2\u6D8C"
+    tier: 1
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 6
+      minValue: 4
+      maxValue: 6
+      isPercentage: 1
+    - statType: 15
+      minValue: -4
+      maxValue: -2
+      isPercentage: 1
+  - affixId: prefix_cruel_wp
+    displayName: "\u6B8B\u66B4"
+    tier: 1
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 9
+      minValue: 8
+      maxValue: 12
+      isPercentage: 0
+    - statType: 16
+      minValue: -3
+      maxValue: -2
+      isPercentage: 0
+  - affixId: prefix_war_wp
+    displayName: "\u72C2\u6218"
+    tier: 2
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+    - statType: 15
+      minValue: -6
+      maxValue: -3
+      isPercentage: 1
+  - affixId: prefix_bloodsurge_wp
+    displayName: "\u8840\u6D8C"
+    tier: 2
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 6
+      minValue: 5
+      maxValue: 8
+      isPercentage: 1
+    - statType: 16
+      minValue: -4
+      maxValue: -3
+      isPercentage: 0
+  - affixId: prefix_ruin_wp
+    displayName: "\u6BC1\u706D"
+    tier: 2
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+  - affixId: prefix_warall_wp
+    displayName: "\u6218\u4E89"
+    tier: 2
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+    - statType: 12
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+    - statType: 13
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+    - statType: 14
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+  - affixId: prefix_scourge_wp
+    displayName: "\u5929\u7F5A"
+    tier: 3
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 14
+      maxValue: 18
+      isPercentage: 1
+  - affixId: prefix_godslayer_wp
+    displayName: "\u5F11\u795E"
+    tier: 3
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 14
+      maxValue: 18
+      isPercentage: 1
+    - statType: 12
+      minValue: 14
+      maxValue: 18
+      isPercentage: 1
+    - statType: 13
+      minValue: 14
+      maxValue: 18
+      isPercentage: 1
+    - statType: 14
+      minValue: 14
+      maxValue: 18
+      isPercentage: 1
+  - affixId: prefix_bloodrage_wp
+    displayName: "\u6D74\u8840"
+    tier: 4
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 16
+      maxValue: 20
+      isPercentage: 1
+    - statType: 0
+      minValue: -15
+      maxValue: -8
+      isPercentage: 1
+  - affixId: prefix_wrath_wp
+    displayName: "\u795E\u6012"
+    tier: 4
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 20
+      maxValue: 25
+      isPercentage: 1
+  - affixId: prefix_godwar_wp
+    displayName: "\u72C2\u795E"
+    tier: 4
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 18
+      maxValue: 25
+      isPercentage: 1
+    - statType: 15
+      minValue: -20
+      maxValue: -10
+      isPercentage: 1
+  - affixId: prefix_doom_wp
+    displayName: "\u7EC8\u672B"
+    tier: 4
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 12
+      minValue: 16
+      maxValue: 22
+      isPercentage: 1
+    - statType: 13
+      minValue: 16
+      maxValue: 22
+      isPercentage: 1
+    - statType: 14
+      minValue: 16
+      maxValue: 22
+      isPercentage: 1
+    - statType: 0
+      minValue: -20
+      maxValue: -10
+      isPercentage: 1
+  - affixId: prefix_sturdy_am
+    displayName: "\u575A\u6BC5"
+    tier: 0
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 1
+      maxValue: 2
+      isPercentage: 0
+  - affixId: prefix_vital_am
+    displayName: "\u751F\u547D"
+    tier: 0
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 4
+      maxValue: 6
+      isPercentage: 0
+  - affixId: prefix_evasive_am
+    displayName: "\u95EA\u907F"
+    tier: 0
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 16
+      minValue: 1
+      maxValue: 2
+      isPercentage: 0
+  - affixId: prefix_ironhide_am
+    displayName: "\u94C1\u58C1"
+    tier: 0
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 4
+      maxValue: 6
+      isPercentage: 1
+    - statType: 16
+      minValue: -2
+      maxValue: -1
+      isPercentage: 0
+  - affixId: prefix_brittle_am
+    displayName: "\u8106\u5F31"
+    tier: 0
+    weight: 2
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: -4
+      maxValue: -2
+      isPercentage: 1
+  - affixId: prefix_robust_am
+    displayName: "\u5065\u58EE"
+    tier: 1
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 8
+      maxValue: 12
+      isPercentage: 0
+  - affixId: prefix_steady_am
+    displayName: "\u7A33\u56FA"
+    tier: 1
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 3
+      maxValue: 6
+      isPercentage: 1
+  - affixId: prefix_giant_am
+    displayName: "\u5DE8\u4EBA"
+    tier: 1
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 4
+      maxValue: 8
+      isPercentage: 1
+    - statType: 16
+      minValue: -3
+      maxValue: -2
+      isPercentage: 0
+  - affixId: prefix_bulwark_am
+    displayName: "\u58C1\u5792"
+    tier: 1
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 3
+      maxValue: 6
+      isPercentage: 1
+    - statType: 16
+      minValue: -3
+      maxValue: -2
+      isPercentage: 0
+  - affixId: prefix_beast_am
+    displayName: "\u5DE8\u517D"
+    tier: 2
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 6
+      maxValue: 10
+      isPercentage: 1
+    - statType: 16
+      minValue: -4
+      maxValue: -3
+      isPercentage: 0
+  - affixId: prefix_bloody_am
+    displayName: "\u8840\u6027"
+    tier: 2
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 8
+      maxValue: 12
+      isPercentage: 1
+    - statType: 16
+      minValue: -4
+      maxValue: -3
+      isPercentage: 0
+  - affixId: prefix_unyielding_am
+    displayName: "\u4E0D\u706D"
+    tier: 2
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 8
+      maxValue: 12
+      isPercentage: 1
+  - affixId: prefix_eternal_am
+    displayName: "\u6C38\u751F"
+    tier: 2
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 6
+      maxValue: 10
+      isPercentage: 1
+  - affixId: prefix_immortal_am
+    displayName: "\u4E0D\u673D"
+    tier: 3
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+  - affixId: prefix_hallowed_am
+    displayName: "\u5723\u4F51"
+    tier: 3
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 18
+      minValue: 5
+      maxValue: 8
+      isPercentage: 0
+    - statType: 17
+      minValue: 5
+      maxValue: 8
+      isPercentage: 0
+    - statType: 19
+      minValue: 5
+      maxValue: 8
+      isPercentage: 0
+  - affixId: prefix_colossus_am
+    displayName: "\u5DE8\u7075"
+    tier: 4
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 15
+      minValue: -15
+      maxValue: -8
+      isPercentage: 1
+  - affixId: prefix_divinebody_am
+    displayName: "\u795E\u8EAF"
+    tier: 4
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 18
+      maxValue: 28
+      isPercentage: 1
+    - statType: 11
+      minValue: 1
+      maxValue: 2
+      isPercentage: 0
+  - affixId: prefix_titan_am
+    displayName: "\u6CF0\u5766"
+    tier: 4
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 16
+      maxValue: 25
+      isPercentage: 1
+    - statType: 0
+      minValue: -20
+      maxValue: -10
+      isPercentage: 1
+  - affixId: prefix_chaos_am
+    displayName: "\u6DF7\u6C8C"
+    tier: 4
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 18
+      minValue: 8
+      maxValue: 12
+      isPercentage: 0
+    - statType: 17
+      minValue: 8
+      maxValue: 12
+      isPercentage: 0
+    - statType: 19
+      minValue: 8
+      maxValue: 12
+      isPercentage: 0
+    - statType: 0
+      minValue: -15
+      maxValue: -8
+      isPercentage: 1
+  - affixId: prefix_strong_ac
+    displayName: "\u5F3A\u58EE"
+    tier: 0
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 2
+      minValue: 3
+      maxValue: 5
+      isPercentage: 0
+  - affixId: prefix_agile_ac
+    displayName: "\u654F\u6377"
+    tier: 0
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 3
+      minValue: 3
+      maxValue: 5
+      isPercentage: 0
+  - affixId: prefix_wise_ac
+    displayName: "\u777F\u667A"
+    tier: 0
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 4
+      minValue: 3
+      maxValue: 5
+      isPercentage: 0
+  - affixId: prefix_tradeoff_ac
+    displayName: "\u6743\u8861"
+    tier: 0
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 2
+      minValue: 3
+      maxValue: 5
+      isPercentage: 0
+    - statType: 15
+      minValue: -2
+      maxValue: -1
+      isPercentage: 1
+  - affixId: prefix_wan_ac
+    displayName: "\u7FB8\u5F31"
+    tier: 0
+    weight: 2
+    pool: 2
+    statModifiers:
+    - statType: 2
+      minValue: -6
+      maxValue: -3
+      isPercentage: 0
+  - affixId: prefix_mighty_ac
+    displayName: "\u5DE8\u529B"
+    tier: 1
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 2
+      minValue: 6
+      maxValue: 10
+      isPercentage: 0
+  - affixId: prefix_brilliant_ac
+    displayName: "\u806A\u6167"
+    tier: 1
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 4
+      minValue: 6
+      maxValue: 10
+      isPercentage: 0
+  - affixId: prefix_vitaldual_ac
+    displayName: "\u575A\u97E7"
+    tier: 1
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 5
+      minValue: 6
+      maxValue: 10
+      isPercentage: 0
+    - statType: 16
+      minValue: -3
+      maxValue: -2
+      isPercentage: 0
+  - affixId: prefix_agiledual_ac
+    displayName: "\u7075\u52A8"
+    tier: 1
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 3
+      minValue: 6
+      maxValue: 10
+      isPercentage: 0
+    - statType: 15
+      minValue: -4
+      maxValue: -2
+      isPercentage: 1
+  - affixId: prefix_fate_ac
+    displayName: "\u547D\u8FD0"
+    tier: 2
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 8
+      minValue: 3
+      maxValue: 5
+      isPercentage: 0
+    - statType: 15
+      minValue: -6
+      maxValue: -3
+      isPercentage: 1
+  - affixId: prefix_intdual_ac
+    displayName: "\u5929\u8D44"
+    tier: 2
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 4
+      minValue: 10
+      maxValue: 15
+      isPercentage: 0
+    - statType: 16
+      minValue: -4
+      maxValue: -3
+      isPercentage: 0
+  - affixId: prefix_havoc_ac
+    displayName: "\u6D69\u52AB"
+    tier: 2
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 7
+      minValue: 8
+      maxValue: 11
+      isPercentage: 1
+    - statType: 12
+      minValue: 8
+      maxValue: 11
+      isPercentage: 1
+    - statType: 13
+      minValue: 8
+      maxValue: 11
+      isPercentage: 1
+    - statType: 14
+      minValue: 8
+      maxValue: 11
+      isPercentage: 1
+  - affixId: prefix_blessing_ac
+    displayName: "\u795E\u6069"
+    tier: 2
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 0
+      minValue: 8
+      maxValue: 12
+      isPercentage: 1
+  - affixId: prefix_annihilate_ac
+    displayName: "\u6E6E\u706D"
+    tier: 3
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 7
+      minValue: 11
+      maxValue: 15
+      isPercentage: 1
+    - statType: 12
+      minValue: 11
+      maxValue: 15
+      isPercentage: 1
+    - statType: 13
+      minValue: 11
+      maxValue: 15
+      isPercentage: 1
+    - statType: 14
+      minValue: 11
+      maxValue: 15
+      isPercentage: 1
+  - affixId: prefix_forever_ac
+    displayName: "\u6C38\u6052"
+    tier: 3
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 0
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+  - affixId: prefix_revelation_ac
+    displayName: "\u5929\u542F"
+    tier: 4
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 12
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 13
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 14
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 0
+      minValue: -15
+      maxValue: -8
+      isPercentage: 1
+  - affixId: prefix_oracle_ac
+    displayName: "\u795E\u8C15"
+    tier: 4
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 7
+      minValue: 15
+      maxValue: 18
+      isPercentage: 1
+    - statType: 12
+      minValue: 15
+      maxValue: 18
+      isPercentage: 1
+    - statType: 13
+      minValue: 15
+      maxValue: 18
+      isPercentage: 1
+    - statType: 14
+      minValue: 15
+      maxValue: 18
+      isPercentage: 1
+  - affixId: prefix_gambler_ac
+    displayName: "\u8D4C\u795E"
+    tier: 4
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 8
+      minValue: 7
+      maxValue: 10
+      isPercentage: 0
+    - statType: 0
+      minValue: -20
+      maxValue: -10
+      isPercentage: 1
+  - affixId: prefix_worldend_ac
+    displayName: "\u706D\u4E16"
+    tier: 4
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 12
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 13
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 14
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 15
+      minValue: -20
+      maxValue: -10
+      isPercentage: 1
+  suffixes:
+  - affixId: suffix_blazing_wp
+    displayName: "\u707C\u70ED"
+    tier: 0
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 12
+      minValue: 2
+      maxValue: 3
+      isPercentage: 0
+  - affixId: suffix_rime_wp
+    displayName: "\u971C\u5BD2"
+    tier: 0
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 13
+      minValue: 2
+      maxValue: 3
+      isPercentage: 0
+  - affixId: suffix_arc_wp
+    displayName: "\u7535\u5F27"
+    tier: 0
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 14
+      minValue: 2
+      maxValue: 3
+      isPercentage: 0
+  - affixId: suffix_reckless_wp
+    displayName: "\u9C81\u83BD"
+    tier: 0
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 6
+      minValue: 3
+      maxValue: 5
+      isPercentage: 1
+    - statType: 15
+      minValue: -2
+      maxValue: -1
+      isPercentage: 1
+  - affixId: suffix_jagged_wp
+    displayName: "\u5F00\u88C2"
+    tier: 0
+    weight: 2
+    pool: 0
+    statModifiers:
+    - statType: 6
+      minValue: -4
+      maxValue: -2
+      isPercentage: 1
+  - affixId: suffix_accuracy_wp
+    displayName: "\u7CBE\u51C6"
+    tier: 1
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 8
+      minValue: 2
+      maxValue: 3
+      isPercentage: 0
+  - affixId: suffix_might_wp
+    displayName: "\u5F3A\u5065"
+    tier: 1
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 4
+      maxValue: 6
+      isPercentage: 0
+  - affixId: suffix_surge_wp
+    displayName: "\u72C2\u6D8C"
+    tier: 1
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 8
+      maxValue: 12
+      isPercentage: 1
+    - statType: 15
+      minValue: -4
+      maxValue: -2
+      isPercentage: 1
+  - affixId: suffix_cruel_wp
+    displayName: "\u6B8B\u66B4"
+    tier: 1
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 9
+      minValue: 8
+      maxValue: 12
+      isPercentage: 0
+    - statType: 16
+      minValue: -3
+      maxValue: -2
+      isPercentage: 0
+  - affixId: suffix_war_wp
+    displayName: "\u72C2\u6218"
+    tier: 2
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+    - statType: 15
+      minValue: -6
+      maxValue: -3
+      isPercentage: 1
+  - affixId: suffix_overload_wp
+    displayName: "\u8D85\u8F7D"
+    tier: 2
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 6
+      minValue: 5
+      maxValue: 8
+      isPercentage: 1
+    - statType: 16
+      minValue: -4
+      maxValue: -3
+      isPercentage: 0
+  - affixId: suffix_ruin_wp
+    displayName: "\u6BC1\u706D"
+    tier: 2
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+  - affixId: suffix_elemental_wp
+    displayName: "\u5143\u7D20\u7206\u53D1"
+    tier: 2
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 12
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+    - statType: 13
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+    - statType: 14
+      minValue: 10
+      maxValue: 14
+      isPercentage: 1
+  - affixId: suffix_cataclysm_wp
+    displayName: "\u7EC8\u7109"
+    tier: 3
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 14
+      maxValue: 18
+      isPercentage: 1
+    - statType: 12
+      minValue: 14
+      maxValue: 18
+      isPercentage: 1
+    - statType: 13
+      minValue: 14
+      maxValue: 18
+      isPercentage: 1
+    - statType: 14
+      minValue: 14
+      maxValue: 18
+      isPercentage: 1
+  - affixId: suffix_god_wp
+    displayName: "\u795E\u542F"
+    tier: 3
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 9
+      minValue: 20
+      maxValue: 30
+      isPercentage: 0
+  - affixId: suffix_bloodprice_wp
+    displayName: "\u8840\u796D"
+    tier: 4
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 0
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 6
+      minValue: -10
+      maxValue: -6
+      isPercentage: 1
+  - affixId: suffix_divine_wp
+    displayName: "\u795E\u5723"
+    tier: 4
+    weight: 5
+    pool: 0
+    statModifiers:
+    - statType: 9
+      minValue: 30
+      maxValue: 40
+      isPercentage: 0
+  - affixId: suffix_annihilate_wp
+    displayName: "\u6E6E\u706D"
+    tier: 4
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 7
+      minValue: 18
+      maxValue: 25
+      isPercentage: 1
+    - statType: 15
+      minValue: -20
+      maxValue: -10
+      isPercentage: 1
+  - affixId: suffix_doom_wp
+    displayName: "\u7EC8\u672B"
+    tier: 4
+    weight: 4
+    pool: 0
+    statModifiers:
+    - statType: 12
+      minValue: 16
+      maxValue: 22
+      isPercentage: 1
+    - statType: 13
+      minValue: 16
+      maxValue: 22
+      isPercentage: 1
+    - statType: 14
+      minValue: 16
+      maxValue: 22
+      isPercentage: 1
+    - statType: 0
+      minValue: -20
+      maxValue: -10
+      isPercentage: 1
+  - affixId: suffix_fortitude_am
+    displayName: "\u521A\u6BC5"
+    tier: 0
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 1
+      maxValue: 2
+      isPercentage: 0
+  - affixId: suffix_vitality_am
+    displayName: "\u751F\u673A"
+    tier: 0
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 5
+      maxValue: 8
+      isPercentage: 0
+  - affixId: suffix_recovery_am
+    displayName: "\u590D\u539F"
+    tier: 0
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 1
+      minValue: 0.2
+      maxValue: 0.3
+      isPercentage: 0
+  - affixId: suffix_thorns_am
+    displayName: "\u8346\u68D8"
+    tier: 0
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 1
+      minValue: 0.3
+      maxValue: 0.5
+      isPercentage: 0
+    - statType: 15
+      minValue: -2
+      maxValue: -1
+      isPercentage: 1
+  - affixId: suffix_rusty_am
+    displayName: "\u9508\u8680"
+    tier: 0
+    weight: 2
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: -4
+      maxValue: -2
+      isPercentage: 1
+  - affixId: suffix_nimble_am
+    displayName: "\u7075\u5DE7"
+    tier: 1
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 16
+      minValue: 2
+      maxValue: 3
+      isPercentage: 0
+  - affixId: suffix_ironwall_am
+    displayName: "\u94C1\u58C1"
+    tier: 1
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 3
+      maxValue: 6
+      isPercentage: 1
+  - affixId: suffix_tenacity_am
+    displayName: "\u97E7\u6027"
+    tier: 1
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 16
+      minValue: 2
+      maxValue: 4
+      isPercentage: 0
+    - statType: 15
+      minValue: -3
+      maxValue: -1
+      isPercentage: 1
+  - affixId: suffix_bloodforge_am
+    displayName: "\u8840\u70BC"
+    tier: 1
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 4
+      maxValue: 8
+      isPercentage: 1
+    - statType: 15
+      minValue: -3
+      maxValue: -1
+      isPercentage: 1
+  - affixId: suffix_unyield_am
+    displayName: "\u4E0D\u5C48"
+    tier: 2
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 6
+      maxValue: 10
+      isPercentage: 1
+    - statType: 16
+      minValue: -4
+      maxValue: -3
+      isPercentage: 0
+  - affixId: suffix_bloodoath_am
+    displayName: "\u8840\u8A93"
+    tier: 2
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 8
+      maxValue: 12
+      isPercentage: 1
+    - statType: 16
+      minValue: -4
+      maxValue: -3
+      isPercentage: 0
+  - affixId: suffix_giant_am
+    displayName: "\u5DE8\u4EBA"
+    tier: 2
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 8
+      maxValue: 12
+      isPercentage: 1
+  - affixId: suffix_guardian_am
+    displayName: "\u5B88\u62A4"
+    tier: 2
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 6
+      maxValue: 10
+      isPercentage: 1
+  - affixId: suffix_immortal_am
+    displayName: "\u4E0D\u673D"
+    tier: 3
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+  - affixId: suffix_holyguard_am
+    displayName: "\u5723\u76FE"
+    tier: 3
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 18
+      minValue: 5
+      maxValue: 8
+      isPercentage: 0
+    - statType: 17
+      minValue: 5
+      maxValue: 8
+      isPercentage: 0
+    - statType: 19
+      minValue: 5
+      maxValue: 8
+      isPercentage: 0
+  - affixId: suffix_sacrifice_am
+    displayName: "\u732E\u796D"
+    tier: 4
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 1
+      minValue: 1.5
+      maxValue: 2.5
+      isPercentage: 0
+    - statType: 15
+      minValue: -15
+      maxValue: -8
+      isPercentage: 1
+  - affixId: suffix_eternal_am
+    displayName: "\u6C38\u6052"
+    tier: 4
+    weight: 5
+    pool: 1
+    statModifiers:
+    - statType: 0
+      minValue: 18
+      maxValue: 28
+      isPercentage: 1
+  - affixId: suffix_devour_am
+    displayName: "\u541E\u566C"
+    tier: 4
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 15
+      minValue: 16
+      maxValue: 25
+      isPercentage: 1
+    - statType: 0
+      minValue: -20
+      maxValue: -10
+      isPercentage: 1
+  - affixId: suffix_offering_am
+    displayName: "\u796D\u54C1"
+    tier: 4
+    weight: 4
+    pool: 1
+    statModifiers:
+    - statType: 18
+      minValue: 8
+      maxValue: 12
+      isPercentage: 0
+    - statType: 17
+      minValue: 8
+      maxValue: 12
+      isPercentage: 0
+    - statType: 19
+      minValue: 8
+      maxValue: 12
+      isPercentage: 0
+    - statType: 16
+      minValue: -10
+      maxValue: -6
+      isPercentage: 0
+  - affixId: suffix_might_ac
+    displayName: "\u5F3A\u5065"
+    tier: 0
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 5
+      minValue: 3
+      maxValue: 5
+      isPercentage: 0
+  - affixId: suffix_cunning_ac
+    displayName: "\u72E1\u9EE0"
+    tier: 0
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 3
+      minValue: 3
+      maxValue: 5
+      isPercentage: 0
+  - affixId: suffix_brilliance_ac
+    displayName: "\u6167\u5FC3"
+    tier: 0
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 4
+      minValue: 3
+      maxValue: 5
+      isPercentage: 0
+  - affixId: suffix_tradeoff_ac
+    displayName: "\u6743\u8861"
+    tier: 0
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 8
+      minValue: 1
+      maxValue: 2
+      isPercentage: 0
+    - statType: 16
+      minValue: -2
+      maxValue: -1
+      isPercentage: 0
+  - affixId: suffix_haunted_ac
+    displayName: "\u7F20\u8EAB"
+    tier: 0
+    weight: 2
+    pool: 2
+    statModifiers:
+    - statType: 0
+      minValue: -8
+      maxValue: -5
+      isPercentage: 1
+  - affixId: suffix_endurance_ac
+    displayName: "\u8010\u529B"
+    tier: 1
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 5
+      minValue: 6
+      maxValue: 10
+      isPercentage: 0
+  - affixId: suffix_strength_ac
+    displayName: "\u5DE8\u529B"
+    tier: 1
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 2
+      minValue: 6
+      maxValue: 10
+      isPercentage: 0
+  - affixId: suffix_bloodtide_ac
+    displayName: "\u8840\u6F6E"
+    tier: 1
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 1
+      minValue: 0.5
+      maxValue: 1
+      isPercentage: 0
+    - statType: 16
+      minValue: -3
+      maxValue: -2
+      isPercentage: 0
+  - affixId: suffix_agiletide_ac
+    displayName: "\u654F\u5F71"
+    tier: 1
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 3
+      minValue: 6
+      maxValue: 10
+      isPercentage: 0
+    - statType: 15
+      minValue: -4
+      maxValue: -2
+      isPercentage: 1
+  - affixId: suffix_fate_ac
+    displayName: "\u547D\u8FD0"
+    tier: 2
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 9
+      minValue: 12
+      maxValue: 20
+      isPercentage: 0
+    - statType: 15
+      minValue: -6
+      maxValue: -3
+      isPercentage: 1
+  - affixId: suffix_inttide_ac
+    displayName: "\u5929\u8D44"
+    tier: 2
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 4
+      minValue: 10
+      maxValue: 15
+      isPercentage: 0
+    - statType: 16
+      minValue: -4
+      maxValue: -3
+      isPercentage: 0
+  - affixId: suffix_chaos_ac
+    displayName: "\u6DF7\u6C8C"
+    tier: 2
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 7
+      minValue: 8
+      maxValue: 11
+      isPercentage: 1
+    - statType: 12
+      minValue: 8
+      maxValue: 11
+      isPercentage: 1
+    - statType: 13
+      minValue: 8
+      maxValue: 11
+      isPercentage: 1
+    - statType: 14
+      minValue: 8
+      maxValue: 11
+      isPercentage: 1
+  - affixId: suffix_renewal_ac
+    displayName: "\u65B0\u751F"
+    tier: 2
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 1
+      minValue: 1
+      maxValue: 1.5
+      isPercentage: 0
+  - affixId: suffix_overlord_ac
+    displayName: "\u5927\u541B"
+    tier: 3
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 7
+      minValue: 11
+      maxValue: 15
+      isPercentage: 1
+    - statType: 12
+      minValue: 11
+      maxValue: 15
+      isPercentage: 1
+    - statType: 13
+      minValue: 11
+      maxValue: 15
+      isPercentage: 1
+    - statType: 14
+      minValue: 11
+      maxValue: 15
+      isPercentage: 1
+  - affixId: suffix_providence_ac
+    displayName: "\u795E\u4F51"
+    tier: 3
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 18
+      minValue: 5
+      maxValue: 8
+      isPercentage: 0
+    - statType: 17
+      minValue: 5
+      maxValue: 8
+      isPercentage: 0
+    - statType: 19
+      minValue: 5
+      maxValue: 8
+      isPercentage: 0
+  - affixId: suffix_gamble_ac
+    displayName: "\u8D4C\u5F92"
+    tier: 4
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 8
+      minValue: 5
+      maxValue: 7
+      isPercentage: 0
+    - statType: 0
+      minValue: -12
+      maxValue: -6
+      isPercentage: 1
+  - affixId: suffix_oracle_ac
+    displayName: "\u795E\u8C15"
+    tier: 4
+    weight: 5
+    pool: 2
+    statModifiers:
+    - statType: 9
+      minValue: 30
+      maxValue: 40
+      isPercentage: 0
+    - statType: 11
+      minValue: 1
+      maxValue: 2
+      isPercentage: 0
+  - affixId: suffix_hexed_ac
+    displayName: "\u5929\u5492"
+    tier: 4
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 12
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 13
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 14
+      minValue: 12
+      maxValue: 18
+      isPercentage: 1
+    - statType: 0
+      minValue: -20
+      maxValue: -10
+      isPercentage: 1
+  - affixId: suffix_evilgod_ac
+    displayName: "\u90AA\u795E"
+    tier: 4
+    weight: 4
+    pool: 2
+    statModifiers:
+    - statType: 8
+      minValue: 7
+      maxValue: 10
+      isPercentage: 0
+    - statType: 16
+      minValue: -10
+      maxValue: -6
+      isPercentage: 0

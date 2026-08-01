@@ -43,6 +43,7 @@ public class Entity : MonoBehaviour, IHitStopable
     [SerializeField] private float hitStopDuration = 0.08f;
     [SerializeField] private float hitStopTimeScale = 0.0f;
     public bool IsHitStopActive => isHitStopActive;
+    public bool HitStopEnabled { get => enableHitStop; set => enableHitStop = value; } // 顿帧开关（追击等状态可临时禁用）
     private bool isHitStopActive;
     private float originalAnimSpeed;
     private Vector2 savedVelocity;

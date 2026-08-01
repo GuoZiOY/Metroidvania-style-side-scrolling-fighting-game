@@ -27,12 +27,32 @@ public class Enemy : Entity
     [Header("等级系统")]
     [SerializeField] private EnemyLevelSystem levelSystem; // 敌人等级系统
     [SerializeField] private int enemyLevel = 1; // 敌人等级
-    
+
     [Header("敌人类型系统")]
     [SerializeField] private NormalEnemyTypeSystem normalTypeSystem; // 普通敌人类型系统
     [SerializeField] private EliteEnemyTypeSystem eliteTypeSystem; // 精英敌人类型系统
     [SerializeField] private BossEnemyTypeSystem bossTypeSystem; // Boss敌人类型系统
     private EnemyTypeSystem activeTypeSystem; // 当前激活的类型系统
+
+    [Header("精英词缀 (V2)")]
+    public List<IEnemyAffix> ActiveAffixes { get; private set; } = new(); // 当前激活的词缀列表（由 AffixSpawner 注入）
+
+    // 词缀系统伤害事件 — 行为类词缀通过订阅这些事件响应战斗
+    // 由 Entity_Combat（造成伤害时）和 Entity_Health（受到伤害时）调用下面的公开方法触发
+    public event System.Action<float> OnEnemyDealtDamage; // 敌人对玩家造成伤害时触发，参数=伤害总量（物理+元素）
+    public event System.Action<float> OnEnemyTookDamage;   // 敌人受到伤害时触发，参数=伤害总量
+
+    // 供 Entity_Combat 调用：通知词缀敌人造成了伤害
+    public void ReportDealtDamage(float totalDamage)
+    {
+        OnEnemyDealtDamage?.Invoke(totalDamage);
+    }
+
+    // 供 Entity_Health 调用：通知词缀敌人受到了伤害
+    public void ReportTookDamage(float totalDamage)
+    {
+        OnEnemyTookDamage?.Invoke(totalDamage);
+    }
 
 
     [Header("玩家检测")]
@@ -129,9 +149,45 @@ public class Enemy : Entity
 
     public virtual void DestroyEntity()
     {
- 
+        RemoveAllAffixes();
         Destroy(gameObject,2);
-        
+    }
+
+    // ─── 精英词缀管理 (V2) ───
+
+    public void AddAffix(IEnemyAffix affix) // 添加词缀
+    {
+        if (affix == null || ActiveAffixes.Contains(affix))
+            return;
+        ActiveAffixes.Add(affix);
+    }
+
+    public void RemoveAffix(IEnemyAffix affix) // 移除单个词缀
+    {
+        if (affix == null || !ActiveAffixes.Contains(affix))
+            return;
+        affix.OnRemoved(this);
+        ActiveAffixes.Remove(affix);
+    }
+
+    public void RemoveAllAffixes() // 移除全部词缀
+    {
+        foreach (var affix in ActiveAffixes)
+        {
+            if (affix != null)
+                affix.OnRemoved(this);
+        }
+        ActiveAffixes.Clear();
+    }
+
+    // 每帧 BattleState 调用，驱动所有词缀的逐帧行为
+    public void UpdateAffixes()
+    {
+        foreach (var affix in ActiveAffixes)
+        {
+            if (affix != null)
+                affix.OnBattleUpdate(this);
+        }
     }
     public void TryEnterBattleState(Transform player)//尝试进入战斗状态，通常在受到攻击时调用（Enemy_Health被攻击时）
     {
@@ -151,15 +207,19 @@ public class Enemy : Entity
 
     public void InitializeEnemy(EnemyType type, int level) // 统一初始化敌人（类型 + 等级）
     {
+        // 0. 先重置属性到默认值，避免类型和等级加成累积
+        if (stats != null && stats.defaultStatSetup != null)
+            stats.ApplyDefaultStatSetup();
+
         // 1. 设置类型
         enemyType = type;
-        
+
         // 2. 应用类型加成
         ApplyTypeBonus();
-        
+
         // 3. 应用等级加成
         ApplyLevelBonus(level);
-        
+
         Debug.Log($"{enemyName} 初始化完成：类型={type}, 等级={level}");
     }
 

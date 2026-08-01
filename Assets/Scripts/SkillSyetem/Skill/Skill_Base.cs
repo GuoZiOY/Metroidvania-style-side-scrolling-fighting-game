@@ -74,12 +74,12 @@ public class Skill_Base : MonoBehaviour
 
     public bool CanUseSkill()
     {
-        if(upgradeType == SkillUpgradeType.None)
+        if (upgradeType == SkillUpgradeType.None)
             return false;
 
         if (IsOnCooldown())
         {
-            player.VFX.CreatePopUpText($"{skillType} CD:{GetRemainingCooldown():F1}");
+            // 技能冷却中不可用（已移除 CD 飘字提示，按用户要求）
             Debug.Log($"{GetType().Name} 技能冷却中，剩余时间: {GetRemainingCooldown():F1}秒");
             return false;
         }

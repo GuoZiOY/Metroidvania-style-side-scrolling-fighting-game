@@ -55,13 +55,17 @@ public static class TargetNameResolver
         if (string.IsNullOrEmpty(targetId)) return targetId;
         if (!initialized) Initialize();
 
+        // 兼容旧数据可能存了 "id - name" 格式，提取纯 ID
+        int dash = targetId.IndexOf(" - ");
+        string bareId = dash >= 0 ? targetId.Substring(0, dash) : targetId;
+
         var dict = type switch
         {
             ObjectiveType.Kill => entityNames,
             ObjectiveType.Collect => itemNames,
-            ObjectiveType.TalkToNPC => entityNames,  // NPC ID 暂用实体表
+            ObjectiveType.TalkToNPC => entityNames,
             _ => itemNames,
         };
-        return dict.TryGetValue(targetId, out var name) ? name : targetId;
+        return dict.TryGetValue(bareId, out var name) ? name : bareId;
     }
 }

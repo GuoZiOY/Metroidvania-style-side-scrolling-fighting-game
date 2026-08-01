@@ -38,6 +38,7 @@ public class ReliableChannel
     // ---- 配置 ----
     private readonly TimeSpan _resendTimeout = TimeSpan.FromMilliseconds(200);
     private readonly int _maxRetries = 5;
+    private const int HoleSkipThreshold = 10; // 空洞跳过阈值：buffer 累积超过此数量才跳过
 
     // ---- 回调 ----
     public Action<byte[]>? OnReliableDataReceived;
@@ -144,11 +145,11 @@ public class ReliableChannel
         // 如果 reorderBuffer 积累超过 _maxRetries×2 条消息还在等某个序号，
         // 说明发送方已经重试耗尽放弃那个序号了。
         // 跳过空洞，从 buffer 里最早的消息开始投递。
-        if (_reorderBuffer.Count >= _maxRetries)
+        if (_reorderBuffer.Count >= HoleSkipThreshold)
         {
             lock (_reorderLock)
             {
-                if (_reorderBuffer.Count >= _maxRetries)
+                if (_reorderBuffer.Count >= HoleSkipThreshold)
                 {
                     uint minSeq = uint.MaxValue;
                     foreach (var key in _reorderBuffer.Keys)

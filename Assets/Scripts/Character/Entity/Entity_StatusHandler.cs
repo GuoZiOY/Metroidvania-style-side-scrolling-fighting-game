@@ -68,7 +68,7 @@ private void Awake()
 
     private IEnumerator BurnEffectCo(float duration, float totalDamage)//����buff��Эͬ����
     {
-        currentEffect = ElementType.Ice;
+        currentEffect = ElementType.Fire;
         entityVFX.PlayStatusVFX(duration, ElementType.Fire);//���
         
         int ticksPerSecond = 2;//ÿ�봥������

@@ -46,12 +46,8 @@ public class EnemyLevelSystem : MonoBehaviour
             return;
         }
 
-        // 先重置到基础值，避免倍率累积
-        if (stats.defaultStatSetup != null)
-        {
-            stats.ApplyDefaultStatSetup();
-        }
-
+        // 注意：默认值重置已移至 Enemy.InitializeEnemy() 中统一处理，
+        // 避免覆盖类型系统 (EnemyTypeSystem) 已应用的属性加成
         int levelBonus = level - 1; // 等级加成（1级为0，2级为1，以此类推）
         float totalMultiplier = 1f + levelBonus * statGrowthMultiplier; // 总倍率
 

@@ -42,7 +42,8 @@ public class ExperienceManager : MonoBehaviour
     {
         sourceMultipliers = new Dictionary<ExperienceSourceType, float>
         {
-            { ExperienceSourceType.EnemyDefeated, enemyDefeatedMultiplier }
+            { ExperienceSourceType.EnemyDefeated, enemyDefeatedMultiplier },
+            { ExperienceSourceType.Quest, 1f }
         };
     }
 

@@ -156,6 +156,8 @@ public class PlayerLevelManager : MonoBehaviour // 玩家等级管理器
         currentExp = exp;
         skillPoints = skillPts;
         attributePoints = attrPts;
+        // 读档后检查是否有未处理的升级（防止极边缘情况下的经验溢出）
+        CheckLevelUp();
     }
 
     public void SetLevel(int level) // 设置等级

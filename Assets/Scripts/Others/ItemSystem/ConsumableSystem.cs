@@ -86,7 +86,7 @@ public class ConsumableSystem : MonoBehaviour
         if (statToModify != null)
         {
             string buffID = "ConsumableBuff_" + System.Guid.NewGuid().ToString().Substring(0, 8);
-            statToModify.AddModifier((int)value, buffID);
+            statToModify.AddModifier(value, buffID);
 
             if (duration > 0)
             {

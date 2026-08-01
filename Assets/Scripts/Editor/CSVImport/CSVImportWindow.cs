@@ -29,7 +29,7 @@ public class CSVImportWindow : EditorWindow
         GUILayout.Space(5);
         EditorGUILayout.LabelField("系统", EditorStyles.boldLabel);
         if (GUILayout.Button("导入属性配置", GUILayout.Height(25))) StatSetupImporter.Import();
-        if (GUILayout.Button("导入任务", GUILayout.Height(25))) QuestCSVImporter.Import();
+        // if (GUILayout.Button("导入任务", GUILayout.Height(25))) QuestCSVImporter.Import(); // 已改用任务树编辑器
         if (GUILayout.Button("导入掉落表", GUILayout.Height(25))) LootTableCSVImporter.Import();
     }
 }

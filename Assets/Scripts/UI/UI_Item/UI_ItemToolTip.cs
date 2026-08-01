@@ -7,43 +7,83 @@ using UnityEngine.UI;
 
 public class UI_ItemToolTip : UI_ToolTip
 {
-    
-    [SerializeField]private TextMeshProUGUI itemName;//物品名称文本  
-    [SerializeField]private TextMeshProUGUI itemType;//物品类型文本
-    [SerializeField]private TextMeshProUGUI itemInfo;//物品数量文本
+    [SerializeField] private TextMeshProUGUI itemName;//物品名称文本
+    [SerializeField] private TextMeshProUGUI itemType;//物品类型文本
+    [SerializeField] private TextMeshProUGUI itemInfo;//物品数量文本
 
-
-    public void ShowToolTip(bool show,RectTransform targetRect,Inventory_Item itemToShow)
+    public void ShowToolTip(bool show, RectTransform targetRect, Inventory_Item itemToShow)
     {
         base.ShowToolTip(show, targetRect);
         if (!show || itemToShow == null) return; // 如果不显示或物品为空，直接返回
-        
-        //设置物品名称和稀有度标签
-        if (itemToShow.actualRarity.HasValue)
-        {
-            LootRarity rarity = itemToShow.actualRarity.Value;
-            string rarityName = RarityCalculator.GetRarityName(rarity);
-            itemName.text = $"[{rarityName}]{itemToShow.itemData.itemName}"; //在名称前添加稀有度标签
-            itemName.color = RarityCalculator.GetRarityColor(rarity); //应用稀有度颜色
-        }
-        else
-        {
-            itemName.text = itemToShow.itemData.itemName;
-            itemName.color = Color.white; //默认白色
-        }
-        
-        itemType.text = itemToShow.itemData.itemType.ToString();//设置物品类型
+
+        // 名称：前缀词缀 + 物品名 + 后缀词缀（词缀名富文本按 Tier 着色）
+        itemName.text = BuildNameWithAffixes(itemToShow);
+        itemName.color = GetRarityColorForName(itemToShow);
+
+        // 类型：稀有度标签 + 装备类型，如 "[稀有] 武器"
+        itemType.text = BuildTypeText(itemToShow);
+
         itemInfo.text = GetItemInfo(itemToShow);//设置物品信息
-        
+
         // 强制重新计算布局以获取正确的尺寸
         LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
-        
-        base.ShowToolTip(show,targetRect);
+
+        base.ShowToolTip(show, targetRect);
+    }
+
+    // 名称 = 前缀 + 物品名 + 后缀，词缀富文本着色
+    private string BuildNameWithAffixes(Inventory_Item item)
+    {
+        string itemDisplayName = item.itemData.itemName;
+        if (item.affixes == null || item.affixes.Length == 0)
+            return itemDisplayName;
+
+        // 拼接前缀（物品名前）和后缀（物品名后）
+        StringBuilder sb = new StringBuilder();
+        foreach (var affix in item.affixes)
+        {
+            if (affix != null && affix.isPrefix)
+                sb.Append(RichAffixName(affix) + " ");
+        }
+        sb.Append(itemDisplayName);
+        foreach (var affix in item.affixes)
+        {
+            if (affix != null && !affix.isPrefix)
+                sb.Append(" " + RichAffixName(affix));
+        }
+        return sb.ToString();
+    }
+
+    // 词缀名富文本：英文方括号 [名字] 着色（含负面效果的双刃/垃圾词缀用橙色警示）
+    private string RichAffixName(GeneratedEquipmentAffix affix)
+    {
+        string hex = ColorUtility.ToHtmlStringRGB(GetAffixColor(affix));
+        return $"<color=#{hex}>[{affix.displayName}]</color>";
+    }
+
+    // 物品名颜色：有稀有度用稀有度色，否则白色
+    private Color GetRarityColorForName(Inventory_Item item)
+    {
+        if (item.actualRarity.HasValue)
+            return RarityCalculator.GetRarityColor(item.actualRarity.Value);
+        return Color.white;
+    }
+
+    // 类型文本："[稀有] 武器"
+    private string BuildTypeText(Inventory_Item item)
+    {
+        string typeName = item.itemData.itemType.ToString();
+        if (item.actualRarity.HasValue)
+        {
+            string rarityName = RarityCalculator.GetRarityName(item.actualRarity.Value);
+            return $"[{rarityName}] {typeName}";
+        }
+        return typeName;
     }
 
     public string GetItemInfo(Inventory_Item item)
     {
-        if(item.itemData.itemType == ItemType.材料)
+        if (item.itemData.itemType == ItemType.材料)
             return "材料，仅用于制作";
 
         if (item.IsConsumable)
@@ -53,26 +93,62 @@ public class UI_ItemToolTip : UI_ToolTip
 
         StringBuilder sb = new StringBuilder();
 
-        foreach(var mod in item.Modifiers)
+        // 基础属性（底材自带，应用稀有度倍率）
+        if (item.baseModifiers != null)
         {
-            string modType = GetStatNameByType(mod.statType);
-            string modValue;
-            
-            if (IsPercentageStat(mod.statType))
+            foreach (var mod in item.baseModifiers)
             {
-                //百分比属性，整数显示整数，小数显示一位小数
-                modValue = FormatFloatValue(mod.value) + "%";
+                sb.AppendLine(FormatSignedModValue(mod) + " " + GetStatNameByType(mod.statType));
             }
-            else
+        }
+
+        // 词缀效果（紧随基础属性之后，整行富文本着色：词缀名 + 全部效果；含负面词缀用橙色警示）
+        if (item.affixes != null && item.affixes.Length > 0)
+        {
+            foreach (var affix in item.affixes)
             {
-                //非百分比属性，整数显示整数，小数显示一位小数
-                modValue = FormatFloatValue(mod.value);
+                if (affix == null || affix.modifiers == null)
+                    continue;
+
+                // 词缀名 + 效果整体着色：普通按 Tier，含负面效果(双刃/垃圾)用橙色警示
+                string hex = ColorUtility.ToHtmlStringRGB(GetAffixColor(affix));
+                sb.Append($"<color=#{hex}>[{affix.displayName}]");
+                foreach (var mod in affix.modifiers)
+                {
+                    sb.Append("  " + FormatSignedModValue(mod) + " " + GetStatNameByType(mod.statType));
+                }
+                sb.Append("</color>");
+                sb.AppendLine();
             }
-            
-            sb.AppendLine(" + " + modValue + " " + modType); 
         }
 
         return sb.ToString();
+    }
+
+    // 词缀整体颜色：含负面效果(双刃/垃圾)用橙色警示，否则按 Tier 着色
+    private Color GetAffixColor(GeneratedEquipmentAffix affix)
+    {
+        if (affix.hasNegative)
+            return new Color(1f, 0.5f, 0f); // 橙色 — 警示"带负面代价"
+        return GetAffixTierColor(affix.tier);
+    }
+
+    // 带正负号格式化：正值 +X，负值 -X（百分比存小数，显示时乘回 100）
+    private string FormatSignedModValue(ItemModifier mod)
+    {
+        bool negative = mod.value < 0;
+        float abs = Mathf.Abs(mod.value);
+        string number = FormatFloatValue(mod.isPercentage ? abs * 100f : abs);
+        string suffix = mod.isPercentage ? "%" : "";
+        return (negative ? "-" : "+") + number + suffix;
+    }
+
+    // 格式化修饰符值：百分比存的是小数（0.16=16%），显示时乘回 100 再加 %
+    private string FormatModValue(ItemModifier mod)
+    {
+        if (mod.isPercentage)
+            return FormatFloatValue(mod.value * 100f) + "%";
+        return FormatFloatValue(mod.value);
     }
 
     private string FormatFloatValue(float value) //格式化浮点数值：整数显示整数，小数显示一位小数
@@ -179,21 +255,17 @@ public class UI_ItemToolTip : UI_ToolTip
         }
     }
 
-    private bool IsPercentageStat(StatType type)
+    // 装备词缀等级 → 颜色（5 级，对应稀有度配色）
+    private Color GetAffixTierColor(AffixTier tier)
     {
-        switch (type)
+        return tier switch
         {
-            case StatType.CritChance://暴击率
-            case StatType.CritPower://暴击伤害
-            case StatType.AttackSpeed://攻速
-            case StatType.ArmorReduction://护甲穿透
-            case StatType.Evasion://闪避率
-            case StatType.IceResistance://冰霜抗性
-            case StatType.FireResistance://火焰抗性
-            case StatType.LightningResistance://闪电抗性
-                return true;
-            default:
-                return false;
-        }
+            AffixTier.Common => Color.white,
+            AffixTier.Fine => Color.green,
+            AffixTier.Rare => Color.blue,
+            AffixTier.Epic => new Color(0.5f, 0f, 0.5f),   // 紫色
+            AffixTier.Legendary => Color.red,
+            _ => Color.white
+        };
     }
 }

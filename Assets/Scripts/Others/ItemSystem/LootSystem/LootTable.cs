@@ -25,9 +25,12 @@ public class LootTable : ScriptableObject
     public int CurrencyAmount => currencyAmount; //货币掉落量
     public void SetCurrencyAmount(int amount) => currencyAmount = Mathf.Max(0, amount);
 
-    public List<LootedItem> GenerateLoot() //生成掉落物品
+    public List<LootedItem> GenerateLoot(float extraRarityBonus = 0f) //生成掉落物品（可附加词缀稀有度加成）
     {
         List<LootedItem> droppedItems = new List<LootedItem>();
+
+        // 叠加外部稀有度加成（如精英词缀 GetLootBonus 之和），提高向上浮动概率
+        float totalRarityBonus = extraRarityDropChanceBonus + extraRarityBonus;
 
         // 货币掉落（与物品并行）
         if (currencyAmount > 0)
@@ -52,7 +55,7 @@ public class LootTable : ScriptableObject
             int count = selectedItem.GetDropCount();
             for (int j = 0; j < count; j++)
             {
-                LootRarity actualRarity = selectedItem.GetDroppedRarity(extraRarityDropChanceBonus);
+                LootRarity actualRarity = selectedItem.GetDroppedRarity(totalRarityBonus);
                 droppedItems.Add(new LootedItem(selectedItem.ItemData, actualRarity));
             }
 

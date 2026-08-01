@@ -14,7 +14,10 @@ public class Inventory_Item
 
     [field: SerializeField]
     public ItemModifier[] Modifiers{get; set;}
-    
+
+    public ItemModifier[] baseModifiers;          // 基础属性（来自 EquipmentDataSo.modifiers，应用稀有度倍率）
+    public GeneratedEquipmentAffix[] affixes;     // 词缀列表（含名称/前后缀/效果，V2 生成时填充）
+
     public LootRarity? actualRarity; //实际稀有度（用于掉落物品）
     public float rarityMultiplier; //稀有度倍率
 
@@ -32,7 +35,7 @@ public class Inventory_Item
         itemID = $"{itemData.itemType} - [{rarityName}] - {itemData.itemName}  - {Guid.NewGuid().ToString().Substring(0, 4)}";
     }
 
-    public Inventory_Item(LootedItem lootedItem) //掉落物品构造函数（支持稀有度）
+    public Inventory_Item(LootedItem lootedItem, GeneratedEquipmentAffix[] savedAffixes = null) //掉落物品构造函数（支持稀有度；可注入已存档词缀避免重新随机）
     {
         this.itemData = lootedItem.baseItemData;//物品数据
         currentStackSize = 1;//初始化物品数量为1
@@ -40,28 +43,46 @@ public class Inventory_Item
         this.rarityMultiplier = lootedItem.statMultiplier; //保存稀有度倍率
         
         Debug.Log($"[Inventory_Item] 创建掉落物品: {itemData.itemName}, 基础稀有度: {lootedItem.baseRarity}, 实际稀有度: {lootedItem.actualRarity}, 倍率: {rarityMultiplier}");
-        
-        //获取原始修饰器并应用稀有度倍率
+
         EquipmentDataSo equipmentData = itemData as EquipmentDataSo;
-        if (equipmentData != null && equipmentData.modifiers != null && equipmentData.modifiers.Length > 0)
+        if (equipmentData != null)
         {
-            Modifiers = new ItemModifier[equipmentData.modifiers.Length];
-            for (int i = 0; i < equipmentData.modifiers.Length; i++)
+            // 基础属性（EquipmentDataSo.modifiers，应用稀有度倍率）—— 词缀系统的底材属性
+            if (equipmentData.modifiers != null && equipmentData.modifiers.Length > 0)
             {
-                float originalValue = equipmentData.modifiers[i].value;
-                float modifiedValue = lootedItem.GetModifiedValue(originalValue);
-                Modifiers[i] = new ItemModifier
+                baseModifiers = new ItemModifier[equipmentData.modifiers.Length];
+                for (int i = 0; i < equipmentData.modifiers.Length; i++)
                 {
-                    statType = equipmentData.modifiers[i].statType,
-                    value = modifiedValue //应用稀有度倍率
-                };
-                Debug.Log($"[Inventory_Item] 属性 {equipmentData.modifiers[i].statType}: {originalValue:F1} -> {modifiedValue:F1}");
+                    baseModifiers[i] = new ItemModifier
+                    {
+                        statType = equipmentData.modifiers[i].statType,
+                        value = lootedItem.GetModifiedValue(equipmentData.modifiers[i].value) // 应用稀有度倍率
+                    };
+                }
             }
+
+            // 词缀（V2）：随机生成前缀+后缀，叠加在基础属性之上
+            // 读档时传入 savedAffixes 按存档精确恢复（不重新随机）；无存档则新生成
+            affixes = savedAffixes ?? EquipmentAffixGenerator.GenerateAffixes(itemData.itemType, lootedItem.actualRarity);
+
+            // 合并 Modifiers = 基础属性 + 词缀效果（装备系统 AddModifiers 用完整列表）
+            var allMods = new List<ItemModifier>();
+            if (baseModifiers != null)
+                allMods.AddRange(baseModifiers);
+            if (affixes != null)
+            {
+                foreach (var affix in affixes)
+                {
+                    if (affix.modifiers != null)
+                        allMods.AddRange(affix.modifiers);
+                }
+            }
+            Modifiers = allMods.Count > 0 ? allMods.ToArray() : null;
         }
         else
         {
             Modifiers = null;
-            Debug.Log($"[Inventory_Item] 物品 {itemData.itemName} 没有修饰器数据");
+            Debug.Log($"[Inventory_Item] 物品 {itemData.itemName} 不是装备，无修饰符");
         }
 
         //生成物品ID，包含稀有度信息
@@ -88,11 +109,11 @@ public class Inventory_Item
     public void AddModifiers(Entity_Stats playerStats)
     {
         if(Modifiers == null) return;
-        
+
         foreach(var mod in Modifiers)
         {
             Stat statToModify = playerStats.GetStatByType(mod.statType);
-            statToModify.AddModifier(mod.value, itemID);
+            statToModify.AddModifier(mod.value, itemID, mod.isPercentage);
         }
     }
 
@@ -115,6 +136,13 @@ public class Inventory_Item
 
     public void AddStack() => currentStackSize ++;
 
+    // 减少堆叠数量（制作/分解扣除材料用）；返回剩余数量，≤0 表示该堆已清空需由调用方从背包移除
+    public int ReduceStack(int amount)
+    {
+        currentStackSize -= amount;
+        return currentStackSize;
+    }
+
     public bool CanUseConsumable()//判断是否可以使用消耗品
     {
         if (!IsConsumable)
@@ -133,5 +161,83 @@ public class Inventory_Item
     public ConsumableDataSo GetConsumableData()//获取消耗品数据
     {
         return ConsumableData();
+    }
+
+    // 词缀列表 → 存档数据（SaveManager 保存时调用）
+    public static List<AffixSaveData> ToSaveData(GeneratedEquipmentAffix[] affixes)
+    {
+        if (affixes == null || affixes.Length == 0)
+            return null;
+
+        var list = new List<AffixSaveData>();
+        foreach (var a in affixes)
+        {
+            if (a == null)
+                continue;
+
+            var d = new AffixSaveData
+            {
+                displayName = a.displayName,
+                tier = (int)a.tier,
+                isPrefix = a.isPrefix,
+                modifiers = new List<ModifierSaveData>()
+            };
+
+            if (a.modifiers != null)
+            {
+                foreach (var m in a.modifiers)
+                {
+                    d.modifiers.Add(new ModifierSaveData
+                    {
+                        statType = (int)m.statType,
+                        value = m.value,
+                        isPercentage = m.isPercentage
+                    });
+                }
+            }
+            list.Add(d);
+        }
+        return list.Count > 0 ? list : null;
+    }
+
+    // 存档数据 → 词缀列表（SaveManager 读档时调用，精确恢复不重新随机）
+    public static GeneratedEquipmentAffix[] FromSaveData(List<AffixSaveData> saveData)
+    {
+        if (saveData == null || saveData.Count == 0)
+            return null;
+
+        var list = new List<GeneratedEquipmentAffix>();
+        foreach (var s in saveData)
+        {
+            if (s == null)
+                continue;
+
+            var modifiers = new List<ItemModifier>();
+            bool hasNegative = false;
+            if (s.modifiers != null)
+            {
+                foreach (var m in s.modifiers)
+                {
+                    if (m.value < 0)
+                        hasNegative = true; // 存档中任一负值段 → 标记负面词缀（UI 警示色）
+                    modifiers.Add(new ItemModifier
+                    {
+                        statType = (StatType)m.statType,
+                        value = m.value,
+                        isPercentage = m.isPercentage
+                    });
+                }
+            }
+
+            list.Add(new GeneratedEquipmentAffix
+            {
+                displayName = s.displayName,
+                tier = (AffixTier)s.tier,
+                isPrefix = s.isPrefix,
+                modifiers = modifiers.Count > 0 ? modifiers.ToArray() : null,
+                hasNegative = hasNegative
+            });
+        }
+        return list.Count > 0 ? list.ToArray() : null;
     }
 }

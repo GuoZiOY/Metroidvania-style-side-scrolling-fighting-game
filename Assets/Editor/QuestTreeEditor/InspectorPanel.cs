@@ -22,6 +22,7 @@ public class InspectorPanel : VisualElement
     private Button addStageBtn;
     private Button deleteQuestBtn;
     private VisualElement stageDetailContainer;
+    private VisualElement finalRewardContainer;
 
     private ScrollView scrollView;
 
@@ -94,7 +95,7 @@ public class InspectorPanel : VisualElement
         // NPC ID 下拉
         var npcChoices = LoadNpcChoices();
         var triggerNpcDropdown = new DropdownField("触发 NPC ID", npcChoices, 0);
-        triggerNpcDropdown.RegisterValueChangedCallback(evt => { if (currentQuest != null) currentQuest.triggerNpcId = evt.newValue; });
+        triggerNpcDropdown.RegisterValueChangedCallback(evt => { if (currentQuest != null) currentQuest.triggerNpcId = ParseTargetId(evt.newValue); });
         scrollView.Add(triggerNpcDropdown);
         // 缓存用于 ShowQuest 时同步值
         triggerNpcIdField = triggerNpcDropdown;
@@ -122,6 +123,12 @@ public class InspectorPanel : VisualElement
         // 阶段详情容器
         stageDetailContainer = new VisualElement();
         scrollView.Add(stageDetailContainer);
+
+        // ── 最终奖励 ──
+        AddSectionHeader("最终奖励");
+        finalRewardContainer = new VisualElement();
+        scrollView.Add(finalRewardContainer);
+        // 在 ShowQuest 时填充 finalReward 字段
     }
 
     private void AddSectionHeader(string title)
@@ -156,11 +163,18 @@ public class InspectorPanel : VisualElement
         questTypeField.SetValueWithoutNotify(quest.questType);
         triggerField.SetValueWithoutNotify(quest.trigger);
         if (triggerNpcIdField is DropdownField npcDropdown)
-            npcDropdown.SetValueWithoutNotify(quest.triggerNpcId ?? "");
+        {
+            string npcId = quest.triggerNpcId ?? "";
+            string bareNpcId = ParseTargetId(npcId);
+            var match = npcDropdown.choices.FirstOrDefault(c => c.StartsWith(bareNpcId));
+            if (match != null) npcDropdown.SetValueWithoutNotify(match);
+            if (npcId != bareNpcId) quest.triggerNpcId = bareNpcId; // 迁移旧数据
+        }
         autoAcceptField.SetValueWithoutNotify(quest.autoAccept);
         descriptionField.SetValueWithoutNotify(quest.description ?? "");
 
         RefreshStageList();
+        RefreshFinalReward();
         style.display = DisplayStyle.Flex;
     }
 
@@ -215,7 +229,7 @@ public class InspectorPanel : VisualElement
             var children = element.Children().ToList();
 
             var label = (Label)children[2];
-            label.text = $"{index + 1}. {stage.description ?? stage.stageId}";
+            label.text = $"{index + 1}. {stage.description}";
             label.style.color = new Color(0.85f, 0.85f, 0.85f);
 
             var upBtn = (Button)children[0];
@@ -296,18 +310,10 @@ public class InspectorPanel : VisualElement
         headerRow.Add(deleteStageBtn);
         stageDetailContainer.Add(headerRow);
 
-        var stageIdField = new TextField("阶段 ID") { isDelayed = true, value = stage.stageId };
-        stageIdField.RegisterValueChangedCallback(evt => stage.stageId = evt.newValue);
-        stageDetailContainer.Add(stageIdField);
 
         var descField = new TextField("阶段描述") { isDelayed = true, value = stage.description, multiline = true, style = { minHeight = 40 } };
         descField.RegisterValueChangedCallback(evt => { stage.description = evt.newValue; currentNode?.RefreshVisuals(); });
         stageDetailContainer.Add(descField);
-
-        // 对话文本
-        AddDialogueField(stageDetailContainer, "接取对话", stage.startDialogue, v => stage.startDialogue = v);
-        AddDialogueField(stageDetailContainer, "进行中对话", stage.inProgressDialogue, v => stage.inProgressDialogue = v);
-        AddDialogueField(stageDetailContainer, "完成对话", stage.completeDialogue, v => stage.completeDialogue = v);
 
         // 目标列表
         AddSectionHeaderSmall(stageDetailContainer, "目标列表");
@@ -404,8 +410,15 @@ public class InspectorPanel : VisualElement
                 }
                 if (!string.IsNullOrEmpty(obj.targetId))
                 {
-                    try { targetField.SetValueWithoutNotify(obj.targetId); }
-                    catch { targetField.index = 0; }
+                    // 兼容旧数据：targetId 可能是 "id - name"，回读时顺便迁移为纯 ID
+                    string bareId = ParseTargetId(obj.targetId);
+                    var match = targetField.choices.FirstOrDefault(c => c.StartsWith(bareId));
+                    if (match != null)
+                    {
+                        targetField.SetValueWithoutNotify(match);
+                        if (obj.targetId != bareId)
+                            obj.targetId = bareId;  // 迁移旧数据
+                    }
                 }
             }
 
@@ -423,7 +436,7 @@ public class InspectorPanel : VisualElement
             });
             targetField.RegisterValueChangedCallback(evt =>
             {
-                obj.targetId = evt.newValue;
+                obj.targetId = ParseTargetId(evt.newValue);
             });
             countField.RegisterValueChangedCallback(evt =>
             {
@@ -444,14 +457,6 @@ public class InspectorPanel : VisualElement
         // 阶段奖励
         AddSectionHeaderSmall(stageDetailContainer, "阶段奖励");
         AddRewardFields(stageDetailContainer, stage.stageReward ?? new QuestReward(), r => stage.stageReward = r);
-    }
-
-    private void AddDialogueField(VisualElement parent, string label, string value, System.Action<string> onChange)
-    {
-        var field = new TextField(label) { isDelayed = true, value = value, multiline = true, style = { minHeight = 40 } };
-        field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
-        field.style.marginTop = 4;
-        parent.Add(field);
     }
 
     private void AddSectionHeaderSmall(VisualElement parent, string title)
@@ -478,6 +483,114 @@ public class InspectorPanel : VisualElement
         var goldField = new IntegerField("金币") { value = reward.goldAmount };
         goldField.RegisterValueChangedCallback(evt => { reward.goldAmount = evt.newValue; onChanged(reward); });
         parent.Add(goldField);
+
+        // 奖励物品列表
+        AddSectionHeaderSmall(parent, "奖励物品");
+        if (reward.items == null)
+            reward.items = new List<RewardItem>();
+
+        var itemChoices = LoadItemChoices();
+        var itemList = new ListView();
+        itemList.style.maxHeight = 150;
+        itemList.itemsSource = reward.items;
+        itemList.makeItem = () =>
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.paddingTop = 1;
+            row.style.paddingBottom = 1;
+
+            var dropdown = new DropdownField();
+            dropdown.style.flexGrow = 1;
+            dropdown.style.width = 120;
+            row.Add(dropdown);
+
+            var amountField = new IntegerField { value = 1 };
+            amountField.style.width = 50;
+            row.Add(amountField);
+
+            var deleteBtn = new Button { text = "×" };
+            deleteBtn.style.width = 20;
+            row.Add(deleteBtn);
+
+            return row;
+        };
+        itemList.bindItem = (element, index) =>
+        {
+            if (index >= (reward.items?.Count ?? 0)) return;
+            var ri = reward.items[index];
+            element.userData = ri;
+
+            var children = element.Children().ToList();
+            var dropdown = (DropdownField)children[0];
+            var amountField = (IntegerField)children[1];
+            var deleteBtn = (Button)children[2];
+
+            dropdown.choices = itemChoices;
+            if (ri.itemData != null)
+            {
+                var match = itemChoices.FirstOrDefault(c => c.StartsWith(ri.itemData.itemId));
+                if (match != null) dropdown.SetValueWithoutNotify(match);
+            }
+            amountField.SetValueWithoutNotify(ri.amount);
+
+            dropdown.RegisterValueChangedCallback(evt =>
+            {
+                string id = ParseTargetId(evt.newValue);
+                ri.itemData = FindItemById(id);
+                onChanged(reward);
+            });
+            amountField.RegisterValueChangedCallback(evt =>
+            {
+                ri.amount = Mathf.Max(1, evt.newValue);
+                onChanged(reward);
+            });
+            deleteBtn.clickable = new Clickable(() =>
+            {
+                reward.items.RemoveAt(index);
+                itemList.Rebuild();
+                onChanged(reward);
+            });
+        };
+        parent.Add(itemList);
+
+        var addItemBtn = new Button(() =>
+        {
+            reward.items.Add(new RewardItem());
+            itemList.Rebuild();
+            onChanged(reward);
+        }) { text = "+ 添加物品" };
+        addItemBtn.style.marginTop = 2;
+        parent.Add(addItemBtn);
+    }
+
+    private ItemDataSo FindItemById(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return null;
+        var guids = AssetDatabase.FindAssets("t:ItemDataSo");
+        foreach (var guid in guids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var item = AssetDatabase.LoadAssetAtPath<ItemDataSo>(path);
+            if (item != null && item.itemId == id) return item;
+        }
+        return null;
+    }
+
+    private List<string> LoadItemChoices()
+    {
+        var choices = new List<string> { "" };
+        var guids = AssetDatabase.FindAssets("t:ItemDataSo");
+        foreach (var guid in guids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var item = AssetDatabase.LoadAssetAtPath<ItemDataSo>(path);
+            if (item != null)
+                choices.Add($"{item.itemId} - {item.itemName}");
+        }
+        choices.Sort();
+        return choices;
     }
 
     // ─── 按钮操作 ───
@@ -490,7 +603,6 @@ public class InspectorPanel : VisualElement
 
         var newStage = new QuestStage
         {
-            stageId = $"stage_{currentQuest.stages.Count + 1}",
             description = "新阶段",
             objectives = new List<ObjectiveConfig>(),
         };
@@ -549,7 +661,24 @@ public class InspectorPanel : VisualElement
 
     private List<string> LoadNpcChoices()
     {
-        return LoadCsvByType(includeType: "NPC");
+        // 优先从场景中的 NPCBehaviour 读取 npcId + npcName
+        var result = new List<string> { "" };
+        var seen = new HashSet<string>();
+        var npcs = Resources.FindObjectsOfTypeAll<NPCBehaviour>();
+        foreach (var npc in npcs)
+        {
+            if (npc == null || string.IsNullOrEmpty(npc.name) || seen.Contains(npc.name)) continue;
+            seen.Add(npc.name);
+            result.Add($"{npc.name} - {npc.npcName}");
+        }
+        // 补充 CSV 中的 NPC 条目（如果有不在场景中的 NPC）
+        var csvNpcs = LoadCsvByType(includeType: "NPC");
+        foreach (var entry in csvNpcs)
+        {
+            if (entry != "" && !result.Contains(entry))
+                result.Add(entry);
+        }
+        return result;
     }
 
     private List<string> LoadCsvByType(string includeType = null, string excludeType = null)
@@ -592,6 +721,13 @@ public class InspectorPanel : VisualElement
         _ => type.ToString(),
     };
 
+    private string ParseTargetId(string dropdownValue)
+    {
+        if (string.IsNullOrEmpty(dropdownValue)) return "";
+        int dash = dropdownValue.IndexOf(" - ");
+        return dash >= 0 ? dropdownValue.Substring(0, dash) : dropdownValue;
+    }
+
     private void UpdateTargetChoices(DropdownField dropdown, List<string> items,
         List<string> entities, List<string> npcs, ObjectiveType type, ItemType? category = null)
     {
@@ -605,5 +741,17 @@ public class InspectorPanel : VisualElement
         if (choices.Count == 0) choices.Add("");
         dropdown.choices = choices;
         dropdown.index = 0;
+    }
+
+    private void RefreshFinalReward()
+    {
+        finalRewardContainer.Clear();
+        if (currentQuest == null) return;
+
+        if (currentQuest.finalReward == null)
+            currentQuest.finalReward = new QuestReward();
+
+        var reward = currentQuest.finalReward;
+        AddRewardFields(finalRewardContainer, reward, r => currentQuest.finalReward = r);
     }
 }

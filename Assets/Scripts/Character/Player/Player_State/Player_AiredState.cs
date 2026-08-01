@@ -34,5 +34,7 @@ public class Player_AiredState : PlayerState
                 player.inputBuffer.ClearDoubleJumpBuffer();
             stateMachine.ChangeState(player.doubleJumpState);
         }
+
+        // 反击切入已统一移到 PlayerState.Update 基类（CanUseCounter 控制），此处不重复检测
     }
 }

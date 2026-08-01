@@ -52,11 +52,11 @@ public class LevelCalculator : MonoBehaviour
 
     public int GetTotalExpRequired(int targetLevel) // 获取达到目标等级所需总经验
     {
-        if (targetLevel <= 1)
+        if (targetLevel <= 0)
             return 0;
 
         int totalExp = 0;
-        for (int i = 1; i < targetLevel; i++)
+        for (int i = 0; i < targetLevel; i++)
         {
             totalExp += GetExpToNextLevel(i);
         }
@@ -65,7 +65,7 @@ public class LevelCalculator : MonoBehaviour
 
     public int GetCurrentLevelFromExp(int currentExp) // 从经验值反推当前等级
     {
-        int level = 1;
+        int level = 0;
         int accumulatedExp = 0;
 
         while (level < maxLevel)

@@ -11,6 +11,7 @@ public class SaveManager : MonoBehaviour
 {
     public static SaveManager Instance { get; private set; }
 
+    private const int SAVE_DATA_VERSION = 1; // 当前存档格式版本
     private const int MAX_SLOTS = 4;  // 4 个手动存档槽
     private const string FILE_PREFIX = "slot_";
     private const string PROFILES_FILE = "profiles.json";
@@ -86,6 +87,17 @@ public class SaveManager : MonoBehaviour
         {
             Debug.LogError("[SaveManager] 存档解析失败");
             return;
+        }
+
+        // 版本检查
+        if (data.version > SAVE_DATA_VERSION)
+        {
+            Debug.LogError($"[SaveManager] 存档版本 {data.version} 高于当前版本 {SAVE_DATA_VERSION}，无法加载");
+            return;
+        }
+        if (data.version < SAVE_DATA_VERSION)
+        {
+            Debug.LogWarning($"[SaveManager] 存档版本 {data.version} 低于当前版本 {SAVE_DATA_VERSION}，将自动升级");
         }
 
         // 如果场景不同，先切换场景
@@ -191,6 +203,12 @@ public class SaveManager : MonoBehaviour
             return;
         }
 
+        if (data.version > SAVE_DATA_VERSION)
+        {
+            Debug.LogError($"[SaveManager] 存档版本 {data.version} 高于当前版本 {SAVE_DATA_VERSION}，无法加载");
+            return;
+        }
+
         pendingLoad = data;
         SceneManager.sceneLoaded += OnSceneLoadedForLoad;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -215,6 +233,7 @@ public class SaveManager : MonoBehaviour
         }
 
         var data = new SaveData();
+        data.version = SAVE_DATA_VERSION;
         data.sceneName = SceneManager.GetActiveScene().name;
         data.posX = player.transform.position.x;
         data.posY = player.transform.position.y;
@@ -236,6 +255,9 @@ public class SaveManager : MonoBehaviour
 
         // 任务
         data.quests = CollectQuestData();
+
+        // 世界状态 (WorldState flags)
+        data.worldFlags = WorldState.GetSaveData();
 
         return data;
     }
@@ -307,6 +329,7 @@ public class SaveManager : MonoBehaviour
                 slotIndex = kvp.Key,
                 rarity = item.actualRarity.HasValue ? (int)item.actualRarity.Value : (int)item.itemData.rarity,
                 rarityMultiplier = item.rarityMultiplier > 0 ? item.rarityMultiplier : 1f,
+                affixes = Inventory_Item.ToSaveData(item.affixes), // 词缀存档（含双刃/垃圾的负值段）
             });
         }
         return list;
@@ -332,6 +355,7 @@ public class SaveManager : MonoBehaviour
                 slotIndex = e.slotIndex,
                 rarity = e.item.actualRarity.HasValue ? (int)e.item.actualRarity.Value : (int)e.item.itemData.rarity,
                 rarityMultiplier = e.item.rarityMultiplier > 0 ? e.item.rarityMultiplier : 1f,
+                affixes = Inventory_Item.ToSaveData(e.item.affixes), // 词缀存档（含双刃/垃圾的负值段）
             });
         }
         return list;
@@ -396,12 +420,12 @@ public class SaveManager : MonoBehaviour
         QuestManager qm = QuestManager.Instance ?? FindAnyObjectByType<QuestManager>();
         if (qm == null) return d;
 
-        var stageIds = qm.GetActiveQuestStageIdsForSave();
+        var stageIndexes = qm.GetActiveQuestStageIndexesForSave();
         d.active = new List<QuestSaveEntry>();
         foreach (var kvp in qm.GetActiveQuestsForSave())
         {
-            var stageId = stageIds.TryGetValue(kvp.Key, out var sid) ? sid : "";
-            var entry = new QuestSaveEntry { questId = kvp.Key, currentStageId = stageId };
+            var idx = stageIndexes.TryGetValue(kvp.Key, out var sid) ? sid : 0;
+            var entry = new QuestSaveEntry { questId = kvp.Key, currentStageIndex = idx };
             entry.objectiveProgress = kvp.Value;
             entry.objectives = new List<QuestObjectiveData>();
             if (kvp.Value != null)
@@ -422,6 +446,7 @@ public class SaveManager : MonoBehaviour
         d.completed = qm.GetCompletedQuestsForSave();
         d.failed = qm.GetFailedQuestsForSave();
         d.trackedQuestId = qm.GetTrackedQuestIdForSave();
+        d.claimedStageRewards = qm.GetClaimedStageRewardsForSave();
 
         return d;
     }
@@ -461,6 +486,10 @@ public class SaveManager : MonoBehaviour
 
         // 任务
         ApplyQuestData(data.quests);
+
+        // 世界状态 (WorldState flags)
+        if (data.worldFlags != null)
+            WorldState.LoadFromSave(data.worldFlags);
 
         // 存档点
         CurrentCheckpointId = data.lastCheckpointId;
@@ -521,7 +550,8 @@ public class SaveManager : MonoBehaviour
             LootRarity rarity = (LootRarity)slot.rarity;
             float multiplier = slot.rarityMultiplier > 0 ? slot.rarityMultiplier : 1f;
             var looted = new LootedItem(itemData, rarity) { statMultiplier = multiplier };
-            Inventory_Item item = new Inventory_Item(looted);
+            // 词缀：按存档精确恢复（旧存档 affixes=null 则重新随机生成）
+            Inventory_Item item = new Inventory_Item(looted, Inventory_Item.FromSaveData(slot.affixes));
             item.currentStackSize = Mathf.Max(1, slot.stackSize);
             inv.AddItem(item, slot.slotIndex);
         }
@@ -549,7 +579,8 @@ public class SaveManager : MonoBehaviour
             LootRarity rarity = (LootRarity)e.rarity;
             float multiplier = e.rarityMultiplier > 0 ? e.rarityMultiplier : 1f;
             var looted = new LootedItem(itemData, rarity) { statMultiplier = multiplier };
-            Inventory_Item item = new Inventory_Item(looted);
+            // 词缀：按存档精确恢复（旧存档 affixes=null 则重新随机生成）
+            Inventory_Item item = new Inventory_Item(looted, Inventory_Item.FromSaveData(e.affixes));
 
             es.TryEquipItemToSlot(item, e.slotIndex);
             Debug.Log($"[SaveManager] Equip restored: {e.itemId} slot={e.slotIndex}");

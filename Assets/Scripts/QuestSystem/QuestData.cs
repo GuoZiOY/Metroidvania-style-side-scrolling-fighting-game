@@ -55,6 +55,9 @@ public class QuestReward
     public int skillPoints;
     public int goldAmount;
     public List<RewardItem> items;
+
+    public bool HasReward => expAmount > 0 || skillPoints > 0 || goldAmount > 0 ||
+                             (items != null && items.Count > 0);
 }
 
 // ===== 任务阶段 =====
@@ -62,21 +65,23 @@ public class QuestReward
 [System.Serializable]
 public class QuestStage
 {
-    public string stageId;                          // "stage_1"
     [TextArea] public string description;            // 阶段描述
 
     public List<ObjectiveConfig> objectives;         // 本阶段目标
 
-    [Header("阶段对话")]
-    [TextArea] public string startDialogue;          // 进入阶段时 NPC 说的话
-    [TextArea] public string inProgressDialogue;     // 进行中时 NPC 说的话
-    [TextArea] public string completeDialogue;       // 完成时 NPC 说的话
+    public bool HasCollectObjective
+    {
+        get
+        {
+            if (objectives == null) return false;
+            foreach (var obj in objectives)
+                if (obj.type == ObjectiveType.Collect) return true;
+            return false;
+        }
+    }
 
     [Header("阶段奖励")]
     public QuestReward stageReward;                  // 阶段完成时的奖励
-
-    [Header("下一阶段")]
-    public string nextStageId;                       // 空 = 最终阶段
 }
 
 // ===== 任务数据 =====
@@ -113,10 +118,9 @@ public class QuestData : ScriptableObject
 
     // ─── 辅助方法 ───
 
-    public QuestStage GetStage(string stageId)
+    public QuestStage GetStage(int index)
     {
-        if (stages == null) return null;
-        return stages.Find(s => s.stageId == stageId);
+        return stages != null && index >= 0 && index < stages.Count ? stages[index] : null;
     }
 
     public QuestStage GetFirstStage()

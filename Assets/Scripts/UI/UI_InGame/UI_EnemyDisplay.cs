@@ -1,3 +1,4 @@
+using System.Text;
 using UnityEngine;
 using TMPro;
 
@@ -52,8 +53,41 @@ public class UI_EnemyDisplay : UI_EntityDisplay
         string formattedLevel = showLevel ? string.Format(levelFormat, level) + " " : "";
         string formattedType = showType ? typeText + " " : "";
 
-        nameText.text = formattedType + formattedLevel + formattedName;
+        // 附加词缀文本（富文本按 Tier 着色），精英/Boss 显示其激活词缀
+        string affixText = BuildAffixText();
+
+        nameText.text = formattedType + formattedLevel + formattedName + affixText;
         nameText.color = typeColor;
+    }
+
+    // 拼接敌人激活词缀的富文本：每个词缀以「」包裹并按 Tier 着色
+    private string BuildAffixText()
+    {
+        if (enemy.ActiveAffixes == null || enemy.ActiveAffixes.Count == 0)
+            return "";
+
+        StringBuilder sb = new StringBuilder();
+        foreach (var affix in enemy.ActiveAffixes)
+        {
+            if (affix == null)
+                continue;
+
+            string hex = ColorUtility.ToHtmlStringRGB(GetAffixColor(affix.Tier));
+            sb.Append($" <color=#{hex}>「{affix.DisplayName}」</color>");
+        }
+        return sb.ToString();
+    }
+
+    // 词缀 Tier → 颜色（普通白 / 稀有金 / 传说红）
+    private Color GetAffixColor(AffixTier tier)
+    {
+        return tier switch
+        {
+            AffixTier.Common => Color.white,
+            AffixTier.Rare => new Color(1f, 0.84f, 0f),   // 金色
+            AffixTier.Legendary => new Color(1f, 0.3f, 0.3f), // 红色
+            _ => Color.white
+        };
     }
 
     private string GetTypeText(EnemyType type)

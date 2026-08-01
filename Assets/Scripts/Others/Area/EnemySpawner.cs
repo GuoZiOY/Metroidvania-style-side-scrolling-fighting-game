@@ -101,6 +101,10 @@ public class EnemySpawner : MonoBehaviour
                 int level = CalculateEnemyLevel(isElite, areaDifficulty, baseEnemyLevel);
                 enemy.InitializeEnemy(enemyType, level);
 
+                // V2: 精英敌人注入随机词缀（静态工具，数据库由 GameBootstrap 加载）
+                if (isElite)
+                    AffixSpawner.ApplyEliteAffixes(enemy, enemyType);
+
                 OnEnemySpawned?.Invoke(enemy); // 触发敌人生成事件
             }
 

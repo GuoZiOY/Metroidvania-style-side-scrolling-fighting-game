@@ -94,6 +94,11 @@ public class Entity_Health : MonoBehaviour, IDamgable
                 : damageDealer.name)
             : "未知";
 
+        // V2: 通知自身 Enemy 的词缀（如反应护甲）
+        var selfEnemy = GetComponent<Enemy>();
+        if (selfEnemy != null)
+            selfEnemy.ReportTookDamage(lastDamageTaken);
+
         return true;
     }
 

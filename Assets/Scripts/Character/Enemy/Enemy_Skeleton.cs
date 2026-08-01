@@ -36,7 +36,11 @@ public class Enemy_Skeleton : Enemy,ICounterable
 
     public void HandleCounter(float knockbackMultiplier = 1f)
     {
-        if(canBeStunned == false) return;
+        // 不可眩晕的敌人不被打断（如Boss/精英），继续当前行为
+        // 玩家安全由反击无敌帧保障（见 Player_CounterAttackState）
+        if (canBeStunned == false)
+            return;
+
         ApplyCounterKnockback(knockbackMultiplier);
         stateMachine.ChangeState(stunnedState);
     }

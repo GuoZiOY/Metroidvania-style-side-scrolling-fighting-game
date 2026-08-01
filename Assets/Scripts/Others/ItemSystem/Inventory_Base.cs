@@ -7,6 +7,9 @@ public class Inventory_Base : MonoBehaviour
 {
     public event Action OnInventoryUpdated;//物品更新事件
 
+    /// <summary>手动触发 UI 刷新（供 QuestManager 等外部在修改物品后调用）</summary>
+    public void NotifyUpdate() => OnInventoryUpdated?.Invoke();
+
     public int maxInventorySize = 10;
     public Dictionary<int, Inventory_Item> itemDictionary = new Dictionary<int, Inventory_Item>();//物品字典，键为槽位索引，值为物品
     public List<Inventory_Item> itemList => GetItemList();//兼容性属性，返回物品列表

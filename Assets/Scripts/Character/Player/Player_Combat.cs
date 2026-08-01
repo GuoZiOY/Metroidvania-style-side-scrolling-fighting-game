@@ -25,6 +25,7 @@ public class Player_Combat : Entity_Combat
     [SerializeField] private float counterRecovery = 0.2f;
     [SerializeField] private float counterCooldownDuration = 1f;
     [SerializeField] private float counterKnockbackMultiplier = 1.5f;
+    [SerializeField] private float counterInvincibleDuration = 0.35f; // 反击成功后无敌帧时长（覆盖顿帧+给玩家脱离时间）
 
     [Header("追击设置")]
     [SerializeField] private float chaseTimeDuration = 0.5f;
@@ -285,6 +286,7 @@ public class Player_Combat : Entity_Combat
     {
         UpdateChaseTime();
         UpdateCounterCooldown();
+        UpdateCounterInvincibility();
     }
 
     private void UpdateChaseTime()
@@ -336,6 +338,38 @@ public class Player_Combat : Entity_Combat
 
     public Transform ChaseTarget => chaseTarget;
     public float CounterRecoveryDuration => counterRecovery;
+    public float CounterInvincibleDuration => counterInvincibleDuration;
+
+    // ─── 反击无敌帧（独立于状态机生命周期） ───
+    private float counterInvincibleRemaining; // 剩余无敌时间（秒）
+
+    // 反击成功时调用：开启无敌 + 启动计时
+    public void StartCounterInvincibility()
+    {
+        counterInvincibleRemaining = counterInvincibleDuration;
+        player.health.canBeTakedDamage = false;
+    }
+
+    // 追击状态接管无敌时调用：清除反击无敌计时，避免双重复位冲突
+    public void CancelCounterInvincibility()
+    {
+        counterInvincibleRemaining = 0f;
+    }
+
+    // 每帧递减无敌计时，到期恢复受伤
+    // 追击接管时已调用 CancelCounterInvincibility 清零，不会在追击期间触发恢复
+    public void UpdateCounterInvincibility()
+    {
+        if (counterInvincibleRemaining <= 0f)
+            return;
+
+        counterInvincibleRemaining -= Time.deltaTime;
+        if (counterInvincibleRemaining > 0f)
+            return;
+
+        counterInvincibleRemaining = 0f;
+        player.health.canBeTakedDamage = true;
+    }
     public float ChaseTimeDuration => chaseTimeDuration;
     public float ChaseSpeedMultiplier => chaseSpeedMultiplier;
     public float CounterKnockbackMultiplier => counterKnockbackMultiplier;

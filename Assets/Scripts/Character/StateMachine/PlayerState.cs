@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 public abstract class PlayerState : EntityState
@@ -26,8 +25,10 @@ public abstract class PlayerState : EntityState
     {
         base.Update();
 
-        if (GameInput.GetKeyDown(GameInput.Action.Dash) && CanDash())
+        if ((GameInput.GetKeyDown(GameInput.Action.Dash) || (player.inputBuffer != null && player.inputBuffer.HasDashBuffer())) && CanDash())
         {
+            if (player.inputBuffer != null)
+                player.inputBuffer.ClearDashBuffer();
             skillManager.dash.StartSkillCooldown();
             stateMachine.ChangeState(player.dashState);
         }
@@ -41,6 +42,36 @@ public abstract class PlayerState : EntityState
 
             skillManager.domainExpansion.StartSkillCooldown();
         }
+
+        // 反击切入：像冲刺一样，多数状态可强行切到反击（排除不可行动状态，见 CanUseCounter）
+        if ((GameInput.GetKeyDown(GameInput.Action.CounterAttack) || (player.inputBuffer != null && player.inputBuffer.HasCounterAttackBuffer())) && CanUseCounter())
+        {
+            if (player.inputBuffer != null)
+                player.inputBuffer.ClearCounterAttackBuffer();
+
+            if (player.combat.IsCounterCooldownActive)
+            {
+                Debug.Log($"反击冷却中，剩余时间: {player.combat.CurrentCounterCooldown:F2}秒");
+                return;
+            }
+
+            stateMachine.ChangeState(player.counterAttackState);
+        }
+    }
+
+    // 反击可用性：排除无法执行反击的状态
+    public bool CanUseCounter()
+    {
+        if (player.IsDead)
+            return false;
+
+        var cur = stateMachine.currentState;
+        // 不能反击的状态：死亡、领域展开（无法行动）、反击/追击中（防止重入）
+        if (cur == player.deadState || cur == player.domainExpansionState ||
+            cur == player.counterAttackState || cur == player.counterChaseState)
+            return false;
+
+        return true;
     }
 
     public override void Exit()

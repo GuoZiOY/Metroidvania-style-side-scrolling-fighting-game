@@ -44,19 +44,7 @@ public class Player_GroundedState : PlayerState
             stateMachine.ChangeState(player.basicAttackState);
         }
 
-        if (GameInput.GetKeyDown(GameInput.Action.CounterAttack) || (player.inputBuffer != null && player.inputBuffer.HasCounterAttackBuffer()))
-        {
-            if (player.inputBuffer != null)
-                player.inputBuffer.ClearCounterAttackBuffer();
-
-            if (player.combat.IsCounterCooldownActive)
-            {
-                Debug.Log($"反击冷却中，剩余时间: {player.combat.CurrentCounterCooldown:F2}秒");
-                return;
-            }
-
-            stateMachine.ChangeState(player.counterAttackState);
-        }
+        // 反击切入已统一移到 PlayerState.Update 基类（CanUseCounter 控制），此处不重复检测
     }
 
 }

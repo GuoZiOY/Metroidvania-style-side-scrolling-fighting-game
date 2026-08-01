@@ -27,5 +27,6 @@ public class EnemyExpData
 
 public enum ExperienceSourceType
 {
-    EnemyDefeated // 击败敌人
+    EnemyDefeated, // 击败敌人
+    Quest          // 任务奖励
 }

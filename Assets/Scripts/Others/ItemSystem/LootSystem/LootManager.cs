@@ -42,13 +42,13 @@ public class LootManager : MonoBehaviour
 
     #region 公共接口
 
-    public void DropLoot(ILootable lootable)
+    public void DropLoot(ILootable lootable, float extraRarityBonus = 0f)
     {
         if (lootable == null)
             return;
 
         currencyCoinCount = 0;
-        List<LootedItem> itemsToDrop = GenerateLoot(lootable);
+        List<LootedItem> itemsToDrop = GenerateLoot(lootable, extraRarityBonus);
 
         if (itemsToDrop.Count > 0)
         {
@@ -105,7 +105,7 @@ public class LootManager : MonoBehaviour
 
     #region 私有方法 - 掉落生成
 
-    private List<LootedItem> GenerateLoot(ILootable lootable)
+    private List<LootedItem> GenerateLoot(ILootable lootable, float extraRarityBonus = 0f)
     {
         List<LootedItem> items = new List<LootedItem>();
 
@@ -114,7 +114,7 @@ public class LootManager : MonoBehaviour
             foreach (var table in lootable.LootTables)
             {
                 if (table != null)
-                    items.AddRange(table.GenerateLoot());
+                    items.AddRange(table.GenerateLoot(extraRarityBonus));
             }
         }
 

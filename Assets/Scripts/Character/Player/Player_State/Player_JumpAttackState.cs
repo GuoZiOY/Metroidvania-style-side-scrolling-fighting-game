@@ -53,6 +53,8 @@ public class Player_JumpAttackState : PlayerState
     {
         base.Update();
 
+        // 跳跃攻击期间锁定：不进行水平移动，也不随输入翻转方向（保持起跳时的朝向）
+
         if (player.isOnGround && touchedGround == false)//落地后使用jumpAttackTrigger
         {
             touchedGround = true;//落地后播放jumpAttack_end
