@@ -26,12 +26,10 @@ public class UI_DeathScreen : MonoBehaviour
 
     private void Start()
     {
-        if (screenGroup != null)
-        {
-            screenGroup.alpha = 0;
-            screenGroup.gameObject.SetActive(false);
-        }
-
+        // 注意：这里不再操作 screenGroup（不设 alpha=0、不 SetActive(false)）。
+        // 死亡面板开局由 UIManager.CloseAllPanelsAtStart 统一关闭；若本 Start 延迟到
+        // Show() 之后才执行（面板激活时才跑），这里的 SetActive(false) 会把 Show() 刚激活
+        // 的面板再次关掉，导致死亡面板永远不显示。alpha/激活完全交给 Show() 控制。
         continueBtn?.onClick.AddListener(OnContinue);
         mainMenuBtn?.onClick.AddListener(OnMainMenu);
 
@@ -49,12 +47,25 @@ public class UI_DeathScreen : MonoBehaviour
         if (isShowing) return;
         isShowing = true;
 
-        // 读取死亡原因
+        Debug.Log($"[UI_DeathScreen] Show: screenGroup={(screenGroup != null)} isShowing=true");
+
+        // 读取死亡原因（击杀者名字）
+        // 防御：死亡面板开局 inactive 时 Start 延迟执行，Invoke(FindPlayer) 可能未触发，
+        // player 为 null 则当场补查，避免击杀者名永远是"未知"
+        if (player == null)
+            player = FindAnyObjectByType<Player>();
+
         if (player != null)
         {
             var health = player.GetComponent<Entity_Health>();
             if (health != null && !string.IsNullOrEmpty(health.lastAttackerName))
                 killerName = health.lastAttackerName;
+        }
+
+        if (screenGroup == null)
+        {
+            Debug.LogError("[UI_DeathScreen] screenGroup 为 null！");
+            return;
         }
 
         screenGroup.gameObject.SetActive(true);
@@ -89,6 +100,6 @@ public class UI_DeathScreen : MonoBehaviour
         DOTween.Kill(screenGroup);
         DOTween.Kill(causeText);
         Time.timeScale = 1;
-        SceneManager.LoadScene("主菜单");
+        SceneTransitionFader.Instance.TransitionToScene("主菜单"); // 过场黑幕过渡
     }
 }

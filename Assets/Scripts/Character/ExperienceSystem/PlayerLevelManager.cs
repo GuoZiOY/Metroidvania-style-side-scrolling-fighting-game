@@ -14,7 +14,7 @@ public class PlayerLevelManager : MonoBehaviour // 玩家等级管理器
     [Header("组件引用")]
     [SerializeField] private LevelCalculator levelCalculator; // 等级计算器
     [SerializeField] private AttributePointManager attributePointManager; // 属性点管理器
-    [SerializeField] private UI_EventTip eventTip; // 事件提示引用
+    private UI_EventTip eventTip; // 事件提示（场景对象，预制体无法序列化，运行时查找）
 
     public int CurrentLevel => currentLevel; // 获取当前等级
     public int CurrentExp => currentExp; // 获取当前经验值
@@ -98,8 +98,16 @@ public class PlayerLevelManager : MonoBehaviour // 玩家等级管理器
             OnSkillPointsChanged?.Invoke(skillPoints);
             OnAttributePointsChanged?.Invoke(attributePoints);
             
-            eventTip?.ShowLevelUp(currentLevel); // 显示等级提升提示
+            GetEventTip()?.ShowLevelUp(currentLevel); // 显示等级提升提示
         }
+    }
+
+    // 事件提示延迟解析：场景对象引用在预制体中无效，运行时查找
+    private UI_EventTip GetEventTip()
+    {
+        if (eventTip == null)
+            eventTip = FindAnyObjectByType<UI_EventTip>();
+        return eventTip;
     }
 
     private int CalculateFreeAttributePoints(int level) // 计算自由属性点数（平稳成长型）

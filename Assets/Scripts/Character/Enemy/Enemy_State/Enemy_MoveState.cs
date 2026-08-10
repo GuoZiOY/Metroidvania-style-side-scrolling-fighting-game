@@ -11,7 +11,7 @@ public class Enemy_MoveState : Enemy_GroundState
     public override void Enter()
     {
         base.Enter();
-        stateTimer = enemy.moveTime = Random.Range(enemy.minMoveTime,enemy.maxMoveTime);
+        stateTimer = enemy.GetRandomMoveTime(); // 智能随机巡逻时长（不暴露参数）
 
         if (enemy.isOnGround == false || enemy.isOnWall)
             enemy.Flip();

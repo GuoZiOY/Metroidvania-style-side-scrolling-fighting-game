@@ -86,6 +86,11 @@ public class UI_CombinePanel : MonoBehaviour
     {
         bool valid = CombineSystem.CanCombine(selectedItems, out string reason);
 
+        // 背包容量：合成产物（装备）需 1 空槽位，背包满时禁用避免溢出
+        bool bagHasRoom = invSys != null && invSys.GetInventory() != null && invSys.GetInventory().CanAddItem();
+        if (selectedItems.Count >= CombineSystem.MinCount && valid && !bagHasRoom)
+            reason = "背包已满";
+
         if (selectedText != null)
         {
             var sb = new System.Text.StringBuilder();
@@ -121,6 +126,10 @@ public class UI_CombinePanel : MonoBehaviour
                 sb.AppendLine($"保底 {keepTotal} 条（基础{baseKeep} + 品质{keepBonus}）");
                 sb.AppendLine($"素材品质分{qualityScore}（每{qualityPerKeep}分+1条保底，阶段标准）");
                 sb.AppendLine($"<color=#FFD700>突破</color>：完全成功时 {CombineSystem.BreakthroughChance * 100f:F0}% 概率生成一条更高稀有度词缀");
+
+                // 背包满警告：产物无法放入
+                if (!bagHasRoom)
+                    sb.AppendLine($"<color=red>⚠ 背包已满，无法放入产物</color>");
             }
             else if (selectedItems.Count >= CombineSystem.MinCount)
             {
@@ -133,11 +142,11 @@ public class UI_CombinePanel : MonoBehaviour
             selectedText.text = sb.ToString();
         }
 
-        bool canCombine = selectedItems.Count >= CombineSystem.MinCount && valid;
+        bool canCombine = selectedItems.Count >= CombineSystem.MinCount && valid && bagHasRoom;
         if (combineButton != null)
             combineButton.interactable = canCombine;
         if (combineButtonText != null)
-            combineButtonText.text = canCombine ? "合成" : "条件不足";
+            combineButtonText.text = canCombine ? "合成" : (selectedItems.Count >= CombineSystem.MinCount && valid ? "背包已满" : "条件不足");
     }
 
     // 点击合成

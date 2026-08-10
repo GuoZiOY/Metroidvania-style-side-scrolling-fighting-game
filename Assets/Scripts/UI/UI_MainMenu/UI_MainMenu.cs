@@ -15,6 +15,10 @@ public class UI_MainMenu : MonoBehaviour
     {
         UI_ButtonEffect.HookAll();
 
+        // 兜底：进主菜单清空模态栈（ModalStack 是静态类跨场景残留，
+        // 若游戏场景留有未弹出的模态，读档继续后 GameInput.IsGameBlocked 会屏蔽角色输入）
+        ModalStack.Clear();
+
         if (titleText != null)
         {
             titleText.transform.localScale = Vector3.one * 0.8f;

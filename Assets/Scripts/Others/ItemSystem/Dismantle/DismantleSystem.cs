@@ -53,6 +53,33 @@ public static class DismantleSystem
         return null;
     }
 
+    // 检查是否可分解（含背包容量，供 UI 按钮禁用判断）；null=可分解
+    public static string GetDismantleFailReason(Inventory_Item item, PlayerInventorySystem invSys)
+    {
+        if (item == null || invSys == null)
+            return "无效目标";
+
+        var inv = invSys.GetInventory();
+        if (inv == null)
+            return "背包未就绪";
+
+        var output = CalculateOutput(item);
+        if (output.Count == 0)
+            return "不可分解"; // 无配方
+
+        // 背包能否容纳分解产出（材料可堆叠则不占新槽）
+        if (!CanHoldOutput(inv, output))
+            return "背包已满";
+
+        return null;
+    }
+
+    // 检查是否可分解（含背包容量）
+    public static bool CanDismantle(Inventory_Item item, PlayerInventorySystem invSys)
+    {
+        return GetDismantleFailReason(item, invSys) == null;
+    }
+
     // 执行分解：产出材料入背包 + 移除被分解装备；成功返回 true
     public static bool TryDismantle(Inventory_Item item, PlayerInventorySystem invSys)
     {

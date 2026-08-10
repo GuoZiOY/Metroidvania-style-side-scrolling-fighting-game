@@ -3,27 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.GlobalIllumination;
 
-public class StateMachine//×´Ì¬»ú
+public class StateMachine//×´Ì¬ï¿½ï¿½
 {
-    public EntityState currentState {  get; private set; }//È¡µÃ»ùÀàEntityState µÄµ±Ç°×´Ì¬
+    public EntityState currentState {  get; private set; }//È¡ï¿½Ã»ï¿½ï¿½ï¿½EntityState ï¿½Äµï¿½Ç°×´Ì¬
     public bool canChangeSate;
 
-    public void Initialize(EntityState startState)//³õÊ¼»¯×´Ì¬
+    public void Initialize(EntityState startState)//ï¿½ï¿½Ê¼ï¿½ï¿½×´Ì¬
     {
         canChangeSate = true;
-        currentState = startState;//½«µ±Ç°×´Ì¬ÉèÎª´«ÈëµÄ³õÊ¼×´Ì¬
-        currentState.Enter();//½øÈë³õÊ¼×´Ì¬
+        currentState = startState;//ï¿½ï¿½ï¿½ï¿½Ç°×´Ì¬ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ä³ï¿½Ê¼×´Ì¬
+        currentState.Enter();//ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼×´Ì¬
     }
     
-    public void ChangeState(EntityState newState)//¸Ä±ä×´Ì¬
+    public void ChangeState(EntityState newState)//ï¿½Ä±ï¿½×´Ì¬
     {
         if (canChangeSate == false) return;
-        currentState.Exit();//ÍË³öÖ®Ç°µÄ×´Ì¬
-        currentState = newState;//½«µ±Ç°×´Ì¬ÉèÎªÐÂ×´Ì¬
-        currentState.Enter();//½øÈëÐÂ×´Ì¬
+        currentState.Exit();//ï¿½Ë³ï¿½Ö®Ç°ï¿½ï¿½×´Ì¬
+        currentState = newState;//ï¿½ï¿½ï¿½ï¿½Ç°×´Ì¬ï¿½ï¿½Îªï¿½ï¿½×´Ì¬
+        currentState.Enter();//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬
     }
 
-    public void UpdateActiveState()//¸üÐÂ×´Ì¬
+    public void UpdateActiveState()//ï¿½ï¿½ï¿½ï¿½×´Ì¬
     {
         currentState.Update();
     }

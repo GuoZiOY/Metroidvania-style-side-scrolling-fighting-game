@@ -100,13 +100,13 @@ public class SaveManager : MonoBehaviour
             Debug.LogWarning($"[SaveManager] 存档版本 {data.version} 低于当前版本 {SAVE_DATA_VERSION}，将自动升级");
         }
 
-        // 如果场景不同，先切换场景
+        // 如果场景不同，先切换场景（过场黑幕过渡）
         string currentScene = SceneManager.GetActiveScene().name;
         if (data.sceneName != currentScene)
         {
             pendingLoad = data;
             SceneManager.sceneLoaded += OnSceneLoadedForLoad;
-            SceneManager.LoadScene(data.sceneName);
+            SceneTransitionFader.Instance.TransitionToScene(data.sceneName);
         }
         else
         {
@@ -171,6 +171,11 @@ public class SaveManager : MonoBehaviour
         var psm = FindAnyObjectByType<PassiveSkillManager>();
         if (psm != null) psm.RefreshAllPassiveSkills();
 
+        // 被动技能/装备可能改变最大生命，末尾再保证满血（读档统一满血恢复）
+        var player = FindAnyObjectByType<Player>();
+        if (player != null && player.health != null)
+            player.health.SetCurrentHP(player.health.GetMaxHP());
+
         AudioManager.Instance?.PlayLoadSfx();
 
         Debug.Log("[SaveManager] UI 刷新完成");
@@ -216,7 +221,7 @@ public class SaveManager : MonoBehaviour
 
         pendingLoad = data;
         SceneManager.sceneLoaded += OnSceneLoadedForLoad;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        SceneTransitionFader.Instance.TransitionToScene(SceneManager.GetActiveScene().name); // 过场黑幕重载当前场景
     }
 
     // 获取所有存档槽的元数据（主菜单展示）
@@ -406,12 +411,13 @@ public class SaveManager : MonoBehaviour
             }
         }
 
-        // 槽位绑定
+        // 槽位绑定（长度取管理器实际槽位数，避免硬编码 5 与场景 slotCount=6 不一致导致末尾槽位丢失）
         var ssm = SkillSlotManager.Instance ?? FindAnyObjectByType<SkillSlotManager>();
         if (ssm != null)
         {
-            d.slotBindings = new int[5];
-            for (int i = 0; i < 5; i++)
+            int slotCount = ssm.GetSlotCount();
+            d.slotBindings = new int[slotCount];
+            for (int i = 0; i < slotCount; i++)
                 d.slotBindings[i] = (int)ssm.GetUpgradeTypeInSlot(i);
         }
 
@@ -496,6 +502,10 @@ public class SaveManager : MonoBehaviour
         if (data.worldFlags != null)
             WorldState.LoadFromSave(data.worldFlags);
 
+        // 读档满血恢复：不恢复存档时的当前血量，统一回满。
+        // 放在所有属性/装备/等级恢复之后，确保 GetMaxHP() 已是最终值
+        player.health?.SetCurrentHP(player.health.GetMaxHP());
+
         // 存档点
         CurrentCheckpointId = data.lastCheckpointId;
 
@@ -506,8 +516,8 @@ public class SaveManager : MonoBehaviour
     {
         if (d == null) return;
 
-        player.health?.SetCurrentHP(d.currentHP);
-
+        // 注意：不在此处恢复当前血量。读档统一在 ApplySaveData 末尾满血恢复，
+        // 避免此时 maxHP 尚未恢复完成（属性/装备未应用），SetCurrentHP 被 clamp 到旧最大值
         var inv = player.GetComponentInChildren<PlayerInventorySystem>();
         if (inv != null) inv.SetCurrency(d.currency);
 
@@ -620,11 +630,11 @@ public class SaveManager : MonoBehaviour
             }
         }
 
-        // 槽位绑定
+        // 槽位绑定（按存档实际长度恢复，兼容旧档 int[5] 与新档 int[6]）
         var ssm = SkillSlotManager.Instance ?? FindAnyObjectByType<SkillSlotManager>();
         if (ssm != null && d.slotBindings != null)
         {
-            for (int i = 0; i < d.slotBindings.Length && i < 5; i++)
+            for (int i = 0; i < d.slotBindings.Length; i++)
             {
                 var upgradeType = (SkillUpgradeType)d.slotBindings[i];
                 if (upgradeType != SkillUpgradeType.None)

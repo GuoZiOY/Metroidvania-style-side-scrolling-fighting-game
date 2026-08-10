@@ -16,29 +16,39 @@ public class UI_Inventory : MonoBehaviour
     {
         uiItemSlots = uiItemSlotParent.GetComponentsInChildren<UI_InventorySlot>();
         uiEquipSlots = uiEquipSlotParent.GetComponentsInChildren<UI_EquipSlot>();
-        playerInventorySystem = FindAnyObjectByType<PlayerInventorySystem>();
-
-        if (playerInventorySystem != null)
-        {
-            playerInventorySystem.OnInventoryUpdated += UpdateInventoryUI;
-            playerInventorySystem.OnEquipmentUpdated += UpdateEquipmentUI;
-
-            InitializeSlots();
-        }
-        else
-        {
-            Debug.LogError("[UI_Inventory] PlayerInventorySystem 未找到！请确保场景中有该组件。");
-        }
     }
 
     private void Start()
     {
-        //游戏启动时强制更新所有槽位，确保稀有度背景正确显示
-        if (playerInventorySystem != null)
+        // 玩家由 PlayerSpawner 在场景加载后生成（sceneLoaded 事件，晚于本组件 Awake），
+        // 因此延迟到 Start 查找并初始化背包 UI；等待几帧兜底
+        StartCoroutine(InitWhenPlayerReady());
+    }
+
+    // 等待玩家系统就绪后初始化（订阅 + 槽位绑定 + 首刷）
+    private System.Collections.IEnumerator InitWhenPlayerReady()
+    {
+        for (int i = 0; i < 30 && playerInventorySystem == null; i++)
         {
-            UpdateInventorySlots();
-            UpdateEquipmentSlots();
+            playerInventorySystem = FindAnyObjectByType<PlayerInventorySystem>();
+            if (playerInventorySystem != null) break;
+            yield return null;
         }
+
+        if (playerInventorySystem == null)
+        {
+            Debug.LogWarning("[UI_Inventory] PlayerInventorySystem 未找到（玩家未生成？），背包 UI 跳过初始化");
+            yield break;
+        }
+
+        playerInventorySystem.OnInventoryUpdated += UpdateInventoryUI;
+        playerInventorySystem.OnEquipmentUpdated += UpdateEquipmentUI;
+
+        InitializeSlots();
+
+        // 游戏启动时强制更新所有槽位，确保稀有度背景正确显示
+        UpdateInventorySlots();
+        UpdateEquipmentSlots();
     }
 
     private void OnDestroy()

@@ -10,6 +10,10 @@ public class Checkpoint : MonoBehaviour
     [Header("检查点配置")]
     [SerializeField] private string checkpointId;
     [SerializeField] private Transform respawnPoint;
+    [SerializeField] private bool isEntryPoint; // 是否作为本区域的入口存档点（传送门到达位置）
+
+    public bool IsEntryPoint => isEntryPoint; // 是否入口存档点（供传送门/玩家生成器查询）
+    public Vector3 RespawnPosition => respawnPoint != null ? respawnPoint.position : transform.position; // 重生/出生位置
 
     [Header("提示 UI")]
     [SerializeField] private GameObject promptRoot;         // "按 F 存档" UI 根对象

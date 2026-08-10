@@ -8,23 +8,32 @@ public static class CraftingSystem
     // 检查玩家是否满足制作条件（只检查不扣除）
     public static bool CanCraft(CraftingRecipe recipe, PlayerInventorySystem invSys)
     {
+        return GetCraftFailReason(recipe, invSys) == null;
+    }
+
+    // 获取不可制作原因（null=可制作）：背包已满/金币不足/材料不足，供 UI 按钮文案区分
+    public static string GetCraftFailReason(CraftingRecipe recipe, PlayerInventorySystem invSys)
+    {
         if (recipe == null || recipe.resultItem == null || invSys == null)
-            return false;
+            return "配方无效";
 
         var inv = invSys.GetInventory();
         if (inv == null)
-            return false;
+            return "背包未就绪";
 
-        // 背包满无法放入产物
-        if (!inv.CanAddItem())
-            return false;
+        // 背包能否放入产物（可堆叠产物在背包满但有堆空间时也允许制作）
+        if (!inv.CanAddItem(recipe.resultItem))
+            return "背包已满";
 
         // 金币不足
         if (invSys.GetCurrency() < recipe.goldCost)
-            return false;
+            return "金币不足";
 
         // 材料不足
-        return HasEnoughMaterials(recipe, inv);
+        if (!HasEnoughMaterials(recipe, inv))
+            return "材料不足";
+
+        return null;
     }
 
     // 计算制作产物的稀有度：max(配方最低稀有度, 材料平均稀有度)

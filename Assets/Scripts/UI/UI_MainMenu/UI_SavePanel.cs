@@ -161,7 +161,9 @@ public class UI_SavePanel : MonoBehaviour
                 SaveManager.Instance.Delete(selectedSlot);
                 SaveManager.Instance.CurrentSlotIndex = selectedSlot;
             }
-            SceneManager.LoadScene(newGameScene);
+            // 新游戏：到达后把玩家生成在场景入口存档点（isEntryPoint），过场黑幕过渡
+            PlayerSpawner.MarkSpawnAtEntry(false);
+            SceneTransitionFader.Instance.TransitionToScene(newGameScene);
         }
     }
 
@@ -192,7 +194,9 @@ public class UI_SavePanel : MonoBehaviour
         cg.alpha = 0;
         confirmDialog.transform.localScale = Vector3.one * 0.85f;
         DOTween.Kill(confirmDialog);
+        // SetUpdate(true)：主菜单 timeScale=0 时普通 tween 不推进，会导致 alpha 卡 0 弹窗不可见
         DOTween.Sequence()
+            .SetUpdate(true)
             .Join(cg.DOFade(1, 0.15f))
             .Join(confirmDialog.transform.DOScale(Vector3.one, 0.25f).SetEase(Ease.OutBack));
     }

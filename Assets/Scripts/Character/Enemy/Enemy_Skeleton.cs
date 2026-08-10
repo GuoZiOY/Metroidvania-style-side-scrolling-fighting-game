@@ -2,14 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy_Skeleton : Enemy,ICounterable
+public class Enemy_Skeleton : Enemy
 {
-    [Header("追击设置")]
-    [SerializeField] private bool canBeChased = true;
-
-    public bool IsInCounterTime { get => isInCounterTime; }
-    public bool CanBeChased { get => canBeChased; }
-
     protected override void Awake()
     {
         base.Awake();
@@ -34,20 +28,4 @@ public class Enemy_Skeleton : Enemy,ICounterable
 
     }
 
-    public void HandleCounter(float knockbackMultiplier = 1f)
-    {
-        // 不可眩晕的敌人不被打断（如Boss/精英），继续当前行为
-        // 玩家安全由反击无敌帧保障（见 Player_CounterAttackState）
-        if (canBeStunned == false)
-            return;
-
-        ApplyCounterKnockback(knockbackMultiplier);
-        stateMachine.ChangeState(stunnedState);
-    }
-
-    private void ApplyCounterKnockback(float multiplier)
-    {
-        Vector2 counterKnockback = new Vector2(stunnedVelocity.x * multiplier, stunnedVelocity.y * multiplier);
-        rb.linearVelocity = new Vector2(counterKnockback.x * -DirctionToPlayer(), counterKnockback.y);
-    }
 }

@@ -423,6 +423,11 @@ MonoBehaviour:
   enableHitStop: 1
   hitStopDuration: 0.08
   hitStopTimeScale: 0
+  poiseMultiplier: 0.2
+  poiseDamageMultiplier: 1
+  enablePoiseRecovery: 0
+  poiseRecoveryDelay: 2
+  poiseRecoveryMultiplier: 0.1
   enemyName: "\u9AB7\u9AC5"
   uniqueID: 010101
   enemyType: 0

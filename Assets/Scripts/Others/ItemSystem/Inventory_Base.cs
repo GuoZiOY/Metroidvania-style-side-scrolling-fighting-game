@@ -31,9 +31,25 @@ public class Inventory_Base : MonoBehaviour
         return list;
     }
 
-    public bool CanAddItem()//判断是否可以添加物品
+    public bool CanAddItem()//判断是否可以添加物品（是否有空槽位）
     {
         return itemDictionary.Count < maxInventorySize;
+    }
+
+    // 判断能否添加指定物品：有空槽 或 背包满但该物品可堆叠到已有堆（制作/分解/合成容量检查用，防止溢出误判）
+    public bool CanAddItem(ItemDataSo itemData)
+    {
+        if (itemDictionary.Count < maxInventorySize)
+            return true; // 有空槽位
+        if (itemData == null)
+            return false;
+        foreach (var kvp in itemDictionary)
+        {
+            var stack = kvp.Value;
+            if (stack != null && stack.itemData == itemData && stack.CanAddStack())
+                return true; // 可堆叠到已有堆
+        }
+        return false;
     }
 
     public bool CanAddToStack(Inventory_Item item)//判断是否可以添加物品数量

@@ -1,5 +1,6 @@
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Networking;   // UI_Chat 在 Networking 命名空间
 
@@ -34,6 +35,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject questDialogue;    // 任务对话面板
     [SerializeField] private GameObject deathScreen;      // 死亡界面
     [SerializeField] private GameObject chatPanel;        // 聊天面板
+    [SerializeField] private GameObject pauseMenu;        // 暂停菜单（HUD 菜单按钮呼出）
     #endregion
 
     #region 提示框组件
@@ -63,6 +65,7 @@ public class UIManager : MonoBehaviour
     private const string MODAL_NPC_MENU = "npc_menu";
     private const string MODAL_QUEST_DIALOGUE = "quest_dialogue";
     private const string MODAL_MAIN_PANEL = "panel";
+    private const string MODAL_PAUSE = "pause";
 
     // ==================== 公开状态查询/访问器（供外部面板逻辑使用） ====================
 
@@ -110,6 +113,9 @@ public class UIManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        DontDestroyOnLoad(gameObject); // 跨场景持久（方案A）：HUD + 常用面板随 UI系统 整体保留
+        SceneManager.sceneLoaded += OnSceneLoadedForPersist;
+
         BindTabButtons(); // 绑定 Tab主面板 内面板切换按钮
 
         // 监听主面板切换事件
@@ -120,6 +126,23 @@ public class UIManager : MonoBehaviour
         mainPanelSwitcher.HideAll();
     }
 
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoadedForPersist;
+    }
+
+    // UI 系统显隐保证机制：菜单场景隐藏整个 UI，游戏场景强制显示（覆盖默认隐藏/被误关的兜底）
+    private void ApplySceneVisibility(Scene scene)
+    {
+        gameObject.SetActive(scene.name != "主菜单");
+    }
+
+    // 主菜单场景隐藏整个 UI，进入游戏场景恢复（避免 HUD 盖在菜单上）
+    private void OnSceneLoadedForPersist(Scene scene, LoadSceneMode mode)
+    {
+        ApplySceneVisibility(scene);
+    }
+
     private void Start()
     {
         UI_ButtonEffect.HookAll();
@@ -128,8 +151,21 @@ public class UIManager : MonoBehaviour
         mainPanelSwitcher.HideAll();
         CloseAllPanelsAtStart();
 
+        // 暂停菜单自发现：未在 Inspector 拖入时自动找场景中的 UI_PauseMenu（简化接线，无需手动拖引用）
+        if (pauseMenu == null)
+        {
+            var pm = FindAnyObjectByType<UI_PauseMenu>(FindObjectsInactive.Include);
+            if (pm != null)
+                pauseMenu = pm.gameObject;
+        }
+
         // 世界时间统一由 UIManager 管理：启动强制复位，避免残留 timeScale=0 导致游戏冻结
         Time.timeScale = 1f;
+
+        // 保证机制：启动即按当前场景修正 UI 显隐。
+        // Start 可能被延后到首次激活时（菜单场景被隐藏后、进入游戏场景才首次运行），
+        // 此时仍按当前场景强制保证显示，兜底 sceneLoaded 事件漏触发的场景
+        ApplySceneVisibility(SceneManager.GetActiveScene());
     }
 
     // 开局统一关闭所有收编面板（各面板不再在自身 Awake 里关闭，避免首次 Open 被 Awake 抵消）
@@ -142,6 +178,7 @@ public class UIManager : MonoBehaviour
         if (npcMenu != null) npcMenu.SetActive(false);
         if (questDialogue != null) questDialogue.SetActive(false);
         if (deathScreen != null) deathScreen.SetActive(false);
+        if (pauseMenu != null) pauseMenu.SetActive(false);
     }
 
     // ==================== 主面板事件处理 ====================
@@ -258,6 +295,32 @@ public class UIManager : MonoBehaviour
         SetPanelBackground(false);        // 隐藏统一背景
     }
 
+    // 打开暂停菜单（HUD 菜单按钮/Escape 呼出）：隐藏主面板 + 背景 + 入栈 + 暂停
+    public void ShowPauseMenu()
+    {
+        if (pauseMenu == null)
+            return;
+        HideAllPanels(); // 先关主面板/子面板，避免与暂停菜单叠放
+        SetPanelBackground(true); // 统一背景
+        pauseMenu.GetComponent<UI_PauseMenu>()?.Open();
+        ModalStack.Push(MODAL_PAUSE); // 入栈：阻塞游戏输入（GameInput.IsGameBlocked）
+        Time.timeScale = 0f;          // 暂停游戏
+    }
+
+    // 关闭暂停菜单（Escape/继续游戏按钮统一入口）
+    public void ClosePauseMenu()
+    {
+        if (pauseMenu == null)
+            return;
+        pauseMenu.GetComponent<UI_PauseMenu>()?.Close();
+        ModalStack.Pop(MODAL_PAUSE); // 出栈
+        Time.timeScale = 1f;         // 恢复游戏
+        SetPanelBackground(false);   // 隐藏统一背景
+    }
+
+    // 暂停菜单是否打开（供 HUD 按钮判断/防重复打开）
+    public bool IsPauseMenuOpen => ModalStack.Top == MODAL_PAUSE;
+
     // 激活面板根对象（面板可能挂在默认 inactive 的 Canvas 下，打开前确保根激活）
     private void EnsurePanelRootActive(GameObject panel)
     {
@@ -279,7 +342,13 @@ public class UIManager : MonoBehaviour
         if (deathScreen != null)
         {
             deathScreen.SetActive(true);
-            deathScreen.GetComponent<UI_DeathScreen>()?.Show();
+            var death = deathScreen.GetComponent<UI_DeathScreen>();
+            Debug.Log($"[UIManager] ShowDeathScreen: deathScreen={(deathScreen != null)} ui={death != null}");
+            death?.Show();
+        }
+        else
+        {
+            Debug.LogWarning("[UIManager] ShowDeathScreen: deathScreen 引用为 null！");
         }
     }
 
@@ -349,6 +418,9 @@ public class UIManager : MonoBehaviour
                 break;
             case MODAL_MAIN_PANEL:
                 mainPanelSwitcher.HideAll();
+                break;
+            case MODAL_PAUSE:
+                ClosePauseMenu();
                 break;
         }
     }

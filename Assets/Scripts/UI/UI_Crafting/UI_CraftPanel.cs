@@ -104,7 +104,9 @@ public class UI_CraftPanel : MonoBehaviour
         if (selectedRecipe == null)
             return;
 
-        bool canCraft = invSys != null && CraftingSystem.CanCraft(selectedRecipe, invSys);
+        // 制作按钮状态：区分"背包已满/金币不足/材料不足"，背包满时禁用避免产物溢出
+        string craftFail = invSys != null ? CraftingSystem.GetCraftFailReason(selectedRecipe, invSys) : "背包未就绪";
+        bool canCraft = craftFail == null;
 
         // 详情文本
         if (detailText != null)
@@ -126,11 +128,11 @@ public class UI_CraftPanel : MonoBehaviour
             detailText.text = sb.ToString();
         }
 
-        // 制作按钮
+        // 制作按钮（背包满/金币不足/材料不足时禁用并显示原因）
         if (craftButton != null)
             craftButton.interactable = canCraft;
         if (craftButtonText != null)
-            craftButtonText.text = canCraft ? "制作" : "材料不足";
+            craftButtonText.text = canCraft ? "制作" : craftFail;
     }
 
     // 点击制作按钮
@@ -211,14 +213,15 @@ public class UI_CraftRow : MonoBehaviour
             rowButton.transform.DOScale(Vector3.one, 0.15f).SetEase(Ease.OutQuad).SetUpdate(true);
     }
 
-    // 刷新可制作状态
+    // 刷新可制作状态（含背包满原因）
     public void RefreshState(PlayerInventorySystem invSys)
     {
         EnsureReferences();
-        bool can = invSys != null && CraftingSystem.CanCraft(recipe, invSys);
+        string fail = invSys != null ? CraftingSystem.GetCraftFailReason(recipe, invSys) : "背包未就绪";
+        bool can = fail == null;
         if (stateText != null)
         {
-            stateText.text = can ? "可制作" : "材料不足";
+            stateText.text = can ? "可制作" : fail;
             stateText.color = can ? Color.green : Color.red;
         }
     }

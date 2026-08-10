@@ -9,7 +9,7 @@ public enum EnemyType
     Boss//Boss
 }
 
-public class Enemy : Entity
+public class Enemy : Entity, ICounterable
 {
 
     public Enemy_IdleState idleState;
@@ -81,17 +81,25 @@ public class Enemy : Entity
 
 
     [Header("移动模式")]
-    public float idleTime = 3;
-    [SerializeField] public float minIdleTime = 2;
-    [SerializeField] public float maxIdleTime = 4;
-    [Space]
-    public float moveTime = 7;
-    [SerializeField]public float minMoveTime = 5;
-    [SerializeField]public float maxMoveTime = 10;
-    [Space]
     public float moveSpeed = 1.4f;
     [Range(0,2)]
     public float moveAnimSpeedMultiplier = 1;//角色移动时动画速度倍率
+
+    // 智能随机待机时间（不暴露参数）：1.5~4.5s，偶尔长待机（5%概率 4~5.5s）增加不可预测性
+    public float GetRandomIdleTime()
+    {
+        if (Random.value < 0.05f)
+            return Random.Range(4f, 5.5f);
+        return Random.Range(1.5f, 4f);
+    }
+
+    // 智能随机巡逻时间（不暴露参数）：3~7s，偶尔长巡逻（5%概率 6~8s）
+    public float GetRandomMoveTime()
+    {
+        if (Random.value < 0.05f)
+            return Random.Range(6f, 8f);
+        return Random.Range(3f, 6f);
+    }
 
     public float activeSlowMultiplier { get; private set; } = 1;//当前有效的减速倍率
 
@@ -128,6 +136,23 @@ public class Enemy : Entity
     }
 
     public void EnableCounterTime(bool enable)=> isInCounterTime = enable;//开启/关闭可反击时间
+
+    // ─── ICounterable 实现（提到基类，所有敌人通用可被反击）───
+    [SerializeField] private bool canBeChased = true; // 反击成功后是否可被追击
+
+    public bool IsInCounterTime => isInCounterTime; // 是否处于可反击时间
+    public bool CanBeChased => canBeChased; // 反击后是否可追击
+
+    // 反击命中：击退 + 眩晕（不可眩晕的敌人不被反击打断，如Boss/精英）
+    public void HandleCounter(float knockbackMultiplier = 1f)
+    {
+        if (canBeStunned == false)
+            return;
+
+        Vector2 counterKnockback = new Vector2(stunnedVelocity.x * knockbackMultiplier, stunnedVelocity.y * knockbackMultiplier);
+        rb.linearVelocity = new Vector2(counterKnockback.x * -DirctionToPlayer(), counterKnockback.y);
+        stateMachine.ChangeState(stunnedState);
+    }
 
     public int DirctionToPlayer()//返回指向玩家的方向
     {

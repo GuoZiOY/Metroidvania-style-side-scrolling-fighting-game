@@ -27,7 +27,7 @@ public class Entity_VFX : MonoBehaviour//实体视觉特效
     [SerializeField] private CritParticleEffect critParticleEffect;
 
     [Header("相机震动")]
-    [SerializeField] private CinemaScreenShake screenShake;
+    private CinemaScreenShake screenShake; // 相机震动（场景对象，预制体无法序列化，运行时查找）
 
     [Header("元素颜色-击中特效")]
     public bool closeHitVFXColor = true;//������Ч������Ԫ����ɫ��Ĭ�Ͽ���
@@ -152,20 +152,25 @@ public class Entity_VFX : MonoBehaviour//实体视觉特效
 
     public void ShakeScreenForCounter()
     {
-        if (screenShake != null)
-            screenShake.ShakeScreenForCounter();
+        GetScreenShake()?.ShakeScreenForCounter();
     }
 
     public void ShakeScreenForAttack(int attackIndex)
     {
-        if (screenShake != null)
-            screenShake.ShakeScreenForAttack(attackIndex);
+        GetScreenShake()?.ShakeScreenForAttack(attackIndex);
     }
 
     public void ShakeScreenForJumpAttack()
     {
-        if (screenShake != null)
-            screenShake.ShakeScreenForJumpAttack();
+        GetScreenShake()?.ShakeScreenForJumpAttack();
+    }
+
+    // 相机震动延迟解析：场景对象引用在预制体中无效，运行时查找
+    private CinemaScreenShake GetScreenShake()
+    {
+        if (screenShake == null)
+            screenShake = FindAnyObjectByType<CinemaScreenShake>();
+        return screenShake;
     }
 
     public void PlayOnDamageVfx()

@@ -21,6 +21,10 @@ public class HealthBar : MonoBehaviour
     {
         if (entityHealth == null)
             entityHealth = GetComponentInParent<Entity_Health>();
+
+        // 血条 UI 不在角色层级下时，兜底自动查找玩家角色
+        if (entityHealth == null)
+            FindPlayerHealth();
     }
 
     private void Start()
@@ -33,6 +37,10 @@ public class HealthBar : MonoBehaviour
 
     private void Update()
     {
+        // 玩家可能延迟生成，引用未找到时惰性重找
+        if (entityHealth == null)
+            FindPlayerHealth();
+
         if (entityHealth == null || slider == null) return;
 
         float current = entityHealth.GetHealthPercent();
@@ -49,6 +57,25 @@ public class HealthBar : MonoBehaviour
         }
 
         lastSliderValue = current;
+    }
+
+    // 兜底自动查找玩家生命组件（血条挂在独立 UI、不在角色层级下时）
+    private void FindPlayerHealth()
+    {
+        // 敌人血条挂在敌人层级下，不参与玩家兜底，避免误绑玩家血量
+        if (GetComponentInParent<Enemy>() != null)
+            return;
+
+        var player = FindAnyObjectByType<Player>();
+        if (player == null)
+            return;
+
+        entityHealth = player.GetComponentInChildren<Entity_Health>();
+
+        // 首次找到时同步血条显示（玩家可能晚于血条生成）
+        lastSliderValue = entityHealth.GetHealthPercent();
+        if (slider != null) slider.value = lastSliderValue;
+        if (bufferBar != null) bufferBar.fillAmount = lastSliderValue;
     }
 
     private IEnumerator BufferCo(float targetPercent)

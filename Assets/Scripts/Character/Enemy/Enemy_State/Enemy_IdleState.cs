@@ -11,7 +11,7 @@ public class Enemy_IdleState : Enemy_GroundState
     public override void Enter()
     {
         base.Enter();
-        stateTimer = enemy.idleTime = Random.Range(enemy.minIdleTime, enemy.maxIdleTime);
+        stateTimer = enemy.GetRandomIdleTime(); // 智能随机待机时长（不暴露参数）
 
     }
 

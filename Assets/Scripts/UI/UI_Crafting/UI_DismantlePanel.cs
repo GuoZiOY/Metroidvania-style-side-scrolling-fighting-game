@@ -71,7 +71,9 @@ public class UI_DismantlePanel : MonoBehaviour
         if (selectedItem == null)
             return;
 
-        bool canDismantle = invSys != null;
+        // 分解按钮状态：含背包容量检查（背包满时禁用，避免产出溢出）
+        string failReason = DismantleSystem.GetDismantleFailReason(selectedItem, invSys);
+        bool canDismantle = failReason == null;
 
         if (detailText != null)
         {
@@ -81,7 +83,6 @@ public class UI_DismantlePanel : MonoBehaviour
             if (output.Count == 0)
             {
                 sb.AppendLine("（此装备无配方，不可分解）");
-                canDismantle = false;
             }
             else
             {
@@ -94,7 +95,7 @@ public class UI_DismantlePanel : MonoBehaviour
         if (dismantleButton != null)
             dismantleButton.interactable = canDismantle;
         if (dismantleButtonText != null)
-            dismantleButtonText.text = canDismantle ? "分解" : "不可分解";
+            dismantleButtonText.text = canDismantle ? "分解" : failReason;
     }
 
     // 点击分解

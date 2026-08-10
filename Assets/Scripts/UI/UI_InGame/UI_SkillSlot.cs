@@ -35,29 +35,39 @@ public class UI_SkillSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
         if (background != null) originalColor = background.color;
     }
 
+    protected virtual void OnEnable() // 激活时同步管理器当前绑定（读档时序防御：事件可能早于订阅/错过）
+    {
+        RefreshBindingFromManager();
+    }
+
     protected virtual void Start() // 初始化管理器引用和UI显示
     {
         skillSlotManager = SkillSlotManager.Instance;
         skillManager = Player_SkillManager.Instance;
 
-        // 读档时序防御：读档恢复可能早于本组件 Start 订阅事件（OnSkillSlotChanged 已错过），
-        // 直接从管理器读取当前槽位绑定，确保读档后槽位仍能显示已恢复的技能
-        if (skillSlotManager != null)
-        {
-            SkillUpgradeType boundType = skillSlotManager.GetUpgradeTypeInSlot(slotIndex);
-            if (boundType != SkillUpgradeType.None)
-            {
-                currentUpgradeType = boundType;
-                currentSkill = GetSkillByUpgradeType(boundType);
-            }
-        }
-
-        UpdateSlotDisplay();
+        RefreshBindingFromManager();
         UpdateKeyText();
 
         if (skillSlotManager != null)
             skillSlotManager.OnSkillSlotChanged += OnSkillSlotChanged;
         GameInput.OnBindingsChanged += UpdateKeyText;
+    }
+
+    // 从管理器同步当前槽位绑定（读档/重激活兜底：不依赖一次性 OnSkillSlotChanged 事件）
+    private void RefreshBindingFromManager()
+    {
+        if (skillSlotManager == null)
+            skillSlotManager = SkillSlotManager.Instance;
+        if (skillSlotManager == null)
+            return;
+
+        SkillUpgradeType boundType = skillSlotManager.GetUpgradeTypeInSlot(slotIndex);
+        currentUpgradeType = boundType;
+        // skillManager 可能尚未在 Start 中赋值（OnEnable 早于 Start），此时仅同步类型
+        currentSkill = (boundType != SkillUpgradeType.None && skillManager != null)
+            ? GetSkillByUpgradeType(boundType)
+            : null;
+        UpdateSlotDisplay();
     }
 
     private void OnDestroy() // 清理事件监听
@@ -165,7 +175,8 @@ public class UI_SkillSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandle
 
     private Skill_Base GetSkillByUpgradeType(SkillUpgradeType upgradeType) // 根据技能升阶类型获取技能实例
     {
-        if (upgradeType == SkillUpgradeType.None) return null;
+        if (upgradeType == SkillUpgradeType.None || skillManager == null || skillManager.allSkills == null)
+            return null;
 
         foreach (var skill in skillManager.allSkills)
         {

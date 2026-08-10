@@ -1,0 +1,382 @@
+fileFormatVersion: 2
+guid: f8eac9be8461bd04e9dfee917e3559b2
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 8386489783811750889
+    second: Slime2_Hurt_body_0
+  - first:
+      213: -1580900043065194034
+    second: Slime2_Hurt_body_1
+  - first:
+      213: -378255092699967038
+    second: Slime2_Hurt_body_2
+  - first:
+      213: -5771059850380722268
+    second: Slime2_Hurt_body_3
+  - first:
+      213: -173699728667479004
+    second: Slime2_Hurt_body_4
+  - first:
+      213: 8697997414861299898
+    second: Slime2_Hurt_body_5
+  - first:
+      213: -6472774165310706799
+    second: Slime2_Hurt_body_6
+  - first:
+      213: -5572406063128214277
+    second: Slime2_Hurt_body_7
+  - first:
+      213: 645187494822597070
+    second: Slime2_Hurt_body_8
+  - first:
+      213: -4251846448176045705
+    second: Slime2_Hurt_body_9
+  - first:
+      213: 8628052069467268889
+    second: Slime2_Hurt_body_10
+  - first:
+      213: -2941550566338756224
+    second: Slime2_Hurt_body_11
+  - first:
+      213: -4013020556737137294
+    second: Slime2_Hurt_body_12
+  - first:
+      213: 2298483880739846821
+    second: Slime2_Hurt_body_13
+  - first:
+      213: 291540935821016900
+    second: Slime2_Hurt_body_14
+  - first:
+      213: -5058823605314136224
+    second: Slime2_Hurt_body_15
+  - first:
+      213: 8329768321070211449
+    second: Slime2_Hurt_body_16
+  - first:
+      213: -6991623740010213627
+    second: Slime2_Hurt_body_17
+  - first:
+      213: -8521359399955593371
+    second: Slime2_Hurt_body_18
+  - first:
+      213: 2449192203782174205
+    second: Slime2_Hurt_body_19
+  - first:
+      213: -8204850383919709869
+    second: Slime2_Hurt_body_20
+  - first:
+      213: 3714605051015340307
+    second: Slime2_Hurt_body_21
+  - first:
+      213: 8529826703090751274
+    second: Slime2_Hurt_body_22
+  - first:
+      213: 6182356773252602949
+    second: Slime2_Hurt_body_23
+  - first:
+      213: -1027799977619077237
+    second: Slime2_Hurt_body_24
+  - first:
+      213: -5798402142098126461
+    second: Slime2_Hurt_body_25
+  - first:
+      213: -969798610225647412
+    second: Slime2_Hurt_body_26
+  - first:
+      213: 2270616368542296285
+    second: Slime2_Hurt_body_27
+  - first:
+      213: 2309340553489720793
+    second: Slime2_Hurt_body_28
+  - first:
+      213: -8365529437337915712
+    second: Slime2_Hurt_body_29
+  - first:
+      213: -6257177167384702706
+    second: Slime2_Hurt_body_30
+  - first:
+      213: -7565252030204084225
+    second: Slime2_Hurt_body_31
+  - first:
+      213: -4022801074669128277
+    second: Slime2_Hurt_body_32
+  - first:
+      213: 5429324946302333215
+    second: Slime2_Hurt_body_33
+  - first:
+      213: 1135725121576094270
+    second: Slime2_Hurt_body_34
+  - first:
+      213: 4866264419652471906
+    second: Slime2_Hurt_body_35
+  - first:
+      213: 8278748735665758677
+    second: Slime2_Hurt_body_36
+  - first:
+      213: 60893638920905808
+    second: Slime2_Hurt_body_37
+  - first:
+      213: -8033615783326282967
+    second: Slime2_Hurt_body_38
+  - first:
+      213: 2929707049115029231
+    second: Slime2_Hurt_body_39
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 16
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Slime2_Hurt_body_15
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 067d3e7dbb27bc9b0800000000000000
+      internalID: -5058823605314136224
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime2_Hurt_body_16
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97121bea728499370800000000000000
+      internalID: 8329768321070211449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime2_Hurt_body_17
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50fc08d6043c8fe90800000000000000
+      internalID: -6991623740010213627
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime2_Hurt_body_18
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 567063a16cc0eb980800000000000000
+      internalID: -8521359399955593371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime2_Hurt_body_19
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df5b71d35574df120800000000000000
+      internalID: 2449192203782174205
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: a759651a77ca47745b4e5900d3dc4d8d
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      Slime2_Hurt_body_0: 8386489783811750889
+      Slime2_Hurt_body_1: -1580900043065194034
+      Slime2_Hurt_body_10: 8628052069467268889
+      Slime2_Hurt_body_11: -2941550566338756224
+      Slime2_Hurt_body_12: -4013020556737137294
+      Slime2_Hurt_body_13: 2298483880739846821
+      Slime2_Hurt_body_14: 291540935821016900
+      Slime2_Hurt_body_15: -5058823605314136224
+      Slime2_Hurt_body_16: 8329768321070211449
+      Slime2_Hurt_body_17: -6991623740010213627
+      Slime2_Hurt_body_18: -8521359399955593371
+      Slime2_Hurt_body_19: 2449192203782174205
+      Slime2_Hurt_body_2: -378255092699967038
+      Slime2_Hurt_body_3: -5771059850380722268
+      Slime2_Hurt_body_4: -173699728667479004
+      Slime2_Hurt_body_5: 8697997414861299898
+      Slime2_Hurt_body_6: -6472774165310706799
+      Slime2_Hurt_body_7: -5572406063128214277
+      Slime2_Hurt_body_8: 645187494822597070
+      Slime2_Hurt_body_9: -4251846448176045705
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -289,7 +289,14 @@ public override void StartHitStop(float duration)
 
         // 启动死亡序列（慢动作 → 相机聚焦 → 停时间 → 死亡面板）
         if (gameObject.activeInHierarchy)
+        {
+            Debug.Log("[Player] 触发死亡，启动死亡序列协程");
             deathSequenceCoroutine = StartCoroutine(DeathSequence());
+        }
+        else
+        {
+            Debug.LogWarning("[Player] 死亡时对象 inactive，死亡序列未启动");
+        }
     }
 
     private Tween timeScaleTween;
@@ -305,6 +312,7 @@ public override void StartHitStop(float duration)
 
     private IEnumerator DeathSequence()
     {
+        Debug.Log("[Player] 死亡序列开始");
         var cam = Camera.main;
         if (cam != null)
         {
@@ -322,18 +330,21 @@ public override void StartHitStop(float duration)
                 cameraZoomTween = DOTween.To(() => cam.fieldOfView, v => cam.fieldOfView = v, originalSize / cameraZoom, focusDuration).SetUpdate(true);
 
             cameraMoveTween = cam.transform.DOMove(targetPos, focusDuration).SetUpdate(true);
+
+            // 等慢动作播完
+            yield return new WaitForSecondsRealtime(slomoDuration);
+
+            // 停止相机/时间相关 tween
+            timeScaleTween?.Kill();
+            cameraZoomTween?.Kill();
+            cameraMoveTween?.Kill();
+            DOTween.Kill(cam.transform);
         }
 
-        // 等慢动作播完
-        yield return new WaitForSecondsRealtime(slomoDuration);
-
-        // 停止 → 通知死亡面板
-        timeScaleTween?.Kill();
-        cameraZoomTween?.Kill();
-        cameraMoveTween?.Kill();
-        DOTween.Kill(Camera.main?.transform);
+        // 死亡面板弹出不依赖相机：无论相机/慢动作是否执行，都要停时间并弹出面板
         Time.timeScale = 0;
 
+        Debug.Log("[Player] 死亡序列结束，调用 UIManager.ShowDeathScreen");
         UIManager.Instance?.ShowDeathScreen();
     }
 
