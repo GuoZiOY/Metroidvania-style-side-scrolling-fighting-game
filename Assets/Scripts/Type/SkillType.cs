@@ -20,6 +20,8 @@ public enum SkillType
 
     ElementalMastery,
 
-    PowerCounterChase
+    PowerCounterChase,
+
+    BagExpand // 被动：背包扩容（每级背包槽+1）
 
 }

@@ -17,6 +17,7 @@ public class Player_SkillManager : MonoBehaviour
     public Skill_DomainExpansion domainExpansion{ get; private set; }
     public Skill_DoubleJump doubleJump { get; private set; }
     public Skill_ElementalMastery elementalMastery { get; private set; }
+    public Skill_BagExpand bagExpand { get; private set; }
 
 
 
@@ -41,6 +42,7 @@ public class Player_SkillManager : MonoBehaviour
         domainExpansion = GetComponentInChildren<Skill_DomainExpansion>();
         doubleJump = GetComponentInChildren<Skill_DoubleJump>();
         elementalMastery = GetComponentInChildren<Skill_ElementalMastery>();
+        bagExpand = GetComponentInChildren<Skill_BagExpand>();
         powerCounterChase = GetComponentInChildren<Skill_PowerCounterChase>();
 
         allSkills = GetComponentsInChildren<Skill_Base>();
@@ -69,6 +71,7 @@ public class Player_SkillManager : MonoBehaviour
             case SkillType.DoubleJump:return doubleJump;
             case SkillType.ElementalMastery:return elementalMastery;
             case SkillType.PowerCounterChase:return powerCounterChase;
+            case SkillType.BagExpand:return bagExpand;
 
             default:
                 Debug.Log($"获取技能- {type} -没有");

@@ -24,6 +24,13 @@ public class UI_InventorySlot : UI_ItemSlot, IItemDropTarget
         //检查是否从装备槽拖拽
         bool isDraggingFromEquipment = UI_ItemDragHandler.Instance != null && UI_ItemDragHandler.Instance.IsDraggingFromEquipment;
 
+        //检查是否从仓库拖拽（取出）
+        bool isDraggingFromWarehouse = UI_ItemDragHandler.Instance != null && UI_ItemDragHandler.Instance.IsDraggingFromWarehouse;
+
+        //仓库物品只能放入空背包槽（取出不交换）
+        if (isDraggingFromWarehouse)
+            return itemInSlot == null;
+
         //如果槽位已有物品
         if (itemInSlot != null)
         {
@@ -65,6 +72,13 @@ public class UI_InventorySlot : UI_ItemSlot, IItemDropTarget
         else if (sourceSlot is UI_InventorySlot sourceInventorySlot)
         {
             HandleInventoryToInventory(item, sourceInventorySlot);
+        }
+        else if (sourceSlot is UI_WarehouseSlot sourceWarehouseSlot)
+        {
+            // 仓库 → 背包：取出到当前空槽
+            var ws = sourceWarehouseSlot.warehouseSystem ?? FindAnyObjectByType<WarehouseSystem>();
+            if (ws != null)
+                ws.WithdrawToBackpack(item, sourceWarehouseSlot.GetSlotIndex(), slotIndex);
         }
     }
 

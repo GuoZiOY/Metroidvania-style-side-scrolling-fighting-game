@@ -11,6 +11,7 @@ public class Inventory_Item
 
     public int currentStackSize;//当前物品数量
     private int maxStackSize = 99;//最大堆叠数量
+    public int MaxStackSize => maxStackSize;//最大堆叠数量（只读，供跨容器转移合并数量）
 
     [field: SerializeField]
     public ItemModifier[] Modifiers{get; set;}

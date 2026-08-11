@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerInventorySystem : MonoBehaviour
 {
+    private const int BaseInventorySize = 15; // 背包基础格数（与玩家预制体现值一致）
+
     public event Action OnInventoryUpdated;
     public event Action OnEquipmentUpdated;
     public event Action OnGoldChanged;
@@ -75,6 +77,36 @@ public class PlayerInventorySystem : MonoBehaviour
         OnInventoryUpdated?.Invoke();
     }
 
+    private void Start()
+    {
+        // 被动「背包扩容」：订阅被动技能等级变化（技能树升级/读档恢复都会触发）
+        if (SkillDataManager.Instance != null)
+            SkillDataManager.Instance.OnPassiveSkillUpdated += OnPassiveSkillUpdated;
+
+        RecalculateCapacity(); // 启动兜底（未学被动时加成=0，容量=基础值）
+    }
+
+    // 被动技能更新回调：仅关心背包扩容
+    private void OnPassiveSkillUpdated(SkillUpgradeType upgradeType, int level)
+    {
+        if (upgradeType == SkillUpgradeType.BagExpand)
+            RecalculateCapacity();
+    }
+
+    // 被动「背包扩容」：背包上限 = 基础15 + 被动加成，并通知 UI 刷新槽位数量
+    public void RecalculateCapacity()
+    {
+        var bagExpand = FindAnyObjectByType<Skill_BagExpand>();
+        int bonus = bagExpand != null ? bagExpand.GetBagSlotBonus() : 0;
+
+        var inv = GetInventory();
+        if (inv != null)
+        {
+            inv.maxInventorySize = BaseInventorySize + bonus;
+            inv.TriggerInventoryUpdate();
+        }
+    }
+
     private void OnDestroy()
     {
         if (inventory != null)
@@ -91,6 +123,9 @@ public class PlayerInventorySystem : MonoBehaviour
         {
             consumableSystem.OnConsumableUsed -= HandleConsumableUsed;
         }
+
+        if (SkillDataManager.Instance != null)
+            SkillDataManager.Instance.OnPassiveSkillUpdated -= OnPassiveSkillUpdated;
     }
 
     public bool TryEquipItem(Inventory_Item item)//从背包装备物品

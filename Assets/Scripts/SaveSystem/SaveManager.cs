@@ -257,6 +257,9 @@ public class SaveManager : MonoBehaviour
         // 背包
         data.inventory = CollectInventory(player);
 
+        // 仓库
+        data.warehouse = CollectWarehouse();
+
         // 装备
         data.equipment = CollectEquipment(player);
 
@@ -343,6 +346,12 @@ public class SaveManager : MonoBehaviour
             });
         }
         return list;
+    }
+
+    private List<InventorySlotData> CollectWarehouse()
+    {
+        var ws = FindAnyObjectByType<WarehouseSystem>();
+        return ws != null ? ws.GetSaveData() : new List<InventorySlotData>();
     }
 
     private List<EquipSlotData> CollectEquipment(Player player)
@@ -486,14 +495,18 @@ public class SaveManager : MonoBehaviour
         // 属性
         ApplyStatData(player, data.stats);
 
+        // 技能（先于背包/装备恢复：被动「背包扩容」按技能等级重算背包容量，
+        // 背包物品按槽位落格依赖该容量，顺序靠后会触发"无效的槽位索引"报错）
+        ApplySkillData(data.skills);
+
         // 背包（先清空再重建）
         ApplyInventory(player, data.inventory);
 
+        // 仓库（旧档 warehouse 为 null 时保持空仓库）
+        ApplyWarehouse(data.warehouse);
+
         // 装备
         ApplyEquipment(player, data.equipment);
-
-        // 技能
-        ApplySkillData(data.skills);
 
         // 任务
         ApplyQuestData(data.quests);
@@ -570,6 +583,13 @@ public class SaveManager : MonoBehaviour
             item.currentStackSize = Mathf.Max(1, slot.stackSize);
             inv.AddItem(item, slot.slotIndex);
         }
+    }
+
+    private void ApplyWarehouse(List<InventorySlotData> items)
+    {
+        var ws = FindAnyObjectByType<WarehouseSystem>();
+        if (ws != null)
+            ws.LoadFromSave(items);
     }
 
     private void ApplyEquipment(Player player, List<EquipSlotData> equipment)

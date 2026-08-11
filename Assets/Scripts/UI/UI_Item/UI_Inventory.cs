@@ -46,6 +46,10 @@ public class UI_Inventory : MonoBehaviour
 
         InitializeSlots();
 
+        // 确保槽位数量与当前背包容量一致（被动扩容后容量可大于预置槽数）
+        var inventory = playerInventorySystem.GetInventory();
+        EnsureSlotCount(inventory != null ? inventory.maxInventorySize : uiItemSlots.Length);
+
         // 游戏启动时强制更新所有槽位，确保稀有度背景正确显示
         UpdateInventorySlots();
         UpdateEquipmentSlots();
@@ -82,18 +86,38 @@ public class UI_Inventory : MonoBehaviour
 
     private void OnInventorySlotDoubleClicked(Inventory_Item item)
     {
-        if (item != null)
+        if (item == null)
+            return;
+
+        // 仓库打开时：双击把背包物品存入仓库
+        if (UIManager.Instance != null && UIManager.Instance.IsWarehouseOpen)
         {
-            playerInventorySystem.TryEquipItem(item);
+            var ws = WarehouseSystem.Instance ?? FindAnyObjectByType<WarehouseSystem>();
+            var inv = playerInventorySystem.GetInventory();
+            int slot = inv != null ? inv.GetItemSlot(item) : -1;
+            if (ws != null && slot != -1)
+                ws.DepositFromBackpack(item, slot);
+            return;
         }
+
+        playerInventorySystem.TryEquipItem(item);
     }
 
     private void OnEquipmentSlotDoubleClicked(Inventory_Item item)
     {
-        if (item != null)
+        if (item == null)
+            return;
+
+        // 仓库打开时：双击把已装备物品卸下存入仓库
+        if (UIManager.Instance != null && UIManager.Instance.IsWarehouseOpen)
         {
-            playerInventorySystem.TryUnequipItem(item);
+            var ws = WarehouseSystem.Instance ?? FindAnyObjectByType<WarehouseSystem>();
+            if (ws != null)
+                ws.DepositFromEquipment(item);
+            return;
         }
+
+        playerInventorySystem.TryUnequipItem(item);
     }
 
     private void UpdateInventoryUI()
@@ -125,12 +149,50 @@ public class UI_Inventory : MonoBehaviour
     private void UpdateInventorySlots()
     {
         var inventory = playerInventorySystem.GetInventory();
+        if (inventory == null)
+            return;
 
-        // 使用新的字典存储系统更新槽位
-        for (int i = 0; i < uiItemSlots.Length; i++)
+        // 被动扩容后容量可变，先确保槽位数量与容量一致
+        EnsureSlotCount(inventory.maxInventorySize);
+
+        // 使用新的字典存储系统更新槽位（仅刷新容量内的有效槽位）
+        int count = Mathf.Min(uiItemSlots.Length, inventory.maxInventorySize);
+        for (int i = 0; i < count; i++)
         {
             Inventory_Item item = inventory.GetItemAtSlot(i);
             uiItemSlots[i].UpdateSlot(item);
         }
+    }
+
+    // 确保背包槽位数量与容量一致：不足则克隆首个槽位补足，超出则隐藏（被动扩容后容量可变）
+    private void EnsureSlotCount(int capacity)
+    {
+        if (uiItemSlots == null || uiItemSlots.Length == 0 || capacity <= 0)
+            return;
+
+        if (uiItemSlots.Length < capacity)
+        {
+            var inventory = playerInventorySystem.GetInventory();
+            int start = uiItemSlots.Length;
+            for (int i = start; i < capacity; i++)
+            {
+                var go = Instantiate(uiItemSlots[0].gameObject, uiItemSlotParent);
+                go.name = $"背包槽位{i}";
+                go.SetActive(true); // 确保克隆槽位激活（模板可能被隐藏）
+            }
+
+            // 重新收集全部槽位（含 inactive），只初始化新增部分
+            var newSlots = uiItemSlotParent.GetComponentsInChildren<UI_InventorySlot>(true);
+            for (int i = start; i < newSlots.Length; i++)
+            {
+                newSlots[i].Initialize(inventory, i);
+                newSlots[i].OnItemSlotDoubleClicked += OnInventorySlotDoubleClicked;
+            }
+            uiItemSlots = newSlots;
+        }
+
+        // 隐藏超出容量的槽位（容量一般只增不减，防御回缩）
+        for (int i = 0; i < uiItemSlots.Length; i++)
+            uiItemSlots[i].gameObject.SetActive(i < capacity);
     }
 }

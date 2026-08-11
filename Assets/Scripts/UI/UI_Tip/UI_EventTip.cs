@@ -11,6 +11,12 @@ public class UI_EventTip : BaseTip
         ShowTip(message, true); // 显示物品获得提示
     }
 
+    // 通用失败提示（红色 + 基础动画 + 抖动），供仓库存取等操作失败时调用
+    public void ShowDenyTip(string message)
+    {
+        ShowTip(message, false, AnimationType.基础, true);
+    }
+
     // 显示等级提升提示
     public void ShowLevelUp(int newLevel)
     {

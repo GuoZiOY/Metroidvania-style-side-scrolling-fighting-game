@@ -36,6 +36,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject deathScreen;      // 死亡界面
     [SerializeField] private GameObject chatPanel;        // 聊天面板
     [SerializeField] private GameObject pauseMenu;        // 暂停菜单（HUD 菜单按钮呼出）
+    [SerializeField] private GameObject warehousePanel;   // 仓库面板（仓库管理员 NPC 呼出）
     #endregion
 
     #region 提示框组件
@@ -66,6 +67,7 @@ public class UIManager : MonoBehaviour
     private const string MODAL_QUEST_DIALOGUE = "quest_dialogue";
     private const string MODAL_MAIN_PANEL = "panel";
     private const string MODAL_PAUSE = "pause";
+    private const string MODAL_WAREHOUSE = "warehouse";
 
     // ==================== 公开状态查询/访问器（供外部面板逻辑使用） ====================
 
@@ -179,6 +181,7 @@ public class UIManager : MonoBehaviour
         if (questDialogue != null) questDialogue.SetActive(false);
         if (deathScreen != null) deathScreen.SetActive(false);
         if (pauseMenu != null) pauseMenu.SetActive(false);
+        if (warehousePanel != null) warehousePanel.SetActive(false);
     }
 
     // ==================== 主面板事件处理 ====================
@@ -321,6 +324,35 @@ public class UIManager : MonoBehaviour
     // 暂停菜单是否打开（供 HUD 按钮判断/防重复打开）
     public bool IsPauseMenuOpen => ModalStack.Top == MODAL_PAUSE;
 
+    // 仓库是否打开（供背包/装备双击时判断"存入仓库"而非装备/卸装）
+    public bool IsWarehouseOpen => ModalStack.Top == MODAL_WAREHOUSE;
+
+    // 打开仓库（仓库管理员 NPC 调用）：隐藏主面板 + 激活根 + 背景 + 面板内容 + 入栈 + 暂停
+    public void ShowWarehouse()
+    {
+        HideAllPanels();
+        if (warehousePanel != null)
+        {
+            EnsurePanelRootActive(warehousePanel);
+            SetPanelBackground(true);
+            warehousePanel.GetComponent<UI_WarehousePanel>()?.Open();
+            ModalStack.Push(MODAL_WAREHOUSE);
+            Time.timeScale = 0f;
+        }
+    }
+
+    // 关闭仓库（Escape/关闭按钮统一入口）：内容清理 + 出栈 + 恢复 + 背景 + 重开NPC菜单
+    public void CloseWarehouse()
+    {
+        if (warehousePanel == null)
+            return;
+        warehousePanel.GetComponent<UI_WarehousePanel>()?.Close();
+        ModalStack.Pop(MODAL_WAREHOUSE);
+        Time.timeScale = 1f;
+        SetPanelBackground(false);
+        UI_NpcMenu.TryReopen();
+    }
+
     // 激活面板根对象（面板可能挂在默认 inactive 的 Canvas 下，打开前确保根激活）
     private void EnsurePanelRootActive(GameObject panel)
     {
@@ -374,9 +406,9 @@ public class UIManager : MonoBehaviour
         if (GameInput.GetKeyDown(GameInput.Action.Escape))
             HandleEscape();
 
-        // 商店/铁匠打开时禁止切换主面板
+        // 商店/铁匠/仓库打开时禁止切换主面板（与 Tab主面板 互斥，避免相互呼出）
         string top = ModalStack.Top;
-        if (top == MODAL_SHOP || top == MODAL_BLACKSMITH)
+        if (top == MODAL_SHOP || top == MODAL_BLACKSMITH || top == MODAL_WAREHOUSE)
             return;
 
         if (GameInput.GetKeyDown(GameInput.Action.ToggleCharacterPanel))
@@ -417,10 +449,13 @@ public class UIManager : MonoBehaviour
                 questDialogue?.GetComponent<UI_QuestDialogue>()?.Close();
                 break;
             case MODAL_MAIN_PANEL:
-                mainPanelSwitcher.HideAll();
+                HideAllPanels(); // 隐藏子面板 + 收起 Tab主面板 容器（含切换按钮）
                 break;
             case MODAL_PAUSE:
                 ClosePauseMenu();
+                break;
+            case MODAL_WAREHOUSE:
+                CloseWarehouse();
                 break;
         }
     }

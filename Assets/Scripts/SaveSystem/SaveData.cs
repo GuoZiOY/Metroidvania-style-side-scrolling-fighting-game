@@ -24,6 +24,7 @@ public class SaveData
     public SkillSaveData skills;
     public QuestSaveData quests;
     public List<string> worldFlags;      // WorldState 持久化 (key=true 的列表)
+    public List<InventorySlotData> warehouse;  // 仓库内容（旧档为 null → 空仓库，向后兼容）
 }
 
 #endregion

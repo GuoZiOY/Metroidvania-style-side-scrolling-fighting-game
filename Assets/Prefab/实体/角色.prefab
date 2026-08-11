@@ -1323,6 +1323,7 @@ GameObject:
   - component: {fileID: 5052617555593271842}
   - component: {fileID: 3363425461321971405}
   - component: {fileID: 4085335319373861101}
+  - component: {fileID: 3367479067101835512}
   m_Layer: 7
   m_Name: "\u88AB\u52A8\u6280\u80FD"
   m_TagString: Untagged
@@ -1376,7 +1377,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   skillType: 10
-  upgradeType: 27
+  upgradeType: 0
   currentLevel: 0
   cooldown: 0
   totalLevel: 0
@@ -1394,7 +1395,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   skillType: 11
-  upgradeType: 28
+  upgradeType: 0
   currentLevel: 0
   cooldown: 0
   totalLevel: 0
@@ -1402,6 +1403,24 @@ MonoBehaviour:
   baseStunChance: 0.5
   stunChancePerLevel: 0.5
   stunDurationBonusPerLevel: 0.5
+--- !u!114 &3367479067101835512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5134879202823615439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9307b7069bd36084597c5112faaadee8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Skill_BagExpand
+  skillType: 12
+  upgradeType: 0
+  currentLevel: 0
+  cooldown: 0
+  totalLevel: 0
+  bonusPerLevel: 1
 --- !u!1 &5318745071707143081
 GameObject:
   m_ObjectHideFlags: 0

@@ -25,12 +25,14 @@ public class UI_NpcMenu : MonoBehaviour
     [SerializeField] private Button questButton;
     [SerializeField] private Button shopButton;
     [SerializeField] private Button workbenchButton;
+    [SerializeField] private Button warehouseButton;
     [SerializeField] private Button dialogueButton;
     [SerializeField] private Button leaveButton;
 
     [SerializeField] private GameObject questButtonRoot;
     [SerializeField] private GameObject shopButtonRoot;
     [SerializeField] private GameObject workbenchButtonRoot;
+    [SerializeField] private GameObject warehouseButtonRoot;
 
     private NPCBehaviour currentNpc;
 
@@ -41,6 +43,8 @@ public class UI_NpcMenu : MonoBehaviour
         questButton.onClick.AddListener(OnQuestClicked);
         shopButton.onClick.AddListener(OnShopClicked);
         workbenchButton.onClick.AddListener(OnWorkbenchClicked);
+        if (warehouseButton != null)
+            warehouseButton.onClick.AddListener(OnWarehouseClicked); // 未接线时跳过，避免 NRE
         dialogueButton.onClick.AddListener(OnDialogueClicked);
         leaveButton.onClick.AddListener(OnLeaveClicked);
     }
@@ -69,6 +73,10 @@ public class UI_NpcMenu : MonoBehaviour
         // 工作台按钮：铁匠（hasWorkbench）才显示
         if (workbenchButtonRoot != null)
             workbenchButtonRoot.SetActive(npc != null && npc.hasWorkbench);
+
+        // 仓库按钮：仓库管理员（hasWarehouse）才显示
+        if (warehouseButtonRoot != null)
+            warehouseButtonRoot.SetActive(npc != null && npc.hasWarehouse);
 
         gameObject.SetActive(true);
         ModalStack.Push("npc_menu");
@@ -139,6 +147,17 @@ public class UI_NpcMenu : MonoBehaviour
 
         // 统一走 UIManager 打开铁匠工作台
         UIManager.Instance?.ShowBlacksmith();
+    }
+
+    private void OnWarehouseClicked()
+    {
+        var npc = currentNpc;
+        if (npc == null || !npc.hasWarehouse) return;
+        gameObject.SetActive(false);
+        ModalStack.Pop("npc_menu");
+
+        // 统一走 UIManager 打开仓库
+        UIManager.Instance?.ShowWarehouse();
     }
 
     private void OnDialogueClicked()

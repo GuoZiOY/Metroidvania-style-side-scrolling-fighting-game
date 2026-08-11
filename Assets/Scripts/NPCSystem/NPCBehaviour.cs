@@ -20,6 +20,9 @@ public class NPCBehaviour : MonoBehaviour
     [Header("工作台（铁匠）")]
     public bool hasWorkbench;   // 是否为铁匠 NPC——对话菜单显示"打开工作台"（打开合成/分解/制作面板）
 
+    [Header("仓库管理员")]
+    public bool hasWarehouse;   // 是否为仓库管理员 NPC——对话菜单显示"仓库"（打开存储/查询/排序面板）
+
     [Header("交互提示")]
     [SerializeField] private GameObject promptRoot;        // "按 F 交互" UI
 
@@ -136,8 +139,8 @@ public class NPCBehaviour : MonoBehaviour
 
     private QuestManager qm => QuestManager.Instance;
 
-    // 有任务/商店/工作台任一交互即显示对话菜单（铁匠仅工作台也需能打开）
-    public bool HasAnyInteraction() => (questsToGive?.Count > 0) || shopData != null || hasWorkbench;
+    // 有任务/商店/工作台/仓库任一交互即显示对话菜单（铁匠仅工作台也需能打开）
+    public bool HasAnyInteraction() => (questsToGive?.Count > 0) || shopData != null || hasWorkbench || hasWarehouse;
 
     // ─── 简化查询：用谓词过滤任务列表 ───
 

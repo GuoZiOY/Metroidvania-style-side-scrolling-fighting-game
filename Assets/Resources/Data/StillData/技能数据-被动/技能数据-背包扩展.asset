@@ -1,0 +1,156 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63fb0a1814489f842afb1d8ce9029021, type: 3}
+  m_Name: "\u6280\u80FD\u6570\u636E-\u80CC\u5305\u6269\u5C55"
+  m_EditorClassIdentifier: Assembly-CSharp::Skill_DataSo
+  displayName: "\u80CC\u5305\u6269\u5C55"
+  description: "\u6BCF\u5347\u4E00\u7EA7\u83B7\u5F97\u4E00\u4E2A\u80CC\u5305\u6269\u5BB9"
+  icon: {fileID: -126789038, guid: 834155993dc690a4ab900bb9cbf80cc0, type: 3}
+  isUnlocked: 0
+  skillType: 12
+  upgradeType: 29
+  conflictSkillTypes: 
+  usageType: 1
+  preSkillRequirements: []
+  maxLevel: 10
+  currentLevel: 0
+  levelDatas:
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: "\u80CC\u5305\u6269\u5BB9+1"
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: "\u80CC\u5305\u6269\u5BB9+1"
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: "\u80CC\u5305\u6269\u5BB9+1"
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: "\u80CC\u5305\u6269\u5BB9+1"
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: "\u80CC\u5305\u6269\u5BB9+1"
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: "\u80CC\u5305\u6269\u5BB9+1"
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: "\u80CC\u5305\u6269\u5BB9+1"
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: "\u80CC\u5305\u6269\u5BB9+1"
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: "\u80CC\u5305\u6269\u5BB9+1"
+  - levelUpCost: 1
+    cooldown: 0
+    damageScaleData:
+      phyiscal: 0
+      elemental: 0
+      chillDuration: 0
+      chillSlowMulitplier: 0
+      burnDuratin: 0
+      burnDamageScale: 0
+      shockDuration: 0
+      shockDamageScale: 0
+      shockCharge: 0
+    levelDescription: "\u80CC\u5305\u6269\u5BB9+1"

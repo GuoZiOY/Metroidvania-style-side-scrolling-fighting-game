@@ -57,16 +57,14 @@ public class UI_ItemSlot : UI_BaseSlot, IPointerDownHandler, IBeginDragHandler, 
         if (eventData.button == PointerEventData.InputButton.Left)
             NotifyItemSlotClicked(itemInSlot);
 
-        if (itemInSlot.IsConsumable)
+        // 消耗品右键使用
+        if (itemInSlot.IsConsumable && eventData.button == PointerEventData.InputButton.Right)
         {
-            if (eventData.button == PointerEventData.InputButton.Right)
-                UseConsumable();
+            UseConsumable();
             return;
         }
 
-        if (!itemInSlot.IsEquipment)
-            return;
-
+        // 双击——对所有物品生效（背包=装备/存入仓库、仓库=取回，由监听方决定）
         if (eventData.clickCount == 2)
             NotifyItemSlotDoubleClicked(itemInSlot);
     }

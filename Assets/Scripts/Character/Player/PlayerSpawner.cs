@@ -14,7 +14,8 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] private GameObject playerPrefab; // 玩家预制体（需在场景外预先转换好）
 
     private GameObject persistentPlayer; // 跨场景保留的玩家实例
-    private static bool resaveAfterArrival; // 到达入口后重新存档（传送门用，保证死亡重生位置正确）
+    private static bool resaveAfterArrival; // 到达后重新存档（传送门用，保证死亡重生位置正确）
+    private static string arrivePortalId;  // 到达场景后要定位的传送门 ID（传送门对传送门；空=入口存档点）
 
     private void Awake()
     {
@@ -29,9 +30,17 @@ public class PlayerSpawner : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    // 传送门调用：到达目标场景入口后重新存档（新游戏传 false）
+    // 传送门调用：到达目标场景入口存档点后重新存档（新游戏传 false）
     public static void MarkSpawnAtEntry(bool resave = false)
     {
+        arrivePortalId = null; // 走入口存档点
+        resaveAfterArrival = resave;
+    }
+
+    // 传送门调用：到达目标场景的指定传送门后重新存档（传送门对传送门；portalId 为空则回入口存档点）
+    public static void MarkSpawnAtPortal(string portalId, bool resave = false)
+    {
+        arrivePortalId = portalId;
         resaveAfterArrival = resave;
     }
 
@@ -75,12 +84,31 @@ public class PlayerSpawner : MonoBehaviour
         }
     }
 
-    // 定位到场景入口检查点（isEntryPoint 优先，兜底用第一个检查点），随后按需重新存档
+    // 定位到场景入口检查点（isEntryPoint 优先，兜底用第一个检查点），随后按需重新存档。
+    // 若传送门标记了目标传送门 ID，则优先定位到该传送门（找不到回退入口存档点）。
     private System.Collections.IEnumerator PlaceAtEntryPoint()
     {
         yield return null; // 等一帧，确保场景对象就绪
 
         if (persistentPlayer == null) yield break;
+
+        // 传送门对传送门：优先定位到目标场景的指定传送门
+        if (!string.IsNullOrEmpty(arrivePortalId))
+        {
+            string portalId = arrivePortalId;
+            arrivePortalId = null; // 一次性消费
+            if (TryPlaceAtPortal(portalId))
+            {
+                if (resaveAfterArrival)
+                {
+                    resaveAfterArrival = false;
+                    if (SaveManager.Instance != null && SaveManager.Instance.CurrentSlotIndex >= 0)
+                        SaveManager.Instance.Save();
+                }
+                yield break;
+            }
+            // 未找到目标传送门 → 回退到入口存档点
+        }
 
         var checkpoints = FindObjectsByType<Checkpoint>(FindObjectsSortMode.None);
         Checkpoint entry = null;
@@ -101,5 +129,20 @@ public class PlayerSpawner : MonoBehaviour
             if (SaveManager.Instance != null && SaveManager.Instance.CurrentSlotIndex >= 0)
                 SaveManager.Instance.Save();
         }
+    }
+
+    // 把玩家放到指定 ID 的传送门落点（找不到返回 false，由调用方回退入口存档点）
+    private bool TryPlaceAtPortal(string portalId)
+    {
+        var portals = FindObjectsByType<Portal>(FindObjectsSortMode.None);
+        foreach (var p in portals)
+        {
+            if (p != null && p.PortalId == portalId)
+            {
+                persistentPlayer.transform.position = p.SpawnPosition;
+                return true;
+            }
+        }
+        return false;
     }
 }

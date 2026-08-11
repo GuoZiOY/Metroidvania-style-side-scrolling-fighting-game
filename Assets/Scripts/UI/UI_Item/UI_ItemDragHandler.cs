@@ -20,6 +20,7 @@ public class UI_ItemDragHandler : MonoBehaviour
     public bool IsDragging { get; private set; }
     public Inventory_Item DraggingItem => draggingItem;
     public bool IsDraggingFromEquipment => sourceSlot is UI_EquipSlot;
+    public bool IsDraggingFromWarehouse => sourceSlot is UI_WarehouseSlot;
 
     private void Awake()
     {
