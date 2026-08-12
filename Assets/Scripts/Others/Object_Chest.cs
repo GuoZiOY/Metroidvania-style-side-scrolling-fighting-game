@@ -19,7 +19,7 @@ public class Object_Chest : MonoBehaviour, IDamgable
     public bool HasDropped => hasDropped;
     public void MarkAsOpened() => hasDropped = true;
 
-    public bool TakeDamage(float damage, float elementalDamage, ElementType element, Transform damageDealer, bool isCrit = false)
+    public bool TakeDamage(float damage, float elementalDamage, ElementType element, Transform damageDealer, bool isCrit = false, bool ignoreInvincibility = false)
     {
         fx.PlayOnDamageVfx();
         anim.SetBool("chestOpen", true);

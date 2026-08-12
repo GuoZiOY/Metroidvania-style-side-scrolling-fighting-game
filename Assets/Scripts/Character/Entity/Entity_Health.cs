@@ -73,7 +73,7 @@ public class Entity_Health : MonoBehaviour, IDamgable
         StartHealthRegeneration();
     }
 
-    public virtual bool TakeDamage(float physicalDamage, float elementalDamage, ElementType element, Transform damageDealer, bool isCrit = false)
+    public virtual bool TakeDamage(float physicalDamage, float elementalDamage, ElementType element, Transform damageDealer, bool isCrit = false, bool ignoreInvincibility = false)
     {
         if (isDead) return false;
 
@@ -83,8 +83,8 @@ public class Entity_Health : MonoBehaviour, IDamgable
             return false;
         }
 
-        // 受击无敌帧：期间免疫所有伤害（"一次失误最多吃一下"的兜底）
-        if (invincibleDuration > 0f && Time.time < invincibleUntil)
+        // 受击无敌帧：期间免疫所有伤害（元素 DoT 通过 ignoreInvincibility 豁免）
+        if (ignoreInvincibility == false && invincibleDuration > 0f && Time.time < invincibleUntil)
             return false;
 
         Entity_Stats attackerStats = damageDealer.GetComponent<Entity_Stats>();
@@ -98,8 +98,8 @@ public class Entity_Health : MonoBehaviour, IDamgable
         TakeKnockBack(damageDealer, physicalDamageTaken);
         ReduceHP(physicalDamageTaken, elementalDamageTaken, element, isCrit);
 
-        // 命中后进入受击无敌（防止多源同帧叠加）
-        if (invincibleDuration > 0f)
+        // 命中后进入受击无敌（仅实际扣血才进无敌，避免冲刺/反击无敌期被白嫖无敌帧）
+        if (canBeTakedDamage && invincibleDuration > 0f)
             invincibleUntil = Time.time + invincibleDuration;
 
         lastDamageTaken = physicalDamageTaken + elementalDamageTaken;

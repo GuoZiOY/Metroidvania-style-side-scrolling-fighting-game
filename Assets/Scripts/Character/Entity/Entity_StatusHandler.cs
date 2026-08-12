@@ -79,7 +79,7 @@ private void Awake()
 
         for (int i = 0; i < tickCount; i++)//ѭ�����ܴ��������ڣ�ÿ�ȼ�����һ������
         {
-            entityHealth.TakeDamage(0, damagePerTick, ElementType.Fire, selfTransform);//���ռ�ȥѪ��
+            entityHealth.TakeDamage(0, damagePerTick, ElementType.Fire, selfTransform, ignoreInvincibility: true);//���ռ�ȥѪ��
             yield return new WaitForSeconds(tickInterval);//��һ֡����ȴ��������
         }
         currentEffect = ElementType.None;
@@ -122,7 +122,7 @@ private void Awake()
     private void DoLightningStrike(float lightingDamage)//ִ�е��buff
     {
         Instantiate(lighingStrikeVfx, transform.position, Quaternion.identity);
-        entityHealth.TakeDamage(0, lightingDamage, ElementType.Lightning, selfTransform);
+        entityHealth.TakeDamage(0, lightingDamage, ElementType.Lightning, selfTransform, ignoreInvincibility: true);
     }
 
     private void StopShockEffect()//ֹͣ���buff

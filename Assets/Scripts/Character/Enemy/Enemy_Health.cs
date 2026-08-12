@@ -7,9 +7,9 @@ public class Enemy_Health : Entity_Health
 {
     private Enemy enemy => GetComponent<Enemy>();//��õ���
 
-    public override bool TakeDamage(float damage, float elementalDamage, ElementType element,Transform damageDealer, bool isCrit = false)
+    public override bool TakeDamage(float damage, float elementalDamage, ElementType element,Transform damageDealer, bool isCrit = false, bool ignoreInvincibility = false)
     {
-        bool wasHit = base.TakeDamage(damage, elementalDamage, element, damageDealer, isCrit);//�ֲ���������ֵ���ں������࣬�Ϳ�������ʹ��
+        bool wasHit = base.TakeDamage(damage, elementalDamage, element, damageDealer, isCrit, ignoreInvincibility);//�ֲ���������ֵ���ں������࣬�Ϳ�������ʹ��
 
         if (wasHit == false)
             return false;//����������߹��������ܣ�����false
