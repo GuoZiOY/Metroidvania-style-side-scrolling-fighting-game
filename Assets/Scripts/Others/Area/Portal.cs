@@ -26,6 +26,7 @@ public class Portal : MonoBehaviour
     [SerializeField] private float floatSpeed = 2f;      // 浮动速度
 
     private bool playerInRange;
+    private bool isLocked; // 锁定后禁止交互（Boss 战期间到达传送门锁定用）
     private CanvasGroup cg;
     private Vector3 promptBasePos;
     private Tween floatTween;
@@ -47,6 +48,7 @@ public class Portal : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (isLocked) return; // 锁定期间不显示提示
         if (!other.CompareTag("Player"))
             return;
         playerInRange = true;
@@ -61,8 +63,17 @@ public class Portal : MonoBehaviour
         ShowPrompt(false);
     }
 
+    // 锁定/解锁（BossEncounter 调用；锁定后禁交互并隐藏提示）
+    public void SetLocked(bool value)
+    {
+        isLocked = value;
+        if (value)
+            ShowPrompt(false);
+    }
+
     private void Update()
     {
+        if (isLocked) return; // 锁定期间不可交互
         if (!playerInRange) return;
         if (!GameInput.GetKeyDown(GameInput.Action.Interact)) return;
         Teleport();
