@@ -76,7 +76,12 @@ public class PlayerSpawner : MonoBehaviour
     {
         if (persistentPlayer == null) return;
 
-        var vcam = FindAnyObjectByType<CinemachineVirtualCamera>();
+        // 双 vcam 兼容：按命名约定选 follow vcam（Intro vcam 名含 "Intro" 且 priority=0，不绑定）
+        var vcams = FindObjectsByType<CinemachineVirtualCamera>();
+        var vcam = System.Array.Find(vcams, v => v != null && v.name.Contains("Follow"));
+        if (vcam == null)
+            vcam = System.Array.Find(vcams, v => v != null && v.Priority > 0);
+
         if (vcam != null)
         {
             vcam.Follow = persistentPlayer.transform;
