@@ -36,10 +36,15 @@ public class CinemaScreenShake : MonoBehaviour
     [SerializeField] private float jumpAttackShakeMultiplier = 1.2f;
     [SerializeField] private Vector3 jumpAttackShakePower = new Vector3(2.5f, 1.2f, 0f);
 
+    private void Awake()
+    {
+        // 提前获取 ImpulseSource，避免 Boss 在其 Start 中调用 ShakeWith 时 screenShake 尚未赋值而静默丢震
+        screenShake = GetComponent<CinemachineImpulseSource>();
+    }
+
     private void Start()
     {
         player = FindAnyObjectByType<Player>();
-        screenShake = GetComponent<CinemachineImpulseSource>();
     }
     
     public void ShakeScreen()
@@ -98,7 +103,8 @@ public class CinemaScreenShake : MonoBehaviour
     // 通用震屏：Boss 落地等任意来源（不依赖玩家朝向；Boss 身上挂 CinemaScreenShake 或单独 ImpulseSource）
     public void ShakeWith(Vector3 velocity, float multiplier = 1f)
     {
-        if (screenShake == null) return;
+        if (screenShake == null)
+            return;
         screenShake.m_DefaultVelocity = velocity * multiplier;
         screenShake.GenerateImpulse();
     }
