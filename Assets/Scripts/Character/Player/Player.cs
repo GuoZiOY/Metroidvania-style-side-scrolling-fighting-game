@@ -124,7 +124,9 @@ protected override void Awake()
     protected override void Start()
     {
         base.Start();
-        stateMachine.Initialize(idleState); 
+        // 受击无敌帧 0.7s（通用层，全游戏受益；敌人 invincibleDuration 保持 0 不启用）
+        health?.SetInvincibleDuration(0.7f);
+        stateMachine.Initialize(idleState);
     }
 
     protected override void Update()

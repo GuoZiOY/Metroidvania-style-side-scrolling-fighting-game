@@ -23,6 +23,13 @@ public class Entity_Health : MonoBehaviour, IDamgable
     [Header("击退设置")]
     public bool canKnockbacked = false;
     [SerializeField] private float knockbackDuration = 0.2f;
+
+    [Header("受击无敌帧")]
+    [SerializeField] protected float invincibleDuration = 0f; // 受击后无敌时长（0=关闭；玩家设 0.7s）
+    protected float invincibleUntil; // 无敌结束时间（Time.time）
+
+    // 代码设置受击无敌帧时长（玩家在 Start 调用）
+    public void SetInvincibleDuration(float duration) => invincibleDuration = duration;
     [SerializeField] private Vector2 onDamageKnockback = new Vector2(1.5f, 2.5f);
     [Space]
     [Range(0, 1)]
@@ -76,6 +83,10 @@ public class Entity_Health : MonoBehaviour, IDamgable
             return false;
         }
 
+        // 受击无敌帧：期间免疫所有伤害（"一次失误最多吃一下"的兜底）
+        if (invincibleDuration > 0f && Time.time < invincibleUntil)
+            return false;
+
         Entity_Stats attackerStats = damageDealer.GetComponent<Entity_Stats>();
         float armorReduction = attackerStats != null ? attackerStats.GetArmorReduction() : 0;
         float mitigation = entityStats != null ? entityStats.GetArmorMitigation(armorReduction) : 0;
@@ -86,6 +97,10 @@ public class Entity_Health : MonoBehaviour, IDamgable
 
         TakeKnockBack(damageDealer, physicalDamageTaken);
         ReduceHP(physicalDamageTaken, elementalDamageTaken, element, isCrit);
+
+        // 命中后进入受击无敌（防止多源同帧叠加）
+        if (invincibleDuration > 0f)
+            invincibleUntil = Time.time + invincibleDuration;
 
         lastDamageTaken = physicalDamageTaken + elementalDamageTaken;
         lastAttackerName = damageDealer != null
