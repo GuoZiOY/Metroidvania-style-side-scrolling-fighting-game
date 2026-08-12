@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -93,6 +94,9 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private float counterHitDelay = 0.1f;
 
     private AudioSource bgmSource;
+    private AudioSource bgmSourceB;          // 第二 BGM 源（crossfade ping-pong）
+    private AudioSource activeBgmSource;     // 当前实际播放的 BGM 源
+    private readonly Stack<AudioClip> bgmStack = new(); // BGM 上下文栈（push/pop 恢复，防与区域音乐冲突）
     private AudioSource chestSource;
     private AudioSource uiSource;
     private AudioSource hitSource;
@@ -118,11 +122,13 @@ public class AudioManager : MonoBehaviour
         LoadVolumes();
         CreateSources();
         PlayBgm();
+        activeBgmSource = bgmSource;
     }
 
     private void CreateSources()
     {
         bgmSource = AddSource();
+        bgmSourceB = AddSource();
         chestSource = AddSource();
         uiSource = AddSource();
         hitSource = AddSource();
@@ -187,7 +193,52 @@ public class AudioManager : MonoBehaviour
 
     private void UpdateBgmVolume()
     {
-        if (bgmSource != null) bgmSource.volume = masterVolume * BGM.bgmVolume;
+        if (activeBgmSource != null) activeBgmSource.volume = masterVolume * BGM.bgmVolume;
+    }
+
+    // 当前正在播放的 BGM（BossEncounter 缓存/断言用）
+    public AudioClip GetCurrentBgmClip() => activeBgmSource != null ? activeBgmSource.clip : BGM.bgmClip;
+
+    // 推入 Boss 曲（缓存上一曲到栈，供 PopBgm 恢复）
+    public void PushBgm(AudioClip clip, float crossfade = 1f)
+    {
+        if (clip == null) return;
+        AudioClip prev = GetCurrentBgmClip();
+        if (prev != null && prev != clip)
+            bgmStack.Push(prev);
+        StartCoroutine(CrossfadeTo(clip, crossfade));
+    }
+
+    // 弹出恢复上一曲（Boss 战结束/玩家死亡）
+    public void PopBgm(float crossfade = 1f)
+    {
+        if (bgmStack.Count == 0) return;
+        StartCoroutine(CrossfadeTo(bgmStack.Pop(), crossfade));
+    }
+
+    // 双源交叉淡入：新曲强拍落在旧曲淡出的同帧（落地冲击作遮罩）
+    private IEnumerator CrossfadeTo(AudioClip clip, float crossfade)
+    {
+        AudioSource oldSource = activeBgmSource;
+        AudioSource newSource = (oldSource == bgmSource) ? bgmSourceB : bgmSource;
+
+        newSource.clip = clip;
+        newSource.loop = true;
+        newSource.volume = 0f;
+        newSource.timeSamples = 0;
+        newSource.Play();
+
+        float t = 0f;
+        while (t < crossfade)
+        {
+            t += Time.unscaledDeltaTime; // 音频不受 timeScale 影响，渐变用真实时间
+            float k = Mathf.Clamp01(t / crossfade);
+            if (oldSource != null) oldSource.volume = masterVolume * BGM.bgmVolume * (1f - k);
+            newSource.volume = masterVolume * BGM.bgmVolume * k;
+            yield return null;
+        }
+        if (oldSource != null) oldSource.Stop();
+        activeBgmSource = newSource;
     }
 
     private void Start()
