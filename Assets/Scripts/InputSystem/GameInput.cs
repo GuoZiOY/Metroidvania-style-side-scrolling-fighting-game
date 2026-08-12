@@ -61,7 +61,9 @@ public static class GameInput
         OnBindingsChanged?.Invoke();
     }
 
-    public static bool IsGameBlocked => Networking.UI_Chat.IsChatFocused || UIManager.IsAnyPanelOpen;
+    public static bool IsPlayerControlBlocked; // Boss 出场等锁定玩家操作（BossEncounter 置位）
+
+    public static bool IsGameBlocked => Networking.UI_Chat.IsChatFocused || UIManager.IsAnyPanelOpen || IsPlayerControlBlocked;
 
     public static bool GetKeyDown(Action action)
     {

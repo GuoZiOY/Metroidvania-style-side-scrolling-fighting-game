@@ -95,4 +95,12 @@ public class CinemaScreenShake : MonoBehaviour
         screenShake.GenerateImpulse();
     }
 
+    // 通用震屏：Boss 落地等任意来源（不依赖玩家朝向；Boss 身上挂 CinemaScreenShake 或单独 ImpulseSource）
+    public void ShakeWith(Vector3 velocity, float multiplier = 1f)
+    {
+        if (screenShake == null) return;
+        screenShake.m_DefaultVelocity = velocity * multiplier;
+        screenShake.GenerateImpulse();
+    }
+
 }
