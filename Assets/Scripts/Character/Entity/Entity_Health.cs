@@ -98,8 +98,8 @@ public class Entity_Health : MonoBehaviour, IDamgable
         TakeKnockBack(damageDealer, physicalDamageTaken);
         ReduceHP(physicalDamageTaken, elementalDamageTaken, element, isCrit);
 
-        // 命中后进入受击无敌（仅实际扣血才进无敌，避免冲刺/反击无敌期被白嫖无敌帧）
-        if (canBeTakedDamage && invincibleDuration > 0f)
+        // 命中后进入受击无敌（仅实际扣血才进无敌；元素 DoT 不刷新无敌帧，避免被烧期间近乎无敌）
+        if (canBeTakedDamage && ignoreInvincibility == false && invincibleDuration > 0f)
             invincibleUntil = Time.time + invincibleDuration;
 
         lastDamageTaken = physicalDamageTaken + elementalDamageTaken;
