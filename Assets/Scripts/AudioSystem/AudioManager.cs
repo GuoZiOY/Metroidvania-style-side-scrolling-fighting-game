@@ -97,6 +97,7 @@ public class AudioManager : MonoBehaviour
     private AudioSource bgmSourceB;          // 第二 BGM 源（crossfade ping-pong）
     private AudioSource activeBgmSource;     // 当前实际播放的 BGM 源
     private readonly Stack<AudioClip> bgmStack = new(); // BGM 上下文栈（push/pop 恢复，防与区域音乐冲突）
+    private Coroutine currentCrossfadeCo;                // 当前 crossfade 协程引用
     private AudioSource chestSource;
     private AudioSource uiSource;
     private AudioSource hitSource;
@@ -206,14 +207,18 @@ public class AudioManager : MonoBehaviour
         AudioClip prev = GetCurrentBgmClip();
         if (prev != null && prev != clip)
             bgmStack.Push(prev);
-        StartCoroutine(CrossfadeTo(clip, crossfade));
+        if (currentCrossfadeCo != null)
+            StopCoroutine(currentCrossfadeCo); // 停旧协程，防并发 crossfade 竞态
+        currentCrossfadeCo = StartCoroutine(CrossfadeTo(clip, crossfade));
     }
 
     // 弹出恢复上一曲（Boss 战结束/玩家死亡）
     public void PopBgm(float crossfade = 1f)
     {
         if (bgmStack.Count == 0) return;
-        StartCoroutine(CrossfadeTo(bgmStack.Pop(), crossfade));
+        if (currentCrossfadeCo != null)
+            StopCoroutine(currentCrossfadeCo); // 停旧协程，防并发 crossfade 竞态
+        currentCrossfadeCo = StartCoroutine(CrossfadeTo(bgmStack.Pop(), crossfade));
     }
 
     // 双源交叉淡入：新曲强拍落在旧曲淡出的同帧（落地冲击作遮罩）
@@ -237,8 +242,10 @@ public class AudioManager : MonoBehaviour
             newSource.volume = masterVolume * BGM.bgmVolume * k;
             yield return null;
         }
+        newSource.volume = masterVolume * BGM.bgmVolume; // 兜底 crossfade<=0（避免新曲静音）
         if (oldSource != null) oldSource.Stop();
         activeBgmSource = newSource;
+        currentCrossfadeCo = null; // 协程结束，清引用
     }
 
     private void Start()
