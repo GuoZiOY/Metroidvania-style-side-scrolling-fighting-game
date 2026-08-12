@@ -214,7 +214,7 @@ public class Enemy : Entity, ICounterable
                 affix.OnBattleUpdate(this);
         }
     }
-    public void TryEnterBattleState(Transform player)//尝试进入战斗状态，通常在受到攻击时调用（Enemy_Health被攻击时）
+    public virtual void TryEnterBattleState(Transform player)//尝试进入战斗状态，通常在受到攻击时调用（Enemy_Health被攻击时）
     {
         if (stateMachine.currentState == battleState || stateMachine.currentState == attackState)
             return;
