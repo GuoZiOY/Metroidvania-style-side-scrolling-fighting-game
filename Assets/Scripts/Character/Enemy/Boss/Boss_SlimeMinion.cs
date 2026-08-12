@@ -35,6 +35,8 @@ public class Boss_SlimeMinion : Enemy
     {
         registry = reg;
         registry?.Register(this);
+
+        nextHopTime = Time.time + hopInterval; // 出生后先等一个间隔再跳（消除出生瞬跳）
     }
 
     protected override void Update()
@@ -44,6 +46,8 @@ public class Boss_SlimeMinion : Enemy
             return;
         if (Time.time < nextHopTime)
             return;
+        if (isOnGround == false)
+            return; // 空中不施加跳跃（防被击飞时延长滞空）
 
         // 每 hopInterval 朝玩家方向跳一下
         Transform target = player;
@@ -60,7 +64,8 @@ public class Boss_SlimeMinion : Enemy
 
     public override void EntityDead()
     {
-        registry?.Unregister(this); // 死亡注销，释放召唤上限
+        registry?.Unregister(this);        // 死亡注销，释放召唤上限
+        stateMachine.canChangeSate = true; // 解除 FSM 冻结，让死亡状态可切换（同 Enemy_Slime 抛掷子体处理）
         base.EntityDead();
     }
 }
