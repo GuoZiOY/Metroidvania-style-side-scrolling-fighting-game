@@ -11,7 +11,6 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private float landingRadius = 2f;     // 落点 AoE 半径
     [SerializeField] private float landingDamagePercent = 0.2f; // 落点伤害（%MaxHP）
     [SerializeField] private float landingRecovery = 1f;   // 落地后摇（惩罚窗口，期间关接触伤害）
-    [SerializeField] private GameObject telegraphPrefab;   // 落点预告（投影阴影）预制体，可空
 
     [Header("召唤")]
     [SerializeField] private GameObject minionPrefab;      // 迷你王预制体
@@ -45,8 +44,6 @@ public class Boss_SlimeKing : Enemy
     private float lastSummonTime;       // 上次召唤时间
     private float lastTeleportTime;     // 上次传送时间
     private Vector2 lastStuckPos;       // 被卡检测参考位置
-    private Transform lockedLandingTarget; // 落点快照目标
-    private float enrageFactor = 1f;    // 狂暴节奏倍率（1=正常，0.7=狂暴）
 
     protected override void Awake()
     {
@@ -124,20 +121,13 @@ public class Boss_SlimeKing : Enemy
         }
     }
 
-    // 统一包装：记录当前动作 + 看门狗超时，任何动作都不可能永久阻塞循环
+    // 统一包装：等待动作完成（Unity 嵌套协程语义）+ 结束后复位物理；动作内部自带超时不致永久卡死
     private IEnumerator RunAction(IEnumerator action)
     {
         currentActionCo = StartCoroutine(action);
-        float watchdog = 8f; // 动作最大时长（防卡死）
-        while (currentActionCo != null && watchdog > 0f)
-        {
-            if (IsDead || isFighting == false) yield break;
-            yield return null;
-            watchdog -= Time.deltaTime;
-        }
-        if (currentActionCo != null) StopCoroutine(currentActionCo);
+        yield return currentActionCo; // 等待动作完成
         currentActionCo = null;
-        rb.linearVelocity = Vector2.zero; // 中断后复位物理
+        rb.linearVelocity = Vector2.zero; // 复位物理（防遗留速度）
     }
 
     // ==================== 动作 ① 跳跃砸击 ====================
@@ -151,9 +141,10 @@ public class Boss_SlimeKing : Enemy
         Transform target = player != null ? player : GetPlayerReference();
         Vector2 landingPoint = target != null ? (Vector2)target.position : (Vector2)transform.position;
 
-        // 升空（限高防出屏）
-        float jumpVel = Mathf.Min(jumpHeightCap * 2f, jumpHeightCap);
-        rb.linearVelocity = new Vector2(0f, jumpVel);
+        // 升空：垂直起跳 + 水平飞向落点（保持重力形成弧线；落点已最高点快照）
+        float distX = landingPoint.x - transform.position.x;
+        float horizVel = Mathf.Clamp(distX / 1.5f, -8f, 8f); // 1.5s 估算空中时长，限制最大水平速度
+        rb.linearVelocity = new Vector2(horizVel, jumpHeightCap);
 
         // 空中等待落地（带超时防御）
         bool leftGround = false;
@@ -172,7 +163,8 @@ public class Boss_SlimeKing : Enemy
         float distToPoint = Vector2.Distance(transform.position, landingPoint);
         if (distToPoint <= landingRadius)
         {
-            var health = FindAnyObjectByType<Player>()?.health;
+            Transform p = player != null ? player : GetPlayerReference();
+            var health = p != null ? p.GetComponent<Entity_Health>() : null;
             if (health != null)
                 health.TakeDamage(health.GetMaxHP() * landingDamagePercent, 0f, ElementType.None, transform);
         }
@@ -202,6 +194,15 @@ public class Boss_SlimeKing : Enemy
 
     // ==================== 动作 ③ 传送 ====================
 
+    // 隐藏/显示：禁用/启用渲染+碰撞（保持 GameObject active，让协程继续运行——SetActive(false) 会杀死协程）
+    private void SetVisible(bool visible)
+    {
+        foreach (var r in GetComponentsInChildren<Renderer>(true))
+            r.enabled = visible;
+        foreach (var c in GetComponentsInChildren<Collider2D>(true))
+            c.enabled = visible;
+    }
+
     private IEnumerator TeleportCo()
     {
         if (Time.time - lastTeleportTime < teleportCooldown)
@@ -210,7 +211,7 @@ public class Boss_SlimeKing : Enemy
 
         // 原地发光预告 0.3s → 消失
         yield return new WaitForSeconds(0.3f);
-        gameObject.SetActive(false);
+        SetVisible(false);
 
         // 目标点：距玩家 3~6m 偏移 + 地面射线校验 + 竞技场内 clamp
         Transform target = player != null ? player : GetPlayerReference();
@@ -229,7 +230,7 @@ public class Boss_SlimeKing : Enemy
             desired.y = hit.point.y;
 
         transform.position = desired;
-        gameObject.SetActive(true);
+        SetVisible(true);
 
         // 落地停顿 ≥0.5s（不做贴脸惩罚）
         yield return new WaitForSeconds(0.5f);
@@ -244,7 +245,6 @@ public class Boss_SlimeKing : Enemy
         if (GetComponent<Entity_Health>() != null && GetComponent<Entity_Health>().GetHealthPercent() < rageThreshold)
         {
             isRaging = true;
-            enrageFactor = 0.7f; // 节奏提档（召唤 CD 减半在前，前摇不缩短）
         }
     }
 
@@ -254,7 +254,7 @@ public class Boss_SlimeKing : Enemy
         float moved = Vector2.Distance(pos, lastStuckPos);
         lastStuckPos = pos;
         // 位移低于阈值持续累加（排除跳跃/传送等主动位移）
-        if (moved < stuckSpeedThreshold * Time.deltaTime * 60f && isOnGround)
+        if (moved < stuckSpeedThreshold * Time.deltaTime && isOnGround)
             stuckClock += Time.deltaTime;
         else
             stuckClock = 0f;
