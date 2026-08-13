@@ -1,5 +1,8 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random; // 消除 System.Random / UnityEngine.Random 二义性
 
 // 史莱姆王——动作池调度器 Boss AI
 // 出生即冻结 FSM（inert），BeginFight() 才启动动作循环；EntityDead() 停调度器+解冻播死亡
@@ -50,16 +53,44 @@ public class Boss_SlimeKing : Enemy
             return; // 冷却内不重复触发
         if (other.CompareTag("Player") == false)
             return; // 只伤玩家
-        var health = other.GetComponent<Entity_Health>();
-        if (health == null)
+        var playerHealth = other.GetComponent<Entity_Health>();
+        if (playerHealth == null)
             return;
-        health.TakeDamage(health.GetMaxHP() * contactDamagePercent, 0f, ElementType.None, transform);
+        playerHealth.TakeDamage(playerHealth.GetMaxHP() * contactDamagePercent, 0f, ElementType.None, transform);
         lastContactHitTime = Time.time;
     }
+
+    // === 阶段状态机（常态/分裂狂暴/濒死隐身）===
+    public enum BossPhase { Normal, Split, Stagger, Stealth } // 三阶段枚举
+
+    public BossPhase phase = BossPhase.Normal;               // 当前阶段
+    public bool hasSplit;                                    // 是否已分裂（防重复）
+    public Boss_SlimeKing sibling;                           // 分裂的另一只
+    public bool isPrimary = true;                            // 主实例（血条绑定/存活者晋升）
+    public event Action<Boss_SlimeKing> OnPrimaryChanged;    // 血条重绑事件
+
+    [Header("分裂")]
+    [SerializeField] private float splitThreshold = 0.3f;       // 分裂阈值
+    [SerializeField] private float splitScale = 0.7f;           // 分裂体缩放
+    [SerializeField] private float survivorHealPercent = 0.29f; // 存活者回血值
+    [SerializeField] private float staggerDuration = 1.5f;      // 僵直时长
+
+    [Header("濒死隐身")]
+    [SerializeField] private float stealthThreshold = 0.01f;     // 濒死阈值
+    [SerializeField] private float stealthHealRate = 0.02f;      // 隐身回血速度（%/s）
+    [SerializeField] private float stealthHealCap = 0.29f;       // 回血封顶（<分裂阈值）
+    [SerializeField] private float stealthSummonInterval = 4f;   // 隐身召唤间隔
+    [SerializeField] private int stealthSummonCount = 1;         // 每次召唤数量
+
+    private Entity_Health health;                       // 自身生命缓存
+    private Coroutine stealthCo;                        // 隐身协程
+    private readonly List<GameObject> stealthSlimes = new(); // 隐身期间召唤的史莱姆
+    private bool stealthSpawnedAny;                     // 隐身是否召唤过史莱姆
 
     protected override void Awake()
     {
         base.Awake();
+        health = GetComponent<Entity_Health>(); // 自身生命缓存
         idleState = new Enemy_IdleState(this, stateMachine, "idle");
         moveState = new Enemy_MoveState(this, stateMachine, "move");
         attackState = new Enemy_AttackState(this, stateMachine, "attack");
@@ -86,14 +117,153 @@ public class Boss_SlimeKing : Enemy
         schedulerCo = StartCoroutine(SchedulerLoop());
     }
 
-    // 死亡优先：停调度器 → 解冻 FSM → base（播死亡动画/掉落）
+    // 死亡优先：停调度器/隐身 → 解冻 FSM → 分裂体存亡分流（存活者晋升 vs 最后实例胜利）
     public override void EntityDead()
     {
         isFighting = false;
         if (schedulerCo != null)
             StopCoroutine(schedulerCo);
+        if (stealthCo != null)
+            StopCoroutine(stealthCo);
         stateMachine.canChangeSate = true; // 解冻，否则 ChangeState(deadState) 被吞
-        base.EntityDead();
+
+        // 兄弟存活 → 存活者晋升（回血/僵直/3段冲刺）；本实例正常死亡（播死亡+销毁，不留尸体）
+        if (sibling != null && sibling.IsDead == false)
+        {
+            OnPrimaryChanged?.Invoke(sibling); // 血条重绑到存活者（事件在已订阅的实例上触发）
+            sibling.OnSiblingDied();
+            base.EntityDead(); // 分裂体自身播死亡+销毁，不留尸体
+        }
+        else
+        {
+            base.EntityDead(); // 最后实例死亡 → 胜利
+        }
+    }
+
+    // ==================== 阶段状态机 ====================
+
+    // 每轮阶段检查：濒死隐身优先 → 分裂狂暴（<30% 未分裂）
+    private void UpdatePhase()
+    {
+        if (IsDead || phase == BossPhase.Stealth)
+            return;
+
+        float pct = health.GetHealthPercent();
+
+        // 濒死隐身（<1%）
+        if (pct < stealthThreshold)
+        {
+            StartStealth();
+            return;
+        }
+        // 分裂狂暴（<30%，未分裂）
+        if (pct < splitThreshold && hasSplit == false)
+        {
+            Split();
+        }
+    }
+
+    // 分裂：生成第 2 实例，各半血，克隆也开打
+    private void Split()
+    {
+        hasSplit = true;
+        phase = BossPhase.Split;
+        var clone = Instantiate(gameObject, transform.position, Quaternion.identity).GetComponent<Boss_SlimeKing>();
+        clone.isPrimary = false;
+        clone.hasSplit = true;
+        clone.sibling = this;
+        sibling = clone;
+        clone.transform.localScale = transform.localScale * splitScale;
+        // 各半血（当前血量 / 2）
+        float half = health.GetCurrentHP() / 2f;
+        health.SetCurrentHP(half);
+        clone.health.SetCurrentHP(half);
+        clone.BeginFight(); // 克隆也开打
+    }
+
+    // 兄弟死亡 → 存活者：晋升为主 + 回血 29% → 僵直 → 3 段冲刺 → 恢复（不再分裂）
+    private void OnSiblingDied()
+    {
+        if (isPrimary == false)
+        {
+            isPrimary = true; // 晋升主实例（血条重绑已由死亡实例的 OnPrimaryChanged 事件完成）
+        }
+        // 回血到 29%
+        health.SetCurrentHP(health.GetMaxHP() * survivorHealPercent);
+        // 僵直（可被打）
+        phase = BossPhase.Stagger;
+        StartCoroutine(StaggerThenDashCo());
+    }
+
+    private IEnumerator StaggerThenDashCo()
+    {
+        yield return new WaitForSeconds(staggerDuration); // 僵直
+        // 连续 3 段快速冲刺（DashCo 死亡自终止）
+        for (int i = 0; i < 3; i++)
+        {
+            yield return StartCoroutine(DashCo());
+        }
+        phase = BossPhase.Normal; // 恢复常态（不再分裂）
+    }
+
+    // 濒死隐身：半透明、无法移动攻击、召唤史莱姆、缓慢回血
+    private void StartStealth()
+    {
+        phase = BossPhase.Stealth;
+        hasSplit = true; // 隐身封顶 29% < 分裂阈值，杜绝退出后重新分裂
+        if (schedulerCo != null)
+            StopCoroutine(schedulerCo);
+        stealthCo = StartCoroutine(StealthCo());
+    }
+
+    private IEnumerator StealthCo()
+    {
+        // 半透明
+        var sr = GetComponentInChildren<SpriteRenderer>();
+        Color c = sr.color;
+        sr.color = new Color(c.r, c.g, c.b, 0.3f);
+        contactEnabled = false; // 隐身不攻击
+        stealthSlimes.Clear();  // 清空上一轮隐身残留
+        stealthSpawnedAny = false;
+        float summonTimer = 0f;
+
+        // 回血（封顶 29%）+ 周期召唤史莱姆；杀光史莱姆或回满提前退出
+        while (!IsDead)
+        {
+            // 缓慢回血（按 %MaxHP/s）
+            health.IncreaseHP(health.GetMaxHP() * stealthHealRate * Time.deltaTime);
+
+            // 周期召唤史莱姆（slimePrefab 为空则跳过召唤，仅回血）
+            summonTimer += Time.deltaTime;
+            if (summonTimer >= stealthSummonInterval && slimePrefab != null)
+            {
+                summonTimer = 0f;
+                stealthSpawnedAny = true;
+                for (int i = 0; i < stealthSummonCount; i++)
+                {
+                    Vector2 pos = (Vector2)transform.position + Random.insideUnitCircle * 1.5f;
+                    stealthSlimes.Add(Instantiate(slimePrefab, pos, Quaternion.identity));
+                }
+            }
+            // 掉出被销毁的史莱姆引用
+            stealthSlimes.RemoveAll(s => s == null);
+
+            // 回血封顶 → 退出隐身
+            if (health.GetHealthPercent() >= stealthHealCap)
+                break;
+            // 史莱姆杀光 → 提前退出隐身
+            if (stealthSpawnedAny && stealthSlimes.Count == 0)
+                break;
+
+            yield return null;
+        }
+
+        // 退出隐身：恢复不透明 + 接触伤害 + 重启调度器
+        sr.color = new Color(c.r, c.g, c.b, 1f);
+        contactEnabled = true;
+        phase = BossPhase.Normal;
+        isFighting = true;
+        schedulerCo = StartCoroutine(SchedulerLoop());
     }
 
     // 防 Enemy_Health 命中时强抢控制权（Boss 只由 BeginFight 激活）
@@ -106,6 +276,18 @@ public class Boss_SlimeKing : Enemy
     {
         while (!IsDead && isFighting)
         {
+            // 每轮先查阶段（分裂/濒死隐身），StartStealth 已停本协程
+            UpdatePhase();
+            // 隐身期间不执行动作（防残留一帧出招）
+            if (phase == BossPhase.Stealth)
+                break;
+            // 僵直：调度器挂起不选动作（可被打），StaggerThenDashCo 单独驱动 3 段冲刺
+            if (phase == BossPhase.Stagger)
+            {
+                yield return null;
+                continue;
+            }
+
             // 每轮面向玩家
             Transform t = playerTarget != null ? playerTarget : GetPlayerReference();
             if (t != null)

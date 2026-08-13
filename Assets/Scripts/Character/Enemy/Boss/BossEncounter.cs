@@ -56,7 +56,16 @@ public class BossEncounter : MonoBehaviour
         boss = Instantiate(bossPrefab, spawnPoint.position, spawnPoint.rotation).GetComponent<Boss_SlimeKing>();
         bossHealth = boss.GetComponent<Entity_Health>();
         if (healthBar != null)
+        {
             healthBar.BindBoss(bossHealth, boss.enemyName);
+            // 分裂后主实例晋升 → 血条重绑到存活者（多体管理）
+            boss.OnPrimaryChanged += newPrimary =>
+            {
+                var hp = newPrimary != null ? newPrimary.GetComponent<Entity_Health>() : null;
+                if (hp != null && healthBar != null)
+                    healthBar.BindBoss(hp, newPrimary.enemyName);
+            };
+        }
         boss.BeginFight();
 
         // 监听 Boss 死亡（最后实例死亡→胜利；玩家死亡由现有死亡系统处理）
