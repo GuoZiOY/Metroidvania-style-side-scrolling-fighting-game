@@ -13,7 +13,8 @@ public class BossEncounter : MonoBehaviour
 
     [Header("引用（场景接线）")]
     [SerializeField] private GameObject bossPrefab;             // Boss 预制体
-    [SerializeField] private Transform spawnPoint;              // Boss 出场点
+    [SerializeField] private Transform spawnPoint;              // Boss 战斗落点（跳进场后停在这里）
+    [SerializeField] private Transform entryPoint;              // Boss 大跳进场起点（远处/场外）
     [SerializeField] private Portal arrivalPortal;              // 到达传送门（Intro 锁定）
     [SerializeField] private GameObject exitPortal;             // 出口传送门（胜利激活，指向城镇）
     [SerializeField] private CinemachineVirtualCamera followCam; // 场景 follow vcam（战斗拉远）
@@ -25,7 +26,6 @@ public class BossEncounter : MonoBehaviour
     [SerializeField] private CinemaScreenShake screenShake;     // 震屏
 
     private const int INTRO_PRIORITY = 20;   // Intro vcam 拉高优先级（follow 默认 9）
-    private const float FIGHT_ZOOM_SIZE = 8f; // 战斗拉远 orthographic size（放大视野）
 
     public EncounterState State { get; private set; } = EncounterState.Idle;
     public event Action VictoryEvent; // 击杀事件（奖励挂载点，探针可订阅验证）
@@ -67,35 +67,45 @@ public class BossEncounter : MonoBehaviour
         if (arrivalPortal != null)
             arrivalPortal.SetLocked(true);
 
-        // ② 相机特写：Intro vcam 拉高
-        if (introCam != null)
-            introCam.Priority = INTRO_PRIORITY;
-
-        // ③ 实例化 Boss（先隐藏，出场再显）
-        boss = Instantiate(bossPrefab, spawnPoint.position, spawnPoint.rotation).GetComponent<Boss_SlimeKing>();
-        bossHealth = boss.GetComponent<Entity_Health>();
-        boss.gameObject.SetActive(false);
-
-        yield return new WaitForSeconds(0.5f);
-
-        // ④ Boss 出场 + 名称横幅 + 切 Boss BGM
-        boss.gameObject.SetActive(true);
+        // ② 切 Boss BGM（落地冲击帧为遮罩起点）
         AudioManager.Instance?.PushBgm(bossBgm, 0.3f);
 
-        // ⑤ 落地冲击演出（坠入 + 震屏）
-        boss.transform.position += Vector3.up * 4f;
-        yield return new WaitForSeconds(0.6f);
-        screenShake?.ShakeWith(new Vector3(3f, -4f, 0f));
+        // ③ Boss 在远处入场点生成（大跳进场的起点）
+        boss = Instantiate(bossPrefab, entryPoint.position, entryPoint.rotation).GetComponent<Boss_SlimeKing>();
+        bossHealth = boss.GetComponent<Entity_Health>();
+        boss.gameObject.SetActive(true);
+        boss.OnLanded += OnBossLanded; // 落地震屏
 
-        // ⑥ 进入战斗：血条 + 激活 Boss + 相机拉远 + 解锁输入
-        if (healthBar != null) healthBar.BindBoss(bossHealth, boss.enemyName);
+        // ④ Intro 相机跟随 Boss（大跳进场镜头）：Follow=LookAt=Boss
+        if (introCam != null)
+        {
+            introCam.Follow = boss.transform;
+            introCam.LookAt = boss.transform;
+            introCam.Priority = INTRO_PRIORITY;
+        }
+
+        // ⑤ Boss 大跳进场：从远处弧线跳向战斗落点，镜头跟着它
+        // 看门狗：即使大跳因异常卡住（如 timeScale=0 时 WaitForSeconds/Time.deltaTime 停摆），
+        // 也强制超时放行，保证相机一定回到玩家、战斗一定开始
+        boss.entryJumpDone = false;
+        StartCoroutine(boss.EntryJump(spawnPoint.position));
+        float introJumpTimeout = 5f;
+        while (introJumpTimeout > 0f && boss.entryJumpDone == false && boss.IsDead == false)
+        {
+            yield return null;
+            introJumpTimeout -= Time.unscaledDeltaTime; // 真实时间，不受 timeScale 影响
+        }
+
+        // ⑥ 落地 → 切回玩家相机 → 激活战斗 + 拉远视野
+        if (introCam != null)
+            introCam.Priority = 0; // 镜头 blend 回玩家
+        if (healthBar != null)
+            healthBar.BindBoss(bossHealth, boss.enemyName);
         boss.BeginFight();
-        if (introCam != null) introCam.Priority = 0; // 镜头回玩家
         ZoomCameraOut();
         GameInput.IsPlayerControlBlocked = false;
         State = EncounterState.Fighting;
 
-        boss.OnLanded += OnBossLanded;
         StartCoroutine(WatchForRage());
 
         // 监听 Boss 死亡（玩家死亡由现有死亡系统处理，不在此监听）
@@ -125,13 +135,13 @@ public class BossEncounter : MonoBehaviour
 
     private void OnBossLanded() => screenShake?.ShakeWith(new Vector3(3f, -4f, 0f));
 
-    // 战斗相机拉远：放大视野看清落点预告（scaled 时间，暂停冻结）
+    // 战斗相机拉远：放大视野看清落点预告（按原值 ×1.6，保证"拉远"而不是反向；scaled 时间，暂停冻结）
     private void ZoomCameraOut()
     {
         if (followCam == null) return;
         DOTween.To(() => followCam.m_Lens.OrthographicSize,
             v => followCam.m_Lens.OrthographicSize = v,
-            FIGHT_ZOOM_SIZE, 0.5f);
+            originalOrthoSize * 1.6f, 0.5f);
     }
 
     private void RestoreCamera()

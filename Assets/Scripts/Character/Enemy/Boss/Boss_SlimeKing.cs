@@ -39,6 +39,7 @@ public class Boss_SlimeKing : Enemy
     private Coroutine schedulerCo;      // 调度器协程
     private Coroutine currentActionCo;  // 当前动作协程
     private bool isFighting;            // 战斗标志
+    public bool entryJumpDone;          // 开场大跳是否完成（BossEncounter 看门狗等待用）
     private bool isRaging;              // 狂暴标志
     private float stuckClock;           // 被卡计时
     private float lastSummonTime;       // 上次召唤时间
@@ -55,6 +56,7 @@ public class Boss_SlimeKing : Enemy
         deadState = new Enemy_DeadState(this, stateMachine, "dead");
         stunnedState = new Enemy_StunnedState(this, stateMachine, "stunned");
         lastStuckPos = transform.position;
+        entryJumpDone = false;
     }
 
     protected override void Start()
@@ -75,6 +77,39 @@ public class Boss_SlimeKing : Enemy
         isFighting = true;
         lastSummonTime = Time.time; // 入场先给一段召唤 CD
         schedulerCo = StartCoroutine(SchedulerLoop());
+    }
+
+    // 开场大跳进场：从当前远点弧线跳向落地位置（Intro 相机跟随），落地触发 OnLanded。
+    // 由 BossEncounter 以嵌套协程等待其完成（yield return boss.EntryJump(...)）
+    public IEnumerator EntryJump(Vector3 landPoint)
+    {
+        isFighting = false; // 入场非战斗，调度器不启动
+        entryJumpDone = false; // 看门狗等待标志复位
+        stateMachine.SwitchOffStateMachine(); // 冻结 FSM，防自动进战斗
+
+        // 弧线初速度：垂直起跳 + 水平按"实际空中时长"飞向落点（保持重力成抛物线，避免飞过）
+        float distX = landPoint.x - transform.position.x;
+        float gravity = rb.gravityScale; // 重力（决定空中时长）
+        float airTime = gravity > 0.01f ? 2f * jumpHeightCap / gravity : 1.5f; // 起跳-落地时长 ≈ 2v/g
+        float horizVel = Mathf.Clamp(distX / airTime, -14f, 14f);
+        rb.linearVelocity = new Vector2(horizVel, jumpHeightCap);
+
+        // 等待落地（带超时防御）
+        bool leftGround = false;
+        float timeout = 3f;
+        while (timeout > 0f && IsDead == false)
+        {
+            if (isOnGround == false)
+                leftGround = true;
+            else if (leftGround)
+                break;
+            yield return null;
+            timeout -= Time.deltaTime;
+        }
+
+        rb.linearVelocity = Vector2.zero; // 落地清零速度
+        entryJumpDone = true; // 标记完成（BossEncounter 看门狗据此放行）
+        OnLanded?.Invoke(); // BossEncounter 订阅 → 震屏
     }
 
     // 死亡优先：停调度器+动作 → 解冻 FSM → base（播死亡动画/掉落）

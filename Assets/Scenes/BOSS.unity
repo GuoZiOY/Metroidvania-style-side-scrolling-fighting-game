@@ -7850,6 +7850,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossEncounter
   bossPrefab: {fileID: 11895868603550486, guid: 6dc7c7be35d3f97429df90660cb96bac, type: 3}
   spawnPoint: {fileID: 1167031991}
+  entryPoint: {fileID: 1484141083}
   arrivalPortal: {fileID: 336328092}
   exitPortal: {fileID: 1421064316176223978}
   followCam: {fileID: 1631505996}
@@ -8654,6 +8655,37 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 65}
   m_Enabled: 1
+--- !u!1 &1484141082
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1484141083}
+  m_Layer: 0
+  m_Name: BossEntryPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1484141083
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1484141082}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -18, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1631505994
 GameObject:
   m_ObjectHideFlags: 0
@@ -9084,7 +9116,7 @@ MonoBehaviour:
   m_Follow: {fileID: 0}
   m_Lens:
     FieldOfView: 40
-    OrthographicSize: 4
+    OrthographicSize: 6
     NearClipPlane: 0.1
     FarClipPlane: 5000
     Dutch: 0
@@ -9143,7 +9175,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7695140697848021076, guid: 9568e0d075f822742bf88b4bbe3dfc9b, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8763904567101159568, guid: 9568e0d075f822742bf88b4bbe3dfc9b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -9280,3 +9312,4 @@ SceneRoots:
   - {fileID: 336328093}
   - {fileID: 128849632}
   - {fileID: 2130020008}
+  - {fileID: 1484141083}
