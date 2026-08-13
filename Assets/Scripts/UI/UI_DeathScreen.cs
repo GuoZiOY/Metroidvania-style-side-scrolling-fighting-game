@@ -88,6 +88,7 @@ public class UI_DeathScreen : MonoBehaviour
         DOTween.Kill(screenGroup);
         DOTween.Kill(causeText);
         Time.timeScale = 1;
+        Hide(); // 关闭死亡面板（UI 系统 DontDestroyOnLoad 持久，重载场景不会自动关）
 
         if (SaveManager.Instance != null && SaveManager.Instance.CurrentSlotIndex >= 0)
             SaveManager.Instance.LoadWithReload(SaveManager.Instance.CurrentSlotIndex);
@@ -100,6 +101,18 @@ public class UI_DeathScreen : MonoBehaviour
         DOTween.Kill(screenGroup);
         DOTween.Kill(causeText);
         Time.timeScale = 1;
+        Hide(); // 回主菜单也关掉死亡面板（持久 UI）
         SceneTransitionFader.Instance.TransitionToScene("主菜单"); // 过场黑幕过渡
+    }
+
+    // 关闭死亡面板（持久 UI 下场景重载不会销毁它，必须主动隐藏；重置 isShowing 允许再次死亡时弹出）
+    private void Hide()
+    {
+        isShowing = false;
+        if (screenGroup != null)
+        {
+            screenGroup.DOKill();
+            screenGroup.gameObject.SetActive(false);
+        }
     }
 }
