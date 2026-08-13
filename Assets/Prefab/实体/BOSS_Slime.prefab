@@ -96,25 +96,35 @@ MonoBehaviour:
   moveSpeed: 2
   moveAnimSpeedMultiplier: 1
   canBeChased: 1
-  chargeTime: 0.5
-  jumpHeightCap: 6
+  jumpChargeTime: 0.5
+  jumpHeight: 6
   landingRadius: 2
   landingDamagePercent: 0.2
   landingRecovery: 1
-  minionPrefab: {fileID: 11895868603550486, guid: 88c89498c52526f4cbbdceeb042a47fc, type: 3}
+  telegraphTime: 0.8
+  dashSpeed: 20
+  dashDistance: 15
+  dashDamagePercent: 0.18
+  teleportRange: 15
+  teleportSlamDamagePercent: 0.24
+  slimePrefab: {fileID: 11895868603550486, guid: 03e2e6ad57982a647bd4eadf734fa80c, type: 3}
   summonCooldown: 10
-  minionBaseCount: 2
-  minionMaxAlive: 3
-  teleportCooldown: 6
-  stuckThreshold: 3
-  stuckSpeedThreshold: 0.5
-  tooFarDistance: 15
-  teleportOffsetMin: 3
-  teleportOffsetMax: 6
-  arenaBounds: {fileID: 0}
-  rageThreshold: 0.3
-  contactArea: {fileID: 8978839516293979865}
-  minionRegistry: {fileID: 0}
+  telegraphPrefab: {fileID: 0}
+  contactDamagePercent: 0.12
+  contactCooldown: 1
+  phase: 0
+  hasSplit: 0
+  sibling: {fileID: 0}
+  isPrimary: 1
+  splitThreshold: 0.3
+  splitScale: 0.7
+  survivorHealPercent: 0.29
+  staggerDuration: 1.5
+  stealthThreshold: 0.01
+  stealthHealRate: 0.02
+  stealthHealCap: 0.29
+  stealthSummonInterval: 4
+  stealthSummonCount: 1
 --- !u!114 &8312034395329814189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -238,7 +248,7 @@ MonoBehaviour:
   canBeTakedDamage: 1
   regenInterval: 0
   canRegenerateHP: 0
-  canKnockbacked: 1
+  canKnockbacked: 0
   knockbackDuration: 0.2
   invincibleDuration: 0
   onDamageKnockback: {x: 1.5, y: 2.5}
@@ -609,7 +619,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2599137665394997291}
   - component: {fileID: 4047046626064672792}
-  - component: {fileID: 8978839516293979865}
   m_Layer: 0
   m_Name: ContactArea
   m_TagString: Untagged
@@ -678,21 +687,6 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.8479159, y: 1.0605615}
   m_EdgeRadius: 0
---- !u!114 &8978839516293979865
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2492915938354277157}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 091d82962e83ba142aaef496ddde69b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ContactDamageArea
-  contactDamage: 0.12
-  hitCooldown: 1
-  damagePercentOfMaxHp: 1
 --- !u!1 &2800894338411449724
 GameObject:
   m_ObjectHideFlags: 0
