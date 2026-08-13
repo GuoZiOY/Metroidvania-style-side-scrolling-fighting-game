@@ -69,7 +69,7 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private float contactDamageMult = 1f;   // 接触伤害倍率（基于攻击力）
     private bool contactEnabled = true; // 落地后摇期间关闭
 
-    // 身体 Trigger 接触玩家 → 接触即伤害（玩家自身 0.7s 无敌帧控频，无需 Boss 侧冷却）
+    // 身体 Trigger 接触玩家 → 接触即伤害（玩家自身受击无敌帧控频，无需 Boss 侧冷却）
     private void OnTriggerStay2D(Collider2D other)
     {
         if (contactEnabled == false)
