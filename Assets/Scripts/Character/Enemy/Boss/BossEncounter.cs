@@ -18,7 +18,6 @@ public class BossEncounter : MonoBehaviour
     [SerializeField] private AudioClip bossBgm;                 // Boss 曲（calm 段）
     [SerializeField] private AudioClip bossBgmRage;             // 狂暴段（可空，HP<30% 切）
     [SerializeField] private UI_BossHealthBar healthBar;        // 顶部大血条
-    [SerializeField] private BossMinionRegistry minionRegistry; // 迷你王登记处
     [SerializeField] private CinemaScreenShake screenShake;     // 震屏
     [SerializeField] private CanvasGroup blackScreen;           // 黑幕（开场淡入淡出，盖住 Boss 出场）
     [SerializeField] private CanvasGroup bossNameText;          // 屏幕中央 Boss 名（开场淡出）
@@ -29,11 +28,6 @@ public class BossEncounter : MonoBehaviour
     private Boss_SlimeKing boss;
     private Entity_Health bossHealth;
     private bool defeatedFlag;
-
-    private void Awake()
-    {
-        if (minionRegistry == null) minionRegistry = GetComponentInChildren<BossMinionRegistry>();
-    }
 
     private void Start()
     {
@@ -150,7 +144,6 @@ public class BossEncounter : MonoBehaviour
         State = EncounterState.Victory;
         if (boss != null) boss.OnLanded -= OnBossLanded;
         if (healthBar != null) healthBar.Unbind(); // 血条隐藏（OnEntityDead 时序内）
-        if (minionRegistry != null) minionRegistry.Clear(); // 清迷你王
         AudioManager.Instance?.PopBgm(0.8f);
         if (exitPortal != null) exitPortal.SetActive(true); // 出口传送门出现（指向城镇）
         defeatedFlag = true;

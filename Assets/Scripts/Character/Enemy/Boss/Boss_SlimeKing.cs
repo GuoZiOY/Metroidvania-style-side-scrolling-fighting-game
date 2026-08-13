@@ -10,13 +10,12 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private float jumpHeightCap = 6f;     // 跳高上限（保证屏内）
     [SerializeField] private float landingRadius = 2f;     // 落点 AoE 半径
     [SerializeField] private float landingDamagePercent = 0.2f; // 落点伤害（%MaxHP）
-    [SerializeField] private float landingRecovery = 1f;   // 落地后摇（惩罚窗口，期间关接触伤害）
+    [SerializeField] private float landingRecovery = 1f;   // 落地后摇（惩罚窗口，玩家可安全输出）
 
     [Header("召唤")]
-    [SerializeField] private GameObject minionPrefab;      // 迷你王预制体
     [SerializeField] private float summonCooldown = 10f;   // 召唤 CD（秒）
     [SerializeField] private int minionBaseCount = 2;      // 每次召唤数量（基础）
-    [SerializeField] private int minionMaxAlive = 3;       // 场上迷你王上限
+    [SerializeField] private int minionMaxAlive = 3;       // 场上召唤物上限
 
     [Header("传送")]
     [SerializeField] private float teleportCooldown = 6f;  // 传送冷却（秒）
@@ -30,10 +29,6 @@ public class Boss_SlimeKing : Enemy
     [Header("狂暴")]
     [SerializeField] private float rageThreshold = 0.3f;   // 狂暴血量阈值
 
-    [Header("组件")]
-    [SerializeField] private ContactDamageArea contactArea;   // 身体接触（史莱姆专属）
-    [SerializeField] private BossMinionRegistry minionRegistry; // 迷你王登记处
-
     public event System.Action OnLanded; // 落地事件（BossEncounter 订阅 → 震屏）
 
     private Coroutine schedulerCo;      // 调度器协程
@@ -42,7 +37,6 @@ public class Boss_SlimeKing : Enemy
     public bool entryJumpDone;          // 开场大跳是否完成（BossEncounter 看门狗等待用）
     private bool isRaging;              // 狂暴标志
     private float stuckClock;           // 被卡计时
-    private float lastSummonTime;       // 上次召唤时间
     private float lastTeleportTime;     // 上次传送时间
     private Vector2 lastStuckPos;       // 被卡检测参考位置
 
@@ -62,9 +56,6 @@ public class Boss_SlimeKing : Enemy
     protected override void Start()
     {
         base.Start();
-        // 场景对象懒查找：minionRegistry 是场景对象，预制体引用不了，运行时从场景解析
-        if (minionRegistry == null)
-            minionRegistry = FindAnyObjectByType<BossMinionRegistry>();
         // inert：冻结 FSM + 给空状态，杜绝 idleState 自动进战斗/每帧写速度
         stateMachine.Initialize(idleState);
         stateMachine.SwitchOffStateMachine();
@@ -75,7 +66,6 @@ public class Boss_SlimeKing : Enemy
     {
         if (isFighting) return;
         isFighting = true;
-        lastSummonTime = Time.time; // 入场先给一段召唤 CD
         schedulerCo = StartCoroutine(SchedulerLoop());
     }
 
@@ -125,8 +115,6 @@ public class Boss_SlimeKing : Enemy
     // 防 Enemy_Health 命中时强抢控制权（Boss 只由 BeginFight 激活）
     public override void TryEnterBattleState(Transform player) { }
 
-    public int GetMinionCount() => minionRegistry != null ? minionRegistry.Count : 0;
-
     // ==================== 调度器 ====================
 
     private IEnumerator SchedulerLoop()
@@ -146,15 +134,6 @@ public class Boss_SlimeKing : Enemy
             {
                 yield return RunAction(TeleportCo());
                 stuckClock = 0f;
-                continue;
-            }
-
-            // 召唤超时保底（狂暴 CD 减半）
-            float cd = summonCooldown * (isRaging ? 0.5f : 1f);
-            if (Time.time - lastSummonTime > cd && GetMinionCount() < minionMaxAlive)
-            {
-                yield return RunAction(SummonCo());
-                lastSummonTime = Time.time;
                 continue;
             }
 
@@ -213,29 +192,11 @@ public class Boss_SlimeKing : Enemy
         }
         // 注意：跳砸落地不触发 OnLanded 震屏——相机震动只在 Boss 入场那次（EntryJump）震一次
 
-        // 落地后摇（惩罚窗口）：接触伤害关闭（contactArea 禁用）+ 玩家可安全输出
-        if (contactArea != null) contactArea.enabled = false;
+        // 落地后摇（惩罚窗口）：玩家可安全输出（接触伤害并入 Boss 脚本，Task 4 处理）
         yield return new WaitForSeconds(landingRecovery * (isRaging ? 0.7f : 1f));
-        if (contactArea != null) contactArea.enabled = true;
     }
 
-    // ==================== 动作 ② 召唤 ====================
-
-    private IEnumerator SummonCo()
-    {
-        int count = isRaging ? 3 : minionBaseCount;
-        for (int i = 0; i < count && GetMinionCount() < minionMaxAlive; i++)
-        {
-            if (minionPrefab == null) yield break;
-            Vector2 spawnPos = (Vector2)transform.position + Random.insideUnitCircle * 1.2f;
-            var go = Instantiate(minionPrefab, spawnPos, Quaternion.identity);
-            if (go.TryGetComponent<Boss_SlimeMinion>(out var minion))
-                minion.InitMinion(minionRegistry);
-            yield return new WaitForSeconds(0.2f); // 错峰生成
-        }
-    }
-
-    // ==================== 动作 ③ 传送 ====================
+    // ==================== 动作 ② 传送 ====================
 
     // 隐藏/显示：禁用/启用渲染+碰撞（保持 GameObject active，让协程继续运行——SetActive(false) 会杀死协程）
     private void SetVisible(bool visible)
