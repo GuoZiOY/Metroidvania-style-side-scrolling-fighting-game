@@ -272,8 +272,9 @@ public class Boss_SlimeKing : Enemy
         var sr = GetComponentInChildren<SpriteRenderer>();
         Color c = sr.color;
         sr.color = new Color(c.r, c.g, c.b, 0.3f);
-        contactEnabled = false; // 隐身不攻击
-        stealthSlimes.Clear();  // 清空上一轮隐身残留
+        contactEnabled = false;        // 隐身不攻击
+        health.canBeTakedDamage = false; // 隐身无敌（不受任何伤害）
+        stealthSlimes.Clear();         // 清空上一轮隐身残留
         int summonsUsed = 0;    // 已召唤次数（预算）
         float summonTimer = 0f;
 
@@ -310,8 +311,9 @@ public class Boss_SlimeKing : Enemy
             yield return null;
         }
 
-        // 退出隐身：恢复不透明 + 接触伤害 + 重启调度器
+        // 退出隐身：恢复不透明 + 可受伤/接触伤害 + 重启调度器
         sr.color = new Color(c.r, c.g, c.b, 1f);
+        health.canBeTakedDamage = true; // 恢复可受伤
         contactEnabled = true;
         phase = BossPhase.Normal;
         isFighting = true;
