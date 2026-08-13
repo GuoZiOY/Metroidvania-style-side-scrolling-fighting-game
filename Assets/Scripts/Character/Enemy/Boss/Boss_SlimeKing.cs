@@ -497,6 +497,13 @@ public class Boss_SlimeKing : Enemy
         currentActionCo = null;
     }
 
+    // 落点地面坐标：从目标点向下射线找地面（预警环贴地生成）
+    private Vector3 GroundPoint(Vector3 target)
+    {
+        var hit = Physics2D.Raycast(target, Vector2.down, 20f, LayerMask.GetMask("Ground"));
+        return hit.collider != null ? (Vector3)hit.point : target;
+    }
+
     // ==================== 追击（常态） ====================
 
     // 朝玩家方向移动（接触伤害常开 → 追上即威胁）；每帧刷新朝向
@@ -582,7 +589,7 @@ public class Boss_SlimeKing : Enemy
             Destroy(tel, 2f);
         }
         if (telegraphParticlePrefab != null)
-            telFx = Instantiate(telegraphParticlePrefab, landing, Quaternion.identity);
+            telFx = Instantiate(telegraphParticlePrefab, GroundPoint(landing), Quaternion.identity); // 贴地
 
         // 高弧线：垂直起跳高 + 水平速度被上限限制；下降段重力加大（下落更快），滞空比对称抛物线短
         float distX = landing.x - transform.position.x;
@@ -676,7 +683,7 @@ public class Boss_SlimeKing : Enemy
         Vector2 overhead = (Vector2)t.position + Vector2.up * teleportHeight;
         GameObject telFx = null;
         if (telegraphParticlePrefab != null)
-            telFx = Instantiate(telegraphParticlePrefab, overhead, Quaternion.identity);
+            telFx = Instantiate(telegraphParticlePrefab, GroundPoint((Vector2)t.position), Quaternion.identity); // 贴地（砸落点）
         if (telegraphPrefab != null)
             Instantiate(telegraphPrefab, overhead, Quaternion.identity);
         yield return new WaitForSeconds(teleportLandMark);
