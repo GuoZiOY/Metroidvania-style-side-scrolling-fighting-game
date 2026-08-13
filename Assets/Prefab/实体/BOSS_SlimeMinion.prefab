@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7997389693249269478}
-  - component: {fileID: 8796702336790855628}
   - component: {fileID: 8312034395329814189}
   - component: {fileID: 3221755127037259760}
   - component: {fileID: 5592246923474770650}
@@ -18,8 +17,9 @@ GameObject:
   - component: {fileID: 7456045279286384528}
   - component: {fileID: 1399052401595346723}
   - component: {fileID: 424965301915696075}
+  - component: {fileID: 5139124499396533206}
   m_Layer: 8
-  m_Name: BOSS_Slime
+  m_Name: BOSS_SlimeMinion
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -35,7 +35,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -35.47, y: -1.96, z: 0}
-  m_LocalScale: {x: 1.3, y: 1.3, z: 1.3}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 9022713923543708044}
@@ -45,76 +45,9 @@ Transform:
   - {fileID: 7685189670989286331}
   - {fileID: 4051987586448903075}
   - {fileID: 9154059115176836752}
-  - {fileID: 2599137665394997291}
+  - {fileID: 3672087652400102148}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8796702336790855628
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 11895868603550486}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cbae16f60d4bd134f8a5a594006e21f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Boss_SlimeKing
-  whatIsGround:
-    serializedVersion: 2
-    m_Bits: 64
-  groundCheckDistance: 0
-  wallCheckDistance: 0
-  groundCheck: {fileID: 0}
-  primaryWallCheck: {fileID: 0}
-  secondaryWallCheck: {fileID: 0}
-  enableHitStop: 1
-  hitStopDuration: 0.08
-  hitStopTimeScale: 0
-  enemyName: Enemy
-  uniqueID: 
-  enemyType: 0
-  levelSystem: {fileID: 0}
-  enemyLevel: 1
-  normalTypeSystem: {fileID: 0}
-  eliteTypeSystem: {fileID: 0}
-  bossTypeSystem: {fileID: 0}
-  whatIsPlayer:
-    serializedVersion: 2
-    m_Bits: 0
-  playerCheck: {fileID: 0}
-  checkPlayer_Distance: 0
-  battleMoveSpeed: 3
-  attackDistance: 2
-  battleTimeDuration: 5
-  minRetreatDistance: 1
-  reteatVelocity: {x: 0, y: 0}
-  stunnedDuration: 1
-  stunnedVelocity: {x: 7, y: 7}
-  canBeStunned: 0
-  lootDropper: {fileID: 0}
-  moveSpeed: 1.4
-  moveAnimSpeedMultiplier: 1
-  canBeChased: 1
-  chargeTime: 0.5
-  jumpHeightCap: 6
-  landingRadius: 2
-  landingDamagePercent: 0.2
-  landingRecovery: 1
-  minionPrefab: {fileID: 11895868603550486, guid: 88c89498c52526f4cbbdceeb042a47fc, type: 3}
-  summonCooldown: 10
-  minionBaseCount: 2
-  minionMaxAlive: 3
-  teleportCooldown: 6
-  stuckThreshold: 3
-  stuckSpeedThreshold: 0.5
-  tooFarDistance: 15
-  teleportOffsetMin: 3
-  teleportOffsetMax: 6
-  arenaBounds: {fileID: 0}
-  rageThreshold: 0.3
-  contactArea: {fileID: 8978839516293979865}
-  minionRegistry: {fileID: 0}
 --- !u!114 &8312034395329814189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -366,6 +299,57 @@ CapsuleCollider2D:
   m_Offset: {x: 0.24859533, y: -0.021497594}
   m_Size: {x: 1.4214741, y: 0.8158164}
   m_Direction: 1
+--- !u!114 &5139124499396533206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 11895868603550486}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 041fd34c0fbfaa04b9881aa636ce8c11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Boss_SlimeMinion
+  whatIsGround:
+    serializedVersion: 2
+    m_Bits: 0
+  groundCheckDistance: 0
+  wallCheckDistance: 0
+  groundCheck: {fileID: 0}
+  primaryWallCheck: {fileID: 0}
+  secondaryWallCheck: {fileID: 0}
+  enableHitStop: 1
+  hitStopDuration: 0.08
+  hitStopTimeScale: 0
+  enemyName: Enemy
+  uniqueID: 
+  enemyType: 0
+  levelSystem: {fileID: 0}
+  enemyLevel: 1
+  normalTypeSystem: {fileID: 0}
+  eliteTypeSystem: {fileID: 0}
+  bossTypeSystem: {fileID: 0}
+  whatIsPlayer:
+    serializedVersion: 2
+    m_Bits: 0
+  playerCheck: {fileID: 0}
+  checkPlayer_Distance: 0
+  battleMoveSpeed: 3
+  attackDistance: 2
+  battleTimeDuration: 5
+  minRetreatDistance: 1
+  reteatVelocity: {x: 0, y: 0}
+  stunnedDuration: 1
+  stunnedVelocity: {x: 7, y: 7}
+  canBeStunned: 0
+  lootDropper: {fileID: 0}
+  moveSpeed: 1.4
+  moveAnimSpeedMultiplier: 1
+  canBeChased: 1
+  hopInterval: 1.2
+  hopForce: 6
+  hopHorizontalRatio: 0.5
 --- !u!1 &455613651941104557
 GameObject:
   m_ObjectHideFlags: 0
@@ -599,100 +583,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!1 &2492915938354277157
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2599137665394997291}
-  - component: {fileID: 4047046626064672792}
-  - component: {fileID: 8978839516293979865}
-  m_Layer: 0
-  m_Name: ContactArea
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2599137665394997291
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2492915938354277157}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.7692308, y: 0.7692308, z: 0.7692308}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7997389693249269478}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!61 &4047046626064672792
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2492915938354277157}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0.32317355, y: -0.02794683}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0, y: 0}
-    oldSize: {x: 0, y: 0}
-    newSize: {x: 0, y: 0}
-    adaptiveTilingThreshold: 0
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1.8479159, y: 1.0605615}
-  m_EdgeRadius: 0
---- !u!114 &8978839516293979865
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2492915938354277157}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 091d82962e83ba142aaef496ddde69b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ContactDamageArea
-  contactDamage: 0.12
-  hitCooldown: 1
-  damagePercentOfMaxHp: 1
 --- !u!1 &2800894338411449724
 GameObject:
   m_ObjectHideFlags: 0
@@ -968,6 +858,100 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7997389693249269478}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3964646083863266420
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3672087652400102148}
+  - component: {fileID: 3781747341470103092}
+  - component: {fileID: 4319072287469407997}
+  m_Layer: 0
+  m_Name: ContactArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3672087652400102148
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3964646083863266420}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7997389693249269478}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!61 &3781747341470103092
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3964646083863266420}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0.24859428, y: -0.021497607}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1.4214706, y: 0.8158159}
+  m_EdgeRadius: 0
+--- !u!114 &4319072287469407997
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3964646083863266420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 091d82962e83ba142aaef496ddde69b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ContactDamageArea
+  contactDamage: 0.06
+  hitCooldown: 1
+  damagePercentOfMaxHp: 1
 --- !u!1 &5138762054048849796
 GameObject:
   m_ObjectHideFlags: 0

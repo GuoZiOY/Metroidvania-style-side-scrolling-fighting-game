@@ -43,6 +43,9 @@ public class BossEncounter : MonoBehaviour
 
     private void Start()
     {
+        // 血条在持久 HUD（跨场景 DontDestroyOnLoad），场景内接不了引用，运行时查找
+        if (healthBar == null)
+            healthBar = FindAnyObjectByType<UI_BossHealthBar>(FindObjectsInactive.Include);
         // 场景加载自动开场（玩家经传送门到达、PlayerSpawner 定位后）
         StartCoroutine(RunIntro());
     }

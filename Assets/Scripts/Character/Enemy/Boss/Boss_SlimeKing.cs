@@ -60,6 +60,9 @@ public class Boss_SlimeKing : Enemy
     protected override void Start()
     {
         base.Start();
+        // 场景对象懒查找：minionRegistry 是场景对象，预制体引用不了，运行时从场景解析
+        if (minionRegistry == null)
+            minionRegistry = FindAnyObjectByType<BossMinionRegistry>();
         // inert：冻结 FSM + 给空状态，杜绝 idleState 自动进战斗/每帧写速度
         stateMachine.Initialize(idleState);
         stateMachine.SwitchOffStateMachine();
