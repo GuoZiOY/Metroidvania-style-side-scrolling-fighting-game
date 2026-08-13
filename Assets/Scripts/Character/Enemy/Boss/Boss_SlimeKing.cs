@@ -28,14 +28,14 @@ public class Boss_SlimeKing : Enemy
 
     [Header("落地")]
     [SerializeField] private float landingRadius = 2f;      // 落点 AoE 半径
-    [SerializeField] private float landingDamagePercent = 0.2f; // 落点伤害
+    [SerializeField] private float landingDamageMult = 1f;  // 落点伤害倍率（基于攻击力）
     [SerializeField] private float landingRecovery = 1f;    // 落地后摇（惩罚窗口）
     [SerializeField] private float telegraphTime = 0.8f;    // 落点预告停留时长
 
     [Header("冲刺")]
     [SerializeField] private float dashSpeed = 26f;         // 冲刺速度（待手动调）
     [SerializeField] private float dashDistance = 20f;      // 冲刺距离（待手动调）
-    [SerializeField] private float dashDamagePercent = 0.18f; // 1.5x
+    [SerializeField] private float dashDamageMult = 1.5f;   // 冲刺伤害倍率（1.5x）
     [SerializeField] private float dashRangeMin = 3f;       // 冲刺触发最近距离
     [SerializeField] private float dashRangeMax = 10f;      // 冲刺触发最远距离
     [SerializeField] private float dashCooldown = 5f;       // 冲刺冷却
@@ -46,7 +46,7 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private float teleportTelegraph = 1f;  // 原地闪光预告（加长，可读）
     [SerializeField] private float teleportLandMark = 0.8f; // 头顶落点标记预告（砸落前）
     [SerializeField] private float teleportHeight = 6f;     // 头顶传送高度（砸落起点）
-    [SerializeField] private float teleportSlamDamagePercent = 0.24f; // 2x
+    [SerializeField] private float teleportDamageMult = 2f; // 传送伤害倍率（2x）
 
     [Header("召唤")]
     [SerializeField] private GameObject slimePrefab;        // Enemy_Slime.prefab
@@ -65,8 +65,8 @@ public class Boss_SlimeKing : Enemy
 
     // === 身体接触伤害（内置，v4：不单独组件）===
     [Header("身体接触伤害")]
-    [SerializeField] private float contactDamagePercent = 0.12f; // 接触伤害（%MaxHP）
-    [SerializeField] private float contactCooldown = 1f;         // 每源冷却（秒）
+    [SerializeField] private float contactDamageMult = 1f;   // 接触伤害倍率（基于攻击力）
+    [SerializeField] private float contactCooldown = 1f;     // 每源冷却（秒）
     private float lastContactHitTime; // 上次接触伤害时间
     private bool contactEnabled = true; // 落地后摇期间关闭
 
@@ -79,10 +79,7 @@ public class Boss_SlimeKing : Enemy
             return; // 冷却内不重复触发
         if (other.CompareTag("Player") == false)
             return; // 只伤玩家
-        var playerHealth = other.GetComponent<Entity_Health>();
-        if (playerHealth == null)
-            return;
-        playerHealth.TakeDamage(playerHealth.GetMaxHP() * contactDamagePercent, 0f, ElementType.None, transform);
+        combat?.DealDamageTo(other, contactDamageMult); // 接触伤害走 Entity_Combat 标准管线（攻击力/暴击/护甲）
         lastContactHitTime = Time.time;
     }
 
@@ -98,6 +95,9 @@ public class Boss_SlimeKing : Enemy
     [Header("分裂")]
     [SerializeField] private float splitThreshold = 0.3f;       // 分裂阈值
     [SerializeField] private float splitScale = 0.7f;           // 分裂体缩放
+    [SerializeField] private float splitChargeTime = 2f;        // 分裂前 2s 静默（无敌预告）
+    [SerializeField] private float splitLaunchSpeed = 9f;       // 分裂体左右发射水平速度
+    [SerializeField] private float splitLaunchHeight = 16f;     // 分裂体左右发射垂直起跳速度
     [SerializeField] private float survivorHealPercent = 0.29f; // 存活者回血值
     [SerializeField] private float staggerDuration = 1.5f;      // 僵直时长
 
@@ -111,6 +111,7 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private int stealthMaxAlive = 4;            // 隐身同时存活史莱姆上限
 
     private Entity_Health health;                       // 自身生命缓存
+    private Boss_SlimeCombat combat;                    // 专属战斗组件（伤害走标准管线）
     private Coroutine stealthCo;                        // 隐身协程
     private Coroutine currentActionCo;                  // 当前动作协程（隐身/死亡时停掉，防残留移动）
     private readonly List<GameObject> stealthSlimes = new(); // 隐身期间召唤的史莱姆
@@ -120,6 +121,7 @@ public class Boss_SlimeKing : Enemy
     {
         base.Awake();
         health = GetComponent<Entity_Health>(); // 自身生命缓存
+        combat = GetComponent<Boss_SlimeCombat>(); // 伤害走 Boss_SlimeCombat 标准管线
         idleState = new Enemy_IdleState(this, stateMachine, "idle");
         moveState = new Enemy_MoveState(this, stateMachine, "move");
         attackState = new Enemy_AttackState(this, stateMachine, "attack");
@@ -186,24 +188,20 @@ public class Boss_SlimeKing : Enemy
 
     // ==================== 阶段状态机 ====================
 
-    // 每轮阶段检查：分裂狂暴（<30% 未分裂）。濒死隐身改由 EntityDead 受致命伤害时触发（一次性保命）
-    private void UpdatePhase()
-    {
-        if (IsDead || phase == BossPhase.Stealth)
-            return;
-
-        // 分裂狂暴（<30%，未分裂）
-        if (health.GetHealthPercent() < splitThreshold && hasSplit == false)
-        {
-            Split();
-        }
-    }
-
-    // 分裂：生成第 2 实例，各半血，克隆也开打
-    private void Split()
+    // 分裂狂暴：<30% → 2s 静默（无敌，可读）→ 各朝左右抛物线发射分裂体 → 落地后两半都开打
+    // 注意：本协程由调度器 RunAction 启动（currentActionCo 指向自己），不能 StopCoroutine(schedulerCo/currentActionCo)，
+    // 调度器在 yield 本协程期间自然挂起（= 2s 静默），本协程返回后调度器自动恢复。
+    private IEnumerator SplitSequenceCo()
     {
         hasSplit = true;
         phase = BossPhase.Split;
+        // 2s 静默：不造成接触伤害、无敌（可被打断由玩家看到但打不动）
+        contactEnabled = false;
+        health.canBeTakedDamage = false;
+
+        // 2s 静默（蓄力预告，玩家可看到但打不动、也不会被打）
+        yield return new WaitForSeconds(splitChargeTime);
+
         // 分裂瞬间可能处于受击闪光中（sr.material 被换成白色 onDamageMaterial），
         // 若直接 Instantiate，克隆会把白色材质拷过去且克隆 Awake 把白色记为 originalMaterial → 永远白。
         // 先还原原实例材质再克隆，保证克隆拿到正常材质。
@@ -211,17 +209,46 @@ public class Boss_SlimeKing : Enemy
         if (splitVfx != null)
             splitVfx.StopAllVFX();
 
+        // 生成分裂体（克隆），各半血；清掉从原实例拷来的协程引用（跨实例 StopCoroutine 非法）
         var clone = Instantiate(gameObject, transform.position, Quaternion.identity).GetComponent<Boss_SlimeKing>();
         clone.isPrimary = false;
         clone.hasSplit = true;
         clone.sibling = this;
         sibling = clone;
         clone.transform.localScale = transform.localScale * splitScale;
-        // 各半血（当前血量 / 2）
+        clone.schedulerCo = null;
+        clone.currentActionCo = null;
+        clone.stealthCo = null;
         float half = health.GetCurrentHP() / 2f;
         health.SetCurrentHP(half);
         clone.health.SetCurrentHP(half);
-        clone.BeginFight(); // 克隆也开打
+
+        // 各朝左右抛物线发射（水平 + 垂直起跳，靠重力成弧线）：本实例朝左，克隆朝右
+        rb.linearVelocity = new Vector2(-splitLaunchSpeed, splitLaunchHeight);
+        clone.rb.linearVelocity = new Vector2(splitLaunchSpeed, splitLaunchHeight);
+
+        // 等本实例落地（两半对称，同滞空）
+        bool leftGround = false;
+        float timeout = 3f;
+        while (timeout > 0f && !IsDead)
+        {
+            if (isOnGround == false)
+                leftGround = true;
+            else if (leftGround)
+                break;
+            yield return null;
+            timeout -= Time.deltaTime;
+        }
+        rb.linearVelocity = Vector2.zero;
+
+        // 落地后：恢复可受伤 + 接触伤害；克隆启动调度器（isFighting 被拷成 true，需复位）
+        health.canBeTakedDamage = true;
+        contactEnabled = true;
+        clone.health.canBeTakedDamage = true;
+        clone.contactEnabled = true;
+        clone.phase = BossPhase.Normal;
+        clone.isFighting = false;
+        clone.BeginFight();
     }
 
     // 兄弟死亡 → 存活者：晋升为主 + 回血 29% → 僵直 → 3 段冲刺 → 恢复（不再分裂）
@@ -330,8 +357,6 @@ public class Boss_SlimeKing : Enemy
     {
         while (!IsDead && isFighting)
         {
-            // 每轮先查阶段（分裂/濒死隐身），StartStealth 已停本协程
-            UpdatePhase();
             // 隐身期间不执行动作（防残留一帧出招）
             if (phase == BossPhase.Stealth)
                 break;
@@ -339,6 +364,13 @@ public class Boss_SlimeKing : Enemy
             if (phase == BossPhase.Stagger)
             {
                 yield return null;
+                continue;
+            }
+
+            // 分裂狂暴：<30% 未分裂 → 2s 静默 → 各朝左右抛物线分裂（分裂后两半各自继续）
+            if (hasSplit == false && health.GetHealthPercent() < splitThreshold)
+            {
+                yield return RunAction(SplitSequenceCo());
                 continue;
             }
 
@@ -476,9 +508,7 @@ public class Boss_SlimeKing : Enemy
         Transform t = playerTarget != null ? playerTarget : GetPlayerReference();
         if (t != null && Vector2.Distance(transform.position, t.position) <= landingRadius)
         {
-            var h = t.GetComponent<Entity_Health>();
-            if (h != null)
-                h.TakeDamage(h.GetMaxHP() * landingDamagePercent, 0f, ElementType.None, transform);
+            combat?.DealDamageTo(t.GetComponent<Collider2D>(), landingDamageMult); // 落点伤害走标准管线
         }
 
         // 落地后摇（惩罚窗口）：关接触伤害，玩家可输出
@@ -528,9 +558,7 @@ public class Boss_SlimeKing : Enemy
         // 落点 AoE 伤害（可躲，靠预告）
         if (Vector2.Distance(transform.position, landing) <= landingRadius && t != null)
         {
-            var h = t.GetComponent<Entity_Health>();
-            if (h != null)
-                h.TakeDamage(h.GetMaxHP() * landingDamagePercent, 0f, ElementType.None, transform);
+            combat?.DealDamageTo(t.GetComponent<Collider2D>(), landingDamageMult); // 落点伤害走标准管线
         }
 
         // 落地后摇（惩罚窗口）：关接触伤害，玩家可安全输出
@@ -568,9 +596,7 @@ public class Boss_SlimeKing : Enemy
         // 冲刺路径上的玩家判定（简化：终点近身判定）
         if (t != null && Vector2.Distance(transform.position, t.position) < 2f)
         {
-            var h = t.GetComponent<Entity_Health>();
-            if (h != null)
-                h.TakeDamage(h.GetMaxHP() * dashDamagePercent, 0f, ElementType.None, transform);
+            combat?.DealDamageTo(t.GetComponent<Collider2D>(), dashDamageMult); // 冲刺 1.5x 走标准管线
         }
         contactEnabled = true;
         yield return new WaitForSeconds(0.4f); // 冲刺后停顿
@@ -618,9 +644,7 @@ public class Boss_SlimeKing : Enemy
         // 砸落触碰（头顶近身判定）
         if (t != null && Vector2.Distance(transform.position, t.position) < 2f)
         {
-            var h = t.GetComponent<Entity_Health>();
-            if (h != null)
-                h.TakeDamage(h.GetMaxHP() * teleportSlamDamagePercent, 0f, ElementType.None, transform);
+            combat?.DealDamageTo(t.GetComponent<Collider2D>(), teleportDamageMult); // 传送 2x 走标准管线
         }
         yield return new WaitForSeconds(0.5f); // 落地停顿
     }

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7997389693249269478}
   - component: {fileID: 8796702336790855628}
   - component: {fileID: 8312034395329814189}
-  - component: {fileID: 3221755127037259760}
+  - component: {fileID: 9200627010412332040}
   - component: {fileID: 5592246923474770650}
   - component: {fileID: 3063347780857818844}
   - component: {fileID: 2143262246327649807}
@@ -108,12 +108,12 @@ MonoBehaviour:
   bigJumpCooldown: 8
   bigJumpMinRange: 7
   landingRadius: 2
-  landingDamagePercent: 0.2
+  landingDamageMult: 1
   landingRecovery: 1
   telegraphTime: 0.8
   dashSpeed: 20
   dashDistance: 15
-  dashDamagePercent: 0.18
+  dashDamageMult: 1.5
   dashRangeMin: 3
   dashRangeMax: 10
   dashCooldown: 5
@@ -122,11 +122,11 @@ MonoBehaviour:
   teleportTelegraph: 1
   teleportLandMark: 0.8
   teleportHeight: 6
-  teleportSlamDamagePercent: 0.24
+  teleportDamageMult: 2
   slimePrefab: {fileID: 11895868603550486, guid: 03e2e6ad57982a647bd4eadf734fa80c, type: 3}
   summonCooldown: 10
   telegraphPrefab: {fileID: 0}
-  contactDamagePercent: 0.12
+  contactDamageMult: 1
   contactCooldown: 1
   phase: 0
   hasSplit: 0
@@ -134,6 +134,9 @@ MonoBehaviour:
   isPrimary: 1
   splitThreshold: 0.3
   splitScale: 0.7
+  splitChargeTime: 2
+  splitLaunchSpeed: 9
+  splitLaunchHeight: 16
   survivorHealPercent: 0.29
   staggerDuration: 1.5
   stealthThreshold: 0.01
@@ -168,7 +171,7 @@ MonoBehaviour:
       baseValue: 1
       modifiers: []
     phyiscalDamage:
-      baseValue: 10
+      baseValue: 5
       modifiers: []
     critChance:
       baseValue: 0
@@ -221,7 +224,7 @@ MonoBehaviour:
       baseValue: 0
       modifiers: []
   InputElement: 0
---- !u!114 &3221755127037259760
+--- !u!114 &9200627010412332040
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -230,9 +233,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 11895868603550486}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd397bd8acb63e74fa9e42f0b13c5150, type: 3}
+  m_Script: {fileID: 11500000, guid: f4939b35cd0cbfc44927ab388538c8f7, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::Boss_SlimeCombat
   basicAttacksData:
     phyiscal: 1
     elemental: 1
