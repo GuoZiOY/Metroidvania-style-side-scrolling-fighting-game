@@ -226,6 +226,12 @@ public class Enemy : Entity, ICounterable
     {
         if (player == null)
             player = PlayerDetected().transform;
+        if (player == null) // 面向射线检测失败兜底：直接按 tag 找玩家（Boss 需一直锁定玩家，不受朝向/障碍影响）
+        {
+            var pl = FindAnyObjectByType<Player>();
+            if (pl != null)
+                player = pl.transform;
+        }
         return player;
     }
 

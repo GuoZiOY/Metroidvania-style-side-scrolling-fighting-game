@@ -136,6 +136,11 @@ public class Boss_SlimeKing : Enemy
             UpdateRage();
             UpdateStuckClock();
 
+            // 每轮面向玩家（Boss 一直锁定玩家；GetPlayerReference 已兜底按 tag 找）
+            Transform face = player != null ? player : GetPlayerReference();
+            if (face != null)
+                HandleFlip(face.position.x > transform.position.x ? 1 : -1);
+
             // 传送优先级：被卡或超距
             if (IsStuck() || TooFarFromPlayer())
             {
