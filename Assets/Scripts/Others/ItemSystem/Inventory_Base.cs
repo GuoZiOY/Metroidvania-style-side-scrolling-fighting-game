@@ -37,61 +37,70 @@ public class Inventory_Base : MonoBehaviour
     }
 
     // 判断能否添加指定物品：有空槽 或 背包满但该物品可堆叠到已有堆（制作/分解/合成容量检查用，防止溢出误判）
-    public bool CanAddItem(ItemDataSo itemData)
+    // 查找任意可堆叠的同物品堆（Bug2 修复：第一堆满 99 后找第二堆，不再各占一格）
+    public Inventory_Item FindStackable(ItemDataSo itemData)
     {
-        if (itemDictionary.Count < maxInventorySize)
-            return true; // 有空槽位
-        if (itemData == null)
-            return false;
         foreach (var kvp in itemDictionary)
         {
             var stack = kvp.Value;
             if (stack != null && stack.itemData == itemData && stack.CanAddStack())
-                return true; // 可堆叠到已有堆
+                return stack;
         }
-        return false;
+        return null;
+    }
+
+    public bool CanAddItem(ItemDataSo itemData)
+    {
+        if (itemDictionary.Count < maxInventorySize)
+            return true; // 有空槽位
+        return FindStackable(itemData) != null; // 背包满但可堆叠到已有堆
     }
 
     public bool CanAddToStack(Inventory_Item item)//判断是否可以添加物品数量
     {
-        foreach (var kvp in itemDictionary)
-        {
-            Inventory_Item stack = kvp.Value;
-            if (stack != null && stack.itemData == item.itemData && stack.CanAddStack())
-                return true;
-        }
-        return false;
+        return FindStackable(item.itemData) != null;
     }
 
-    public void AddItem(Inventory_Item itemToAdd)//添加物品到第一个可用槽位
+    // 自动添加（拾取/奖励/掉落）：优先堆叠到任意未满堆，否则放第一个空槽；失败返回 false（背包满且不可堆叠）
+    public bool AddItem(Inventory_Item itemToAdd)
     {
-        AddItem(itemToAdd, GetFirstAvailableSlot());
+        // 先尝试堆叠（不限于第一个堆）
+        Inventory_Item stack = FindStackable(itemToAdd.itemData);
+        if (stack != null)
+        {
+            stack.AddStack();//添加物品数量
+            OnInventoryUpdated?.Invoke();
+            return true;
+        }
+
+        // 无堆可叠：找第一个空槽
+        int slot = GetFirstAvailableSlot();
+        if (slot < 0)
+        {
+            Debug.LogWarning($"[Inventory] 背包已满，无法添加物品: {(itemToAdd != null && itemToAdd.itemData != null ? itemToAdd.itemData.itemName : "?")}");
+            return false; // 保护：返回 false，调用方决定不拾取/回滚
+        }
+        itemDictionary[slot] = itemToAdd;
+        OnInventoryUpdated?.Invoke();
+        return true;
     }
 
-    public void AddItem(Inventory_Item itemToAdd, int slotIndex)//添加物品到指定槽位
+    // 添加物品到指定槽位（存档恢复/物品移动用）：精确落位，不自动堆叠
+    public bool AddItem(Inventory_Item itemToAdd, int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= maxInventorySize)
         {
-            Debug.LogError("无效的槽位索引: " + slotIndex);
-            return;
+            Debug.LogWarning("无效的槽位索引: " + slotIndex);
+            return false;
         }
-
-        Inventory_Item itemInInventory = FindItem(itemToAdd.itemData);//查找是否存在相同物品
-
-        if (itemInInventory != null && itemInInventory.CanAddStack())
+        if (itemDictionary.ContainsKey(slotIndex))//判断槽位是否已被占用
         {
-            itemInInventory.AddStack();//添加物品数量
+            Debug.LogWarning("槽位 " + slotIndex + " 已被占用，无法添加物品");
+            return false;
         }
-        else
-        {
-            if (itemDictionary.ContainsKey(slotIndex))//判断槽位是否已被占用
-            {
-                Debug.LogWarning("槽位 " + slotIndex + " 已被占用，无法添加物品");
-                return;
-            }
-            itemDictionary[slotIndex] = itemToAdd;//添加物品到字典
-        }
-        OnInventoryUpdated?.Invoke();//物品更新事件
+        itemDictionary[slotIndex] = itemToAdd;
+        OnInventoryUpdated?.Invoke();
+        return true;
     }
 
     public void RemoveItem(Inventory_Item itemToRemove)//移除物品

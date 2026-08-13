@@ -107,7 +107,13 @@ public class ItemAbout : MonoBehaviour
     private void PickupItem(Inventory_Base targetInventory)
     {
         isPickedUp = true;
-        targetInventory.AddItem(itemToAdd);
+        bool added = targetInventory.AddItem(itemToAdd);
+        if (!added)
+        {
+            // 背包满且不可堆叠：保护——不拾取（物品留在地上，重置状态，程序不卡）
+            isPickedUp = false;
+            return;
+        }
         if (itemData != null && !string.IsNullOrEmpty(itemData.itemId))
             QuestEvents.ReportItemCollected(itemData.itemId, 1);
 
