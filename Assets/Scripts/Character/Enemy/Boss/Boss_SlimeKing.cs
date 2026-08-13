@@ -29,6 +29,29 @@ public class Boss_SlimeKing : Enemy
     [Header("狂暴")]
     [SerializeField] private float rageThreshold = 0.3f;   // 狂暴血量阈值
 
+    // === 身体接触伤害（内置，v4：不单独组件）===
+    [Header("身体接触伤害")]
+    [SerializeField] private float contactDamagePercent = 0.12f; // 接触伤害（%MaxHP）
+    [SerializeField] private float contactCooldown = 1f;         // 每源冷却（秒）
+    private float lastContactHitTime; // 上次接触伤害时间
+    private bool contactEnabled = true; // 落地后摇期间关闭
+
+    // 身体 Trigger 接触玩家 → 每源冷却内造成一次接触伤害
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        if (contactEnabled == false)
+            return;
+        if (Time.time - lastContactHitTime < contactCooldown)
+            return; // 冷却内不重复触发
+        if (other.CompareTag("Player") == false)
+            return; // 只伤玩家
+        var health = other.GetComponent<Entity_Health>();
+        if (health == null)
+            return;
+        health.TakeDamage(health.GetMaxHP() * contactDamagePercent, 0f, ElementType.None, transform);
+        lastContactHitTime = Time.time;
+    }
+
     public event System.Action OnLanded; // 落地事件（BossEncounter 订阅 → 震屏）
 
     private Coroutine schedulerCo;      // 调度器协程
