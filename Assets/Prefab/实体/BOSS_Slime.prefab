@@ -63,37 +63,37 @@ MonoBehaviour:
   whatIsGround:
     serializedVersion: 2
     m_Bits: 64
-  groundCheckDistance: 0
-  wallCheckDistance: 0
-  groundCheck: {fileID: 0}
-  primaryWallCheck: {fileID: 0}
-  secondaryWallCheck: {fileID: 0}
+  groundCheckDistance: 0.5
+  wallCheckDistance: 1
+  groundCheck: {fileID: 3110351853385136834}
+  primaryWallCheck: {fileID: 7997389693249269478}
+  secondaryWallCheck: {fileID: 7997389693249269478}
   enableHitStop: 1
   hitStopDuration: 0.08
   hitStopTimeScale: 0
-  enemyName: Enemy
-  uniqueID: 
-  enemyType: 0
-  levelSystem: {fileID: 0}
+  enemyName: "\u53F2\u83B1\u59C6\u738B"
+  uniqueID: boss_slime_king
+  enemyType: 2
+  levelSystem: {fileID: 301183723928762836}
   enemyLevel: 1
-  normalTypeSystem: {fileID: 0}
-  eliteTypeSystem: {fileID: 0}
-  bossTypeSystem: {fileID: 0}
+  normalTypeSystem: {fileID: 1970668998163863185}
+  eliteTypeSystem: {fileID: 8382410190194639747}
+  bossTypeSystem: {fileID: 2767793079032409446}
   whatIsPlayer:
     serializedVersion: 2
-    m_Bits: 0
-  playerCheck: {fileID: 0}
-  checkPlayer_Distance: 0
+    m_Bits: 128
+  playerCheck: {fileID: 7997389693249269478}
+  checkPlayer_Distance: 10
   battleMoveSpeed: 3
   attackDistance: 2
   battleTimeDuration: 5
-  minRetreatDistance: 1
-  reteatVelocity: {x: 0, y: 0}
+  minRetreatDistance: 1.5
+  reteatVelocity: {x: 5, y: 2}
   stunnedDuration: 1
   stunnedVelocity: {x: 7, y: 7}
   canBeStunned: 0
   lootDropper: {fileID: 0}
-  moveSpeed: 1.4
+  moveSpeed: 2
   moveAnimSpeedMultiplier: 1
   canBeChased: 1
   chargeTime: 0.5
@@ -233,7 +233,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   entityVFX: {fileID: 2143262246327649807}
-  currentHP: 50
+  currentHP: 20
   isDead: 0
   canBeTakedDamage: 1
   regenInterval: 0
@@ -426,7 +426,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
