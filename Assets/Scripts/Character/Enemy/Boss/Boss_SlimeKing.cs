@@ -279,12 +279,17 @@ public class Boss_SlimeKing : Enemy
     private IEnumerator StaggerThenDashCo()
     {
         yield return new WaitForSeconds(staggerDuration); // 僵直
-        // 连续 3 段更快更远的狂暴冲刺（DashCo 死亡自终止）
+        yield return RageDashTripleCo(); // 3 段更快更远的狂暴冲刺
+        phase = BossPhase.Normal; // 恢复常态（不再分裂）
+    }
+
+    // 3 段更快更远的狂暴冲刺（子体死后 / 隐身结束后回场用；DashCo 死亡自终止）
+    private IEnumerator RageDashTripleCo()
+    {
         for (int i = 0; i < 3; i++)
         {
             yield return RunAction(DashCo(rageDashSpeedMult, rageDashDistanceMult));
         }
-        phase = BossPhase.Normal; // 恢复常态（不再分裂）
     }
 
     // 濒死隐身：半透明、无法移动攻击、频繁召唤史莱姆、缓慢回血；一次性保命
@@ -349,12 +354,13 @@ public class Boss_SlimeKing : Enemy
             yield return null;
         }
 
-        // 退出隐身：恢复不透明 + 可受伤/接触伤害 + 重启调度器
+        // 退出隐身：恢复不透明 + 可受伤/接触伤害 → 3 段快速冲刺回场 → 重启调度器
         sr.color = new Color(c.r, c.g, c.b, 1f);
         health.canBeTakedDamage = true; // 恢复可受伤
         contactEnabled = true;
         phase = BossPhase.Normal;
         isFighting = true;
+        yield return RageDashTripleCo(); // 隐身结束 → 3 段快速冲刺
         schedulerCo = StartCoroutine(SchedulerLoop());
     }
 
