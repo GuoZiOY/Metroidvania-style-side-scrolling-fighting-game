@@ -11,19 +11,21 @@ public class Boss_SlimeKing : Enemy
     // === 动作参数 ===
     [Header("大跳")]
     [SerializeField] private float jumpChargeTime = 0.5f;   // 前摇
-    [SerializeField] private float jumpHeight = 6f;         // 起跳速度
+    [SerializeField] private float jumpHeight = 9f;         // 起跳速度（越高弧线越夸张/滞空越久）
+    [SerializeField] private float jumpHorizSpeedCap = 18f; // 水平起跳速度上限（远距离追击可达距离）
     [SerializeField] private float landingRadius = 2f;      // 落点 AoE 半径
     [SerializeField] private float landingDamagePercent = 0.2f; // 落点伤害
     [SerializeField] private float landingRecovery = 1f;    // 落地后摇（惩罚窗口）
     [SerializeField] private float telegraphTime = 0.8f;    // 落点预告提前量
 
     [Header("冲刺")]
-    [SerializeField] private float dashSpeed = 20f;         // 待手动调
-    [SerializeField] private float dashDistance = 15f;      // 待手动调
+    [SerializeField] private float dashSpeed = 26f;         // 冲刺速度（待手动调）
+    [SerializeField] private float dashDistance = 20f;      // 冲刺距离（待手动调）
     [SerializeField] private float dashDamagePercent = 0.18f; // 1.5x
 
     [Header("传送攻击")]
     [SerializeField] private float teleportRange = 15f;     // 超距触发
+    [SerializeField] private float farTeleportDelay = 4f;   // 超距持续多久才传送（先跳跃逼近，最后一招）
     [SerializeField] private float teleportSlamDamagePercent = 0.24f; // 2x
 
     [Header("召唤")]
@@ -36,6 +38,7 @@ public class Boss_SlimeKing : Enemy
     private Coroutine schedulerCo;  // 调度器协程
     private bool isFighting;        // 战斗标志
     private Transform playerTarget; // 锁定的玩家
+    private float farTimer;         // 超距持续计时（智能传送：先逼近，持续超距才传送）
 
     // === 身体接触伤害（内置，v4：不单独组件）===
     [Header("身体接触伤害")]
@@ -296,16 +299,25 @@ public class Boss_SlimeKing : Enemy
                 HandleFlip(t.position.x > transform.position.x ? 1 : -1);
             }
 
-            // 超距 → 传送攻击
-            if (t != null && Vector2.Distance(transform.position, t.position) > teleportRange)
+            // 超距计时：先尝试大跳逼近，持续超距才传送（最后一招，不立刻传）
+            float distToPlayer = t != null ? Vector2.Distance(transform.position, t.position) : 0f;
+            if (distToPlayer > teleportRange)
+                farTimer += Time.deltaTime;
+            else
+                farTimer = 0f;
+
+            if (farTimer > farTeleportDelay)
             {
+                farTimer = 0f;
                 yield return StartCoroutine(TeleportAttackCo());
                 continue;
             }
 
-            // 随机选：大跳(主) / 冲刺 / 召唤
+            // 动作选择：远距离优先大跳逼近（大跳水平可达 jumpHorizSpeedCap*滞空）；近距离随机
             float roll = Random.value;
-            if (roll < 0.5f)
+            if (distToPlayer > teleportRange * 0.7f)
+                yield return StartCoroutine(JumpTouchCo()); // 远：跳跃逼近
+            else if (roll < 0.5f)
                 yield return StartCoroutine(JumpTouchCo());
             else if (roll < 0.75f)
                 yield return StartCoroutine(DashCo());
@@ -336,7 +348,7 @@ public class Boss_SlimeKing : Enemy
         float distX = landing.x - transform.position.x;
         float gravity = rb.gravityScale;
         float airTime = gravity > 0.01f ? 2f * jumpHeight / gravity : 1.5f;
-        rb.linearVelocity = new Vector2(Mathf.Clamp(distX / airTime, -14f, 14f), jumpHeight);
+        rb.linearVelocity = new Vector2(Mathf.Clamp(distX / airTime, -jumpHorizSpeedCap, jumpHorizSpeedCap), jumpHeight);
 
         // 等落地（超时防御）
         bool leftGround = false;
