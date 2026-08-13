@@ -513,6 +513,18 @@ public class Boss_SlimeKing : Enemy
             .Append(transform.DOScale(morphBaseScale, duration * 0.55f).SetEase(Ease.OutBack));
     }
 
+    // 落地灰尘：在史莱姆底部（碰撞体底边 = 地面接触处）爆开
+    private void SpawnLandingDust()
+    {
+        if (landingDustPrefab == null)
+            return;
+        Vector3 pos = transform.position;
+        var col = GetComponent<Collider2D>();
+        if (col != null)
+            pos.y = col.bounds.min.y; // 底边贴地
+        Instantiate(landingDustPrefab, pos, Quaternion.identity);
+    }
+
     // ==================== 追击（常态） ====================
 
     // 朝玩家方向移动（接触伤害常开 → 追上即威胁）；每帧刷新朝向
@@ -575,8 +587,7 @@ public class Boss_SlimeKing : Enemy
 
         // 落地：压扁回弹 + 灰尘粒子
         PlaySlimeMorph(1.2f, 0.8f, 0.4f);
-        if (landingDustPrefab != null)
-            Instantiate(landingDustPrefab, transform.position, Quaternion.identity);
+        SpawnLandingDust(); // 灰尘在史莱姆底部爆开
 
         // 落地伤害靠自身碰撞体接触（OnTriggerStay2D），无需额外范围检测
         // 落地后摇（惩罚窗口）：关接触伤害，玩家可输出
@@ -638,8 +649,7 @@ public class Boss_SlimeKing : Enemy
         if (telFx != null)
             Destroy(telFx);
         PlaySlimeMorph(1.2f, 0.8f, 0.4f);
-        if (landingDustPrefab != null)
-            Instantiate(landingDustPrefab, transform.position, Quaternion.identity);
+        SpawnLandingDust(); // 灰尘在史莱姆底部爆开
 
         // 落地伤害靠自身碰撞体接触（OnTriggerStay2D），无需额外范围检测
         // 落地后摇（惩罚窗口）：关接触伤害，玩家可安全输出
@@ -723,6 +733,10 @@ public class Boss_SlimeKing : Enemy
             fallTimeout -= Time.deltaTime;
         }
         rb.linearVelocity = Vector2.zero;
+
+        // 落地：压扁回弹 + 灰尘粒子（与跳跃一致）
+        PlaySlimeMorph(1.2f, 0.8f, 0.4f);
+        SpawnLandingDust(); // 灰尘在史莱姆底部爆开
 
         yield return new WaitForSeconds(0.5f); // 落地停顿
         activeContactMult = 1f; // 恢复普通接触倍率
