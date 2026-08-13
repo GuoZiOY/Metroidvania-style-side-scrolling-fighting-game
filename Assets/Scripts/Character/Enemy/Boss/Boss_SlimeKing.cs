@@ -148,9 +148,19 @@ public class Boss_SlimeKing : Enemy
         schedulerCo = StartCoroutine(SchedulerLoop());
     }
 
-    // 死亡处理：濒死保命（一次性）→ 停调度器/隐身/动作 → 解冻 FSM → 分裂体存亡分流
+    // 死亡处理：跨阈值分裂 → 濒死保命（一次性）→ 停调度器/隐身/动作 → 解冻 FSM → 分裂体存亡分流
     public override void EntityDead()
     {
+        // 残血未分裂却被一击打到 0（玩家高伤同时跨 30% 分裂 + 致死阈值）→ 先进分裂，
+        // 分裂会复活本体+子体各 30%，避免直接进濒死隐身跳过分裂阶段
+        if (hasSplit == false)
+        {
+            health.Revive(); // 清除 isDead（死亡流程已置位）
+            health.SetCurrentHP(health.GetMaxHP() * splitHpPercent); // 立即显示 30%（静默期血条不空）
+            StartSplit();
+            return;
+        }
+
         // 濒死保命：受致命伤害时（health 已置 isDead）强制保留 1% 血进入隐身回血+召唤，不死
         if (stealthUsed == false)
         {
@@ -188,10 +198,24 @@ public class Boss_SlimeKing : Enemy
 
     // ==================== 阶段状态机 ====================
 
+    // 触发分裂：停调度器/当前动作 + 启动分裂协程（调度器检测到 <30% 阈值 或 EntityDead 跨阈值击杀 都用它）
+    private void StartSplit()
+    {
+        hasSplit = true;
+        phase = BossPhase.Split;
+        if (schedulerCo != null)
+            StopCoroutine(schedulerCo);
+        if (currentActionCo != null)
+        {
+            StopCoroutine(currentActionCo);
+            currentActionCo = null;
+        }
+        StartCoroutine(SplitSequenceCo());
+    }
+
     // 分裂狂暴：<30% → 2s 静默（无敌，可读）→ 本体变小 + 分裂出更小子体（无隐身）→ 各朝左右抛物线发射
     // 子体存活期间本体无敌（护盾）；子体死亡 → 本体解除无敌 → 狂暴 3 段更快更远冲刺
-    // 注意：本协程由调度器 RunAction 启动（currentActionCo 指向自己），不能 StopCoroutine(schedulerCo/currentActionCo)，
-    // 调度器在 yield 本协程期间自然挂起（= 2s 静默），本协程返回后调度器自动恢复。
+    // 注意：本协程由 StartSplit 启动（已停调度器），结束时会重启调度器；不要在协程内 StopCoroutine(schedulerCo)
     private IEnumerator SplitSequenceCo()
     {
         hasSplit = true;
@@ -254,6 +278,9 @@ public class Boss_SlimeKing : Enemy
         clone.phase = BossPhase.Normal;
         clone.isFighting = false;
         clone.BeginFight();
+        // 重启本体调度器（StartSplit 已停掉原调度器）
+        isFighting = true;
+        schedulerCo = StartCoroutine(SchedulerLoop());
     }
 
     // 子体死亡 → 本体：解除护盾（恢复可受伤）+ 回血 29% → 僵直 → 狂暴 3 段更快更远冲刺 → 恢复
@@ -379,11 +406,11 @@ public class Boss_SlimeKing : Enemy
                 continue;
             }
 
-            // 分裂狂暴：<30% 未分裂 → 2s 静默 → 各朝左右抛物线分裂（分裂后两半各自继续）
+            // 分裂狂暴：<30% 未分裂 → 停调度器 + 启动分裂协程（协程结束会重启调度器）
             if (hasSplit == false && health.GetHealthPercent() < splitThreshold)
             {
-                yield return RunAction(SplitSequenceCo());
-                continue;
+                StartSplit();
+                yield break; // 调度器已停，分裂协程接管
             }
 
             // 每轮面向玩家
