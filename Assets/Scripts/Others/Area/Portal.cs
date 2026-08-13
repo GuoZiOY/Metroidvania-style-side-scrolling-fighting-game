@@ -140,8 +140,9 @@ public class Portal : MonoBehaviour
         if (saveBeforeTeleport && SaveManager.Instance != null && SaveManager.Instance.CurrentSlotIndex >= 0)
             SaveManager.Instance.Save();
 
-        // 标记到达目标场景的对应传送门（找不到时回退入口存档点），并重新存档
-        PlayerSpawner.MarkSpawnAtPortal(targetPortalId, true);
+        // 标记到达目标场景的对应传送门（找不到时回退入口存档点）。
+        // 存档只由 saveBeforeTeleport 负责（传送前存当前场景）；不做到达后重存
+        PlayerSpawner.MarkSpawnAtPortal(targetPortalId);
 
         // 过场黑幕过渡：淡出 → 切场景 → 新场景就绪后淡入
         SceneTransitionFader.Instance.TransitionToScene(targetScene);

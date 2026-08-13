@@ -221,7 +221,8 @@ public class SaveManager : MonoBehaviour
 
         pendingLoad = data;
         SceneManager.sceneLoaded += OnSceneLoadedForLoad;
-        SceneTransitionFader.Instance.TransitionToScene(SceneManager.GetActiveScene().name); // 过场黑幕重载当前场景
+        // 重载存档所在场景（而非当前场景）：跨场景死亡（如 Boss 房存档在上一场景）时回到存档场景
+        SceneTransitionFader.Instance.TransitionToScene(data.sceneName);
     }
 
     // 获取所有存档槽的元数据（主菜单展示）

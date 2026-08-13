@@ -162,7 +162,7 @@ public class UI_SavePanel : MonoBehaviour
                 SaveManager.Instance.CurrentSlotIndex = selectedSlot;
             }
             // 新游戏：到达后把玩家生成在场景入口存档点（isEntryPoint），过场黑幕过渡
-            PlayerSpawner.MarkSpawnAtEntry(false);
+            PlayerSpawner.MarkSpawnAtEntry();
             SceneTransitionFader.Instance.TransitionToScene(newGameScene);
         }
     }

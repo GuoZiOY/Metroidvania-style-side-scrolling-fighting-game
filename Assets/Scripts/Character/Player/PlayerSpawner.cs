@@ -14,7 +14,6 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] private GameObject playerPrefab; // 玩家预制体（需在场景外预先转换好）
 
     private GameObject persistentPlayer; // 跨场景保留的玩家实例
-    private static bool resaveAfterArrival; // 到达后重新存档（传送门用，保证死亡重生位置正确）
     private static string arrivePortalId;  // 到达场景后要定位的传送门 ID（传送门对传送门；空=入口存档点）
 
     private void Awake()
@@ -30,18 +29,16 @@ public class PlayerSpawner : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    // 传送门调用：到达目标场景入口存档点后重新存档（新游戏传 false）
-    public static void MarkSpawnAtEntry(bool resave = false)
+    // 传送门调用：到达目标场景入口存档点（存档只由 saveBeforeTeleport 负责，无到达后重存）
+    public static void MarkSpawnAtEntry()
     {
         arrivePortalId = null; // 走入口存档点
-        resaveAfterArrival = resave;
     }
 
-    // 传送门调用：到达目标场景的指定传送门后重新存档（传送门对传送门；portalId 为空则回入口存档点）
-    public static void MarkSpawnAtPortal(string portalId, bool resave = false)
+    // 传送门调用：到达目标场景的指定传送门（传送门对传送门；portalId 为空则回入口存档点）
+    public static void MarkSpawnAtPortal(string portalId)
     {
         arrivePortalId = portalId;
-        resaveAfterArrival = resave;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -104,12 +101,6 @@ public class PlayerSpawner : MonoBehaviour
             arrivePortalId = null; // 一次性消费
             if (TryPlaceAtPortal(portalId))
             {
-                if (resaveAfterArrival)
-                {
-                    resaveAfterArrival = false;
-                    if (SaveManager.Instance != null && SaveManager.Instance.CurrentSlotIndex >= 0)
-                        SaveManager.Instance.Save();
-                }
                 yield break;
             }
             // 未找到目标传送门 → 回退到入口存档点
@@ -126,14 +117,6 @@ public class PlayerSpawner : MonoBehaviour
 
         if (entry != null)
             persistentPlayer.transform.position = entry.RespawnPosition;
-
-        // 传送门到达后重新存档：把新场景 + 入口位置写入存档，保证死亡重生位置正确
-        if (resaveAfterArrival)
-        {
-            resaveAfterArrival = false;
-            if (SaveManager.Instance != null && SaveManager.Instance.CurrentSlotIndex >= 0)
-                SaveManager.Instance.Save();
-        }
     }
 
     // 把玩家放到指定 ID 的传送门落点（找不到返回 false，由调用方回退入口存档点）
