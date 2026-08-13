@@ -519,6 +519,16 @@ public class SaveManager : MonoBehaviour
         // 放在所有属性/装备/等级恢复之后，确保 GetMaxHP() 已是最终值
         player.health?.SetCurrentHP(player.health.GetMaxHP());
 
+        // 读档重置角色状态（死亡读档：玩家是 DontDestroyOnLoad 持久对象，重载场景不会清它的运行时状态）
+        // 清死亡标记/状态机回 idle/清状态效果(燃烧/冰冻/电击 DoT 与控制)/清输入缓冲，避免复活后残留
+        player.Revive();
+        var statusHandler = player.GetComponent<Entity_StatusHandler>();
+        if (statusHandler != null)
+            statusHandler.RemoveAllNegativeEffects();
+        var inputBuffer = player.GetComponent<Player_InputBuffer>();
+        if (inputBuffer != null)
+            inputBuffer.ClearAllBuffers();
+
         // 存档点
         CurrentCheckpointId = data.lastCheckpointId;
 
