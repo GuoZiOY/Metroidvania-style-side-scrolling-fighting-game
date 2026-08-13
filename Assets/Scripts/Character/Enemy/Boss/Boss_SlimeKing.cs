@@ -21,8 +21,9 @@ public class Boss_SlimeKing : Enemy
 
     [Header("大跳·从远处扑过来")]
     [SerializeField] private float bigJumpChargeTime = 0.6f;    // 前摇（更长，可读）
-    [SerializeField] private float bigJumpHeight = 26f;         // 起跳速度（高弧线≈顶点9.6单位/滞空≈1.5s，给反应时间）
-    [SerializeField] private float jumpHorizSpeedCap = 12f;     // 大跳水平起跳速度上限（落地不会太远）
+    [SerializeField] private float bigJumpHeight = 20f;         // 起跳速度（弧线高但滞空短，给反应时间）
+    [SerializeField] private float jumpHorizSpeedCap = 24f;     // 大跳水平起跳速度上限（距离更远）
+    [SerializeField] private float bigJumpDescentGravityMult = 1.8f; // 下降重力倍率（下落更快）
     [SerializeField] private float bigJumpCooldown = 8f;        // 大跳冷却（降低频率）
     [SerializeField] private float bigJumpMinRange = 7f;        // 距玩家超此值才大跳（中远距离）
 
@@ -33,8 +34,8 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private float telegraphTime = 0.8f;    // 落点预告停留时长
 
     [Header("冲刺")]
-    [SerializeField] private float dashSpeed = 26f;         // 冲刺速度（待手动调）
-    [SerializeField] private float dashDistance = 20f;      // 冲刺距离（待手动调）
+    [SerializeField] private float dashSpeed = 28f;         // 冲刺速度（待手动调）
+    [SerializeField] private float dashDistance = 22f;      // 冲刺距离（待手动调）
     [SerializeField] private float dashDamageMult = 1.5f;   // 冲刺伤害倍率（1.5x）
     [SerializeField] private float dashRangeMin = 3f;       // 冲刺触发最近距离
     [SerializeField] private float dashRangeMax = 10f;      // 冲刺触发最远距离
@@ -551,17 +552,23 @@ public class Boss_SlimeKing : Enemy
             Destroy(tel, 2f);
         }
 
-        // 高弧线：垂直起跳高 + 水平速度被上限限制（落地不会太远）
+        // 高弧线：垂直起跳高 + 水平速度被上限限制；下降段重力加大（下落更快），滞空比对称抛物线短
         float distX = landing.x - transform.position.x;
         float gravity = Mathf.Abs(Physics2D.gravity.y) * rb.gravityScale; // 实际重力加速度
-        float airTime = gravity > 0.01f ? 2f * bigJumpHeight / gravity : 1.5f;
+        float ascentTime = gravity > 0.01f ? bigJumpHeight / gravity : 0.5f; // 上升段时长
+        float descentTime = gravity > 0.01f && bigJumpDescentGravityMult > 0.01f
+            ? bigJumpHeight / (gravity * Mathf.Sqrt(bigJumpDescentGravityMult)) // 下降段时长（重力加大→更快）
+            : 0.5f;
+        float airTime = ascentTime + descentTime; // 实际滞空（比对称抛物线短）
         rb.linearVelocity = new Vector2(Mathf.Clamp(distX / airTime, -jumpHorizSpeedCap, jumpHorizSpeedCap), bigJumpHeight);
 
-        // 等落地（超时防御，滞空≈1.5s）
+        // 等落地（超时防御）；过顶点后（速度向下）加大重力，下落更快
+        float baseGravity = rb.gravityScale;
         bool leftGround = false;
         float timeout = 3.5f;
         while (timeout > 0f && !IsDead)
         {
+            rb.gravityScale = rb.linearVelocity.y < 0f ? baseGravity * bigJumpDescentGravityMult : baseGravity;
             if (isOnGround == false)
                 leftGround = true;
             else if (leftGround)
@@ -569,6 +576,7 @@ public class Boss_SlimeKing : Enemy
             yield return null;
             timeout -= Time.deltaTime;
         }
+        rb.gravityScale = baseGravity; // 恢复重力
         rb.linearVelocity = Vector2.zero;
 
         // 落点 AoE 伤害（可躲，靠预告）

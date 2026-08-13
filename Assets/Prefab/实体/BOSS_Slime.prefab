@@ -103,16 +103,17 @@ MonoBehaviour:
   closeJumpRange: 4
   closeJumpCooldown: 3
   bigJumpChargeTime: 0.6
-  bigJumpHeight: 26
-  jumpHorizSpeedCap: 12
+  bigJumpHeight: 20
+  jumpHorizSpeedCap: 24
+  bigJumpDescentGravityMult: 1.8
   bigJumpCooldown: 8
   bigJumpMinRange: 7
   landingRadius: 2
   landingDamageMult: 1
   landingRecovery: 1
   telegraphTime: 0.8
-  dashSpeed: 20
-  dashDistance: 15
+  dashSpeed: 28
+  dashDistance: 22
   dashDamageMult: 1.5
   dashRangeMin: 3
   dashRangeMax: 10
