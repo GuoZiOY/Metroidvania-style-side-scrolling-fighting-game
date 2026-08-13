@@ -167,8 +167,7 @@ public class ShopSystem
         }
         else if (!IsBuyMode && SelectedSellItem != null && inventory != null)
         {
-            var held = inventory.FindItem(SelectedItemData);
-            int holdCount = held != null ? held.currentStackSize : 0;
+            int holdCount = SelectedSellItem.currentStackSize; // 用选中堆的堆叠数（而非 FindItem 第一个）
             maxQty = Mathf.Min(maxQty, holdCount);
         }
         else
@@ -288,14 +287,15 @@ public class ShopSystem
         if (Quantity <= 0) return 0;
         if (SelectedItemData.value <= 0) return 0;
 
-        var itemInInv = inventory.FindItem(SelectedItemData);
+        // 用选中的具体物品实例（而非 FindItem 第一个匹配），背包多把同类时只卖选中那把
+        var itemInInv = SelectedSellItem;
         if (itemInInv == null || itemInInv.currentStackSize < Quantity) return 0;
 
         int qty = Quantity;
         int unitValue = Mathf.RoundToInt(SelectedItemData.value * CurrentShop.buyBackRate);
         int totalRevenue = unitValue * qty;
 
-        // 扣物品
+        // 扣物品（操作选中实例）
         if (itemInInv.currentStackSize > qty)
         {
             itemInInv.currentStackSize -= qty;
@@ -308,8 +308,8 @@ public class ShopSystem
 
         playerInventory.AddCurrency(totalRevenue);
 
-        // 物品卖光则清除选中
-        if (inventory.FindItem(SelectedItemData) == null)
+        // 选中的实例已不在背包（卖光）则清除选中，否则重置数量
+        if (inventory.GetItemSlot(itemInInv) == -1)
         {
             DeselectAll();
         }
