@@ -132,7 +132,10 @@ MonoBehaviour:
   splitThreshold: 0.3
   mainSplitScale: 0.8
   childSplitScale: 0.6
-  splitChargeTime: 2
+  splitChargeTime: 1
+  telegraphParticlePrefab: {fileID: 4454894772834191385, guid: c155604c089df8f4d84eefe4dc786837, type: 3}
+  landingDustPrefab: {fileID: 6832065951986402851, guid: e9f3736a861fcde4594800382ce35255, type: 3}
+  shieldEffectPrefab: {fileID: 2697604925647030730, guid: db0359e3d99df84499d4a3d66b64ff31, type: 3}
   splitLaunchSpeed: 9
   splitLaunchHeight: 16
   splitHpPercent: 0.3

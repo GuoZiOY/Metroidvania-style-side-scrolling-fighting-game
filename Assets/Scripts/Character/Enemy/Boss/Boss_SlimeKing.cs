@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using Random = UnityEngine.Random; // 消除 System.Random / UnityEngine.Random 二义性
 
@@ -91,7 +92,12 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private float splitThreshold = 0.3f;       // 分裂阈值
     [SerializeField] private float mainSplitScale = 0.8f;       // 本体分裂后缩放（变小）
     [SerializeField] private float childSplitScale = 0.6f;      // 子体缩放（比本体更小）
-    [SerializeField] private float splitChargeTime = 2f;        // 分裂前 2s 静默（无敌预告）
+    [SerializeField] private float splitChargeTime = 1f;        // 分裂前 1s 静默（无敌预告）
+
+    [Header("VFX 粒子")]
+    [SerializeField] private GameObject telegraphParticlePrefab; // 大跳落点警示环
+    [SerializeField] private GameObject landingDustPrefab;       // 落地灰尘
+    [SerializeField] private GameObject shieldEffectPrefab;      // 残血护盾光环
     [SerializeField] private float splitLaunchSpeed = 9f;       // 分裂体左右发射水平速度
     [SerializeField] private float splitLaunchHeight = 16f;     // 分裂体左右发射垂直起跳速度
     [SerializeField] private float splitHpPercent = 0.3f;       // 分裂后本体/子体血量（最高上限的 30%）
@@ -116,12 +122,15 @@ public class Boss_SlimeKing : Enemy
     private Coroutine currentActionCo;                  // 当前动作协程（隐身/死亡时停掉，防残留移动）
     private readonly List<GameObject> stealthSlimes = new(); // 隐身期间召唤的史莱姆
     private bool stealthUsed;                           // 濒死保命是否已用（一次性）
+    private Vector3 morphBaseScale;                     // 形变基准缩放（分裂改大小后更新）
+    private GameObject shieldEffectInstance;            // 当前护盾光环实例
 
     protected override void Awake()
     {
         base.Awake();
         health = GetComponent<Entity_Health>(); // 自身生命缓存
         combat = GetComponent<Boss_SlimeCombat>(); // 伤害走 Boss_SlimeCombat 标准管线
+        morphBaseScale = transform.localScale; // 记录形变基准缩放
         idleState = new Enemy_IdleState(this, stateMachine, "idle");
         moveState = new Enemy_MoveState(this, stateMachine, "move");
         attackState = new Enemy_AttackState(this, stateMachine, "attack");
@@ -234,8 +243,9 @@ public class Boss_SlimeKing : Enemy
         if (splitVfx != null)
             splitVfx.StopAllVFX();
 
-        // 本体分裂后变小（子体以此为基础再缩放）
+        // 本体分裂后变小（子体以此为基础再缩放）；更新形变基准
         transform.localScale = transform.localScale * mainSplitScale;
+        morphBaseScale = transform.localScale;
 
         // 生成子体（更小，无濒死隐身，充当本体护盾）；清掉从原实例拷来的协程引用（跨实例 StopCoroutine 非法）
         var clone = Instantiate(gameObject, transform.position, Quaternion.identity).GetComponent<Boss_SlimeKing>();
@@ -244,6 +254,7 @@ public class Boss_SlimeKing : Enemy
         clone.sibling = this;
         sibling = clone;
         clone.transform.localScale = transform.localScale * childSplitScale; // 比本体更小
+        clone.morphBaseScale = clone.transform.localScale; // 子体形变基准
         clone.stealthUsed = true; // 子体无濒死隐身（一次性保命只属于本体）
         clone.schedulerCo = null;
         clone.currentActionCo = null;
@@ -272,6 +283,9 @@ public class Boss_SlimeKing : Enemy
 
         // 落地后：本体保持无敌（护盾：子体存活期间打不动），子体可受伤、两半都开打
         health.canBeTakedDamage = false; // 护盾生效，子体死后由 OnSiblingDied 解除
+        // 护盾光环粒子（挂在本体跟随）
+        if (shieldEffectPrefab != null && shieldEffectInstance == null)
+            shieldEffectInstance = Instantiate(shieldEffectPrefab, transform);
         contactEnabled = true;
         clone.health.canBeTakedDamage = true;
         clone.contactEnabled = true;
@@ -287,6 +301,11 @@ public class Boss_SlimeKing : Enemy
     private void OnSiblingDied()
     {
         health.canBeTakedDamage = true; // 解除护盾：子体已死，本体恢复可受伤
+        if (shieldEffectInstance != null)
+        {
+            Destroy(shieldEffectInstance); // 护盾光环消散
+            shieldEffectInstance = null;
+        }
         if (isPrimary == false)
         {
             isPrimary = true; // 晋升主实例（血条重绑已由死亡实例的 OnPrimaryChanged 事件完成）
@@ -484,6 +503,16 @@ public class Boss_SlimeKing : Enemy
         currentActionCo = null;
     }
 
+    // 史莱姆形变（squash & stretch）：压/拉到 (sx,sy)×基准 再回弹基准缩放；先杀旧缩放 tween 防叠加
+    private void PlaySlimeMorph(float sx, float sy, float duration)
+    {
+        transform.DOKill(); // 杀掉旧的缩放 tween
+        Vector3 target = new Vector3(morphBaseScale.x * sx, morphBaseScale.y * sy, morphBaseScale.z);
+        DOTween.Sequence()
+            .Append(transform.DOScale(target, duration * 0.45f).SetEase(Ease.OutQuad))
+            .Append(transform.DOScale(morphBaseScale, duration * 0.55f).SetEase(Ease.OutBack));
+    }
+
     // ==================== 追击（常态） ====================
 
     // 朝玩家方向移动（接触伤害常开 → 追上即威胁）；每帧刷新朝向
@@ -525,9 +554,10 @@ public class Boss_SlimeKing : Enemy
             Destroy(tel, telegraphTime);
         }
 
-        // 原地小跳：垂直起跳，无水平位移
+        // 原地小跳：垂直起跳，无水平位移；起跳拉长（史莱姆伸展）
         float gravity = Mathf.Abs(Physics2D.gravity.y) * rb.gravityScale; // 实际重力加速度
         rb.linearVelocity = new Vector2(0f, normalJumpHeight);
+        PlaySlimeMorph(0.9f, 1.15f, 0.35f); // 起跳拉长
 
         // 等落地（超时防御）
         bool leftGround = false;
@@ -542,6 +572,11 @@ public class Boss_SlimeKing : Enemy
             timeout -= Time.deltaTime;
         }
         rb.linearVelocity = Vector2.zero;
+
+        // 落地：压扁回弹 + 灰尘粒子
+        PlaySlimeMorph(1.2f, 0.8f, 0.4f);
+        if (landingDustPrefab != null)
+            Instantiate(landingDustPrefab, transform.position, Quaternion.identity);
 
         // 落地伤害靠自身碰撞体接触（OnTriggerStay2D），无需额外范围检测
         // 落地后摇（惩罚窗口）：关接触伤害，玩家可输出
@@ -561,12 +596,15 @@ public class Boss_SlimeKing : Enemy
         Transform t = playerTarget != null ? playerTarget : GetPlayerReference();
         Vector2 landing = t != null ? (Vector2)t.position : (Vector2)transform.position;
 
-        // 落地预告（投影阴影，停留到落地，给足反应时间）
+        // 落地预告（投影阴影 + 警示环粒子，停留到落地，给足反应时间）
+        GameObject telFx = null;
         if (telegraphPrefab != null)
         {
             var tel = Instantiate(telegraphPrefab, landing, Quaternion.identity);
             Destroy(tel, 2f);
         }
+        if (telegraphParticlePrefab != null)
+            telFx = Instantiate(telegraphParticlePrefab, landing, Quaternion.identity);
 
         // 高弧线：垂直起跳高 + 水平速度被上限限制；下降段重力加大（下落更快），滞空比对称抛物线短
         float distX = landing.x - transform.position.x;
@@ -577,6 +615,7 @@ public class Boss_SlimeKing : Enemy
             : 0.5f;
         float airTime = ascentTime + descentTime; // 实际滞空（比对称抛物线短）
         rb.linearVelocity = new Vector2(Mathf.Clamp(distX / airTime, -jumpHorizSpeedCap, jumpHorizSpeedCap), bigJumpHeight);
+        PlaySlimeMorph(0.9f, 1.15f, 0.35f); // 起跳拉长（史莱姆伸展）
 
         // 等落地（超时防御）；过顶点后（速度向下）加大重力，下落更快
         float baseGravity = rb.gravityScale;
@@ -594,6 +633,13 @@ public class Boss_SlimeKing : Enemy
         }
         rb.gravityScale = baseGravity; // 恢复重力
         rb.linearVelocity = Vector2.zero;
+
+        // 落地：警示环消散 + 压扁回弹 + 灰尘粒子
+        if (telFx != null)
+            Destroy(telFx);
+        PlaySlimeMorph(1.2f, 0.8f, 0.4f);
+        if (landingDustPrefab != null)
+            Instantiate(landingDustPrefab, transform.position, Quaternion.identity);
 
         // 落地伤害靠自身碰撞体接触（OnTriggerStay2D），无需额外范围检测
         // 落地后摇（惩罚窗口）：关接触伤害，玩家可安全输出
@@ -615,6 +661,7 @@ public class Boss_SlimeKing : Enemy
         // 锁定方向（朝玩家，与冲刺方向一致）+ 极短 0.2s 定向前摇
         int dir = t.position.x > transform.position.x ? 1 : -1;
         HandleFlip(dir); // 修复：冲刺时面向与冲刺方向一致
+        PlaySlimeMorph(1.3f, 0.7f, 0.35f); // 冲刺水平拉长
         yield return new WaitForSeconds(0.2f);
 
         // 冲刺伤害靠自身碰撞体接触（OnTriggerStay2D），冲刺期间接触倍率 = 冲刺 1.5x
@@ -644,9 +691,10 @@ public class Boss_SlimeKing : Enemy
         if (t == null)
             yield break;
 
-        // ① 原地闪光预告（明显可读，玩家看到它要传送）
+        // ① 原地闪光预告（明显可读，玩家看到它要传送）；消失前压扁蓄力
         if (telegraphPrefab != null)
             Instantiate(telegraphPrefab, transform.position, Quaternion.identity);
+        PlaySlimeMorph(1.4f, 0.6f, 0.3f); // 压扁
         yield return new WaitForSeconds(teleportTelegraph);
 
         // ② 消失（隐藏渲染+碰撞，GameObject 保持 active 让协程继续）
@@ -661,6 +709,7 @@ public class Boss_SlimeKing : Enemy
         // ④ 传送到头顶 + 自由落体砸落（砸落期接触倍率 = 传送 2x，靠碰撞体接触判定）
         transform.position = overhead;
         SetVisible(true);
+        PlaySlimeMorph(0.7f, 1.3f, 0.3f); // 重现拉长下落
         activeContactMult = teleportDamageMult; // 传送 2x
         bool fell = false;
         float fallTimeout = 1.2f;
