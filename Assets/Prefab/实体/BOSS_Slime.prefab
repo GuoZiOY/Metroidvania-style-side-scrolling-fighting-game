@@ -133,12 +133,15 @@ MonoBehaviour:
   sibling: {fileID: 8796702336790855628}
   isPrimary: 1
   splitThreshold: 0.3
-  splitScale: 0.7
+  mainSplitScale: 0.8
+  childSplitScale: 0.6
   splitChargeTime: 2
   splitLaunchSpeed: 9
   splitLaunchHeight: 16
   survivorHealPercent: 0.29
   staggerDuration: 1.5
+  rageDashSpeedMult: 1.4
+  rageDashDistanceMult: 1.4
   stealthThreshold: 0.01
   stealthHealRate: 0.02
   stealthHealCap: 0.29

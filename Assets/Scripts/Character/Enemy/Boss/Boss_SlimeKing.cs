@@ -94,12 +94,17 @@ public class Boss_SlimeKing : Enemy
 
     [Header("分裂")]
     [SerializeField] private float splitThreshold = 0.3f;       // 分裂阈值
-    [SerializeField] private float splitScale = 0.7f;           // 分裂体缩放
+    [SerializeField] private float mainSplitScale = 0.8f;       // 本体分裂后缩放（变小）
+    [SerializeField] private float childSplitScale = 0.6f;      // 子体缩放（比本体更小）
     [SerializeField] private float splitChargeTime = 2f;        // 分裂前 2s 静默（无敌预告）
     [SerializeField] private float splitLaunchSpeed = 9f;       // 分裂体左右发射水平速度
     [SerializeField] private float splitLaunchHeight = 16f;     // 分裂体左右发射垂直起跳速度
-    [SerializeField] private float survivorHealPercent = 0.29f; // 存活者回血值
+    [SerializeField] private float survivorHealPercent = 0.29f; // 子体死后本体回血值
     [SerializeField] private float staggerDuration = 1.5f;      // 僵直时长
+
+    [Header("狂暴冲刺")]
+    [SerializeField] private float rageDashSpeedMult = 1.4f;    // 子体死后本体狂暴冲刺速度倍率
+    [SerializeField] private float rageDashDistanceMult = 1.4f; // 子体死后本体狂暴冲刺距离倍率
 
     [Header("濒死隐身·一次性保命")]
     [SerializeField] private float stealthThreshold = 0.01f;     // 致命伤后强制保留血量（1%）
@@ -188,7 +193,8 @@ public class Boss_SlimeKing : Enemy
 
     // ==================== 阶段状态机 ====================
 
-    // 分裂狂暴：<30% → 2s 静默（无敌，可读）→ 各朝左右抛物线发射分裂体 → 落地后两半都开打
+    // 分裂狂暴：<30% → 2s 静默（无敌，可读）→ 本体变小 + 分裂出更小子体（无隐身）→ 各朝左右抛物线发射
+    // 子体存活期间本体无敌（护盾）；子体死亡 → 本体解除无敌 → 狂暴 3 段更快更远冲刺
     // 注意：本协程由调度器 RunAction 启动（currentActionCo 指向自己），不能 StopCoroutine(schedulerCo/currentActionCo)，
     // 调度器在 yield 本协程期间自然挂起（= 2s 静默），本协程返回后调度器自动恢复。
     private IEnumerator SplitSequenceCo()
@@ -209,13 +215,17 @@ public class Boss_SlimeKing : Enemy
         if (splitVfx != null)
             splitVfx.StopAllVFX();
 
-        // 生成分裂体（克隆），各半血；清掉从原实例拷来的协程引用（跨实例 StopCoroutine 非法）
+        // 本体分裂后变小（子体以此为基础再缩放）
+        transform.localScale = transform.localScale * mainSplitScale;
+
+        // 生成子体（更小，无濒死隐身，充当本体护盾）；清掉从原实例拷来的协程引用（跨实例 StopCoroutine 非法）
         var clone = Instantiate(gameObject, transform.position, Quaternion.identity).GetComponent<Boss_SlimeKing>();
         clone.isPrimary = false;
         clone.hasSplit = true;
         clone.sibling = this;
         sibling = clone;
-        clone.transform.localScale = transform.localScale * splitScale;
+        clone.transform.localScale = transform.localScale * childSplitScale; // 比本体更小
+        clone.stealthUsed = true; // 子体无濒死隐身（一次性保命只属于本体）
         clone.schedulerCo = null;
         clone.currentActionCo = null;
         clone.stealthCo = null;
@@ -223,11 +233,11 @@ public class Boss_SlimeKing : Enemy
         health.SetCurrentHP(half);
         clone.health.SetCurrentHP(half);
 
-        // 各朝左右抛物线发射（水平 + 垂直起跳，靠重力成弧线）：本实例朝左，克隆朝右
+        // 各朝左右抛物线发射（水平 + 垂直起跳，靠重力成弧线）：本体朝左，子体朝右
         rb.linearVelocity = new Vector2(-splitLaunchSpeed, splitLaunchHeight);
         clone.rb.linearVelocity = new Vector2(splitLaunchSpeed, splitLaunchHeight);
 
-        // 等本实例落地（两半对称，同滞空）
+        // 等本体落地（两半对称，同滞空）
         bool leftGround = false;
         float timeout = 3f;
         while (timeout > 0f && !IsDead)
@@ -241,8 +251,8 @@ public class Boss_SlimeKing : Enemy
         }
         rb.linearVelocity = Vector2.zero;
 
-        // 落地后：恢复可受伤 + 接触伤害；克隆启动调度器（isFighting 被拷成 true，需复位）
-        health.canBeTakedDamage = true;
+        // 落地后：本体保持无敌（护盾：子体存活期间打不动），子体可受伤、两半都开打
+        health.canBeTakedDamage = false; // 护盾生效，子体死后由 OnSiblingDied 解除
         contactEnabled = true;
         clone.health.canBeTakedDamage = true;
         clone.contactEnabled = true;
@@ -251,9 +261,10 @@ public class Boss_SlimeKing : Enemy
         clone.BeginFight();
     }
 
-    // 兄弟死亡 → 存活者：晋升为主 + 回血 29% → 僵直 → 3 段冲刺 → 恢复（不再分裂）
+    // 子体死亡 → 本体：解除护盾（恢复可受伤）+ 回血 29% → 僵直 → 狂暴 3 段更快更远冲刺 → 恢复
     private void OnSiblingDied()
     {
+        health.canBeTakedDamage = true; // 解除护盾：子体已死，本体恢复可受伤
         if (isPrimary == false)
         {
             isPrimary = true; // 晋升主实例（血条重绑已由死亡实例的 OnPrimaryChanged 事件完成）
@@ -268,10 +279,10 @@ public class Boss_SlimeKing : Enemy
     private IEnumerator StaggerThenDashCo()
     {
         yield return new WaitForSeconds(staggerDuration); // 僵直
-        // 连续 3 段快速冲刺（DashCo 死亡自终止）
+        // 连续 3 段更快更远的狂暴冲刺（DashCo 死亡自终止）
         for (int i = 0; i < 3; i++)
         {
-            yield return RunAction(DashCo());
+            yield return RunAction(DashCo(rageDashSpeedMult, rageDashDistanceMult));
         }
         phase = BossPhase.Normal; // 恢复常态（不再分裂）
     }
@@ -570,20 +581,22 @@ public class Boss_SlimeKing : Enemy
     // ==================== 动作 ③ 冲刺 ====================
 
     // 无提示，锁定方向横冲；接触伤害关闭改由冲刺自身判定
-    private IEnumerator DashCo()
+    // speedMult/distanceMult：狂暴冲刺倍率（子体死后 3 段更快更远）
+    private IEnumerator DashCo(float speedMult = 1f, float distanceMult = 1f)
     {
         Transform t = playerTarget != null ? playerTarget : GetPlayerReference();
         if (t == null)
             yield break;
 
-        // 锁定方向（朝玩家）+ 极短 0.2s 定向前摇
+        // 锁定方向（朝玩家，与冲刺方向一致）+ 极短 0.2s 定向前摇
         int dir = t.position.x > transform.position.x ? 1 : -1;
+        HandleFlip(dir); // 修复：冲刺时面向与冲刺方向一致
         yield return new WaitForSeconds(0.2f);
 
         // 快速横冲
         float traveled = 0f;
-        float speed = dashSpeed;
-        while (traveled < dashDistance && !IsDead)
+        float speed = dashSpeed * speedMult;
+        while (traveled < dashDistance * distanceMult && !IsDead)
         {
             rb.linearVelocity = new Vector2(dir * speed, 0f);
             traveled += speed * Time.deltaTime;
