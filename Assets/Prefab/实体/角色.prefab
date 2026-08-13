@@ -992,6 +992,7 @@ MonoBehaviour:
   canRegenerateHP: 1
   canKnockbacked: 0
   knockbackDuration: 0.2
+  invincibleDuration: 0.5
   onDamageKnockback: {x: 1.5, y: 2.5}
   heavyKnockThreshold: 0.3
   heavyKnockbackDuration: 0.5
