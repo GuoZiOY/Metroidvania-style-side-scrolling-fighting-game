@@ -96,15 +96,19 @@ MonoBehaviour:
   moveSpeed: 2
   moveAnimSpeedMultiplier: 1
   canBeChased: 1
-  jumpChargeTime: 1
-  jumpHeight: 20
-  jumpHorizSpeedCap: 24
+  normalJumpChargeTime: 0.4
+  normalJumpHeight: 14
+  bigJumpChargeTime: 0.6
+  bigJumpHeight: 26
+  jumpHorizSpeedCap: 12
+  bigJumpCooldown: 8
+  bigJumpMinRange: 7
   landingRadius: 2
   landingDamagePercent: 0.2
   landingRecovery: 1
   telegraphTime: 0.8
-  dashSpeed: 26
-  dashDistance: 20
+  dashSpeed: 20
+  dashDistance: 15
   dashDamagePercent: 0.18
   teleportRange: 15
   farTeleportDelay: 4
@@ -142,7 +146,7 @@ MonoBehaviour:
   defaultStatSetup: {fileID: 11400000, guid: 6f49c290c733ab94795c8e529cb7e872, type: 2}
   resources:
     maxHP:
-      baseValue: 20
+      baseValue: 500
       modifiers: []
     healthRegen:
       baseValue: 0
@@ -152,13 +156,13 @@ MonoBehaviour:
       baseValue: 1
       modifiers: []
     phyiscalDamage:
-      baseValue: 3
+      baseValue: 10
       modifiers: []
     critChance:
       baseValue: 0
       modifiers: []
     critPower:
-      baseValue: 150
+      baseValue: 100
       modifiers: []
     armorReduction:
       baseValue: 0

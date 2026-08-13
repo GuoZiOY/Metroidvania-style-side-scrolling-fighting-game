@@ -9,14 +9,22 @@ using Random = UnityEngine.Random; // 消除 System.Random / UnityEngine.Random 
 public class Boss_SlimeKing : Enemy
 {
     // === 动作参数 ===
-    [Header("大跳")]
-    [SerializeField] private float jumpChargeTime = 0.5f;   // 前摇
-    [SerializeField] private float jumpHeight = 20f;        // 起跳速度（刚体重力 3.5 需按比例拉大；20≈弧线顶点5.8单位/滞空1.17s）
-    [SerializeField] private float jumpHorizSpeedCap = 24f; // 水平起跳速度上限（远距离追击可达距离；24×滞空≈28单位）
+    [Header("普通攻击·原地起跳落下")]
+    [SerializeField] private float normalJumpChargeTime = 0.4f; // 前摇
+    [SerializeField] private float normalJumpHeight = 14f;      // 起跳速度（原地小跳，顶点≈2.9单位/滞空≈0.8s）
+
+    [Header("大跳·从远处扑过来")]
+    [SerializeField] private float bigJumpChargeTime = 0.6f;    // 前摇（更长，可读）
+    [SerializeField] private float bigJumpHeight = 26f;         // 起跳速度（高弧线≈顶点9.6单位/滞空≈1.5s，给反应时间）
+    [SerializeField] private float jumpHorizSpeedCap = 12f;     // 大跳水平起跳速度上限（落地不会太远）
+    [SerializeField] private float bigJumpCooldown = 8f;        // 大跳冷却（降低频率）
+    [SerializeField] private float bigJumpMinRange = 7f;        // 距玩家超此值才大跳（中远距离）
+
+    [Header("落地")]
     [SerializeField] private float landingRadius = 2f;      // 落点 AoE 半径
     [SerializeField] private float landingDamagePercent = 0.2f; // 落点伤害
     [SerializeField] private float landingRecovery = 1f;    // 落地后摇（惩罚窗口）
-    [SerializeField] private float telegraphTime = 0.8f;    // 落点预告提前量
+    [SerializeField] private float telegraphTime = 0.8f;    // 落点预告停留时长
 
     [Header("冲刺")]
     [SerializeField] private float dashSpeed = 26f;         // 冲刺速度（待手动调）
@@ -38,7 +46,8 @@ public class Boss_SlimeKing : Enemy
     private Coroutine schedulerCo;  // 调度器协程
     private bool isFighting;        // 战斗标志
     private Transform playerTarget; // 锁定的玩家
-    private float farTimer;         // 超距持续计时（智能传送：先逼近，持续超距才传送）
+    private float lastBigJumpTime;  // 上次大跳时间（冷却控制）
+    private float lastCloseTime;    // 玩家最近一次近距离时间（超距计时基准）
 
     // === 身体接触伤害（内置，v4：不单独组件）===
     [Header("身体接触伤害")]
@@ -171,6 +180,13 @@ public class Boss_SlimeKing : Enemy
     {
         hasSplit = true;
         phase = BossPhase.Split;
+        // 分裂瞬间可能处于受击闪光中（sr.material 被换成白色 onDamageMaterial），
+        // 若直接 Instantiate，克隆会把白色材质拷过去且克隆 Awake 把白色记为 originalMaterial → 永远白。
+        // 先还原原实例材质再克隆，保证克隆拿到正常材质。
+        var splitVfx = GetComponentInChildren<Entity_VFX>();
+        if (splitVfx != null)
+            splitVfx.StopAllVFX();
+
         var clone = Instantiate(gameObject, transform.position, Quaternion.identity).GetComponent<Boss_SlimeKing>();
         clone.isPrimary = false;
         clone.hasSplit = true;
@@ -299,26 +315,36 @@ public class Boss_SlimeKing : Enemy
                 HandleFlip(t.position.x > transform.position.x ? 1 : -1);
             }
 
-            // 超距计时：先尝试大跳逼近，持续超距才传送（最后一招，不立刻传）
+            // 超距计时（真实时间）：持续超距才传送（最后一招）；中途给大跳逼近机会
             float distToPlayer = t != null ? Vector2.Distance(transform.position, t.position) : 0f;
             if (distToPlayer > teleportRange)
-                farTimer += Time.deltaTime;
-            else
-                farTimer = 0f;
-
-            if (farTimer > farTeleportDelay)
             {
-                farTimer = 0f;
-                yield return StartCoroutine(TeleportAttackCo());
+                if (lastCloseTime <= 0f)
+                    lastCloseTime = Time.time; // 首次超距开始计时
+                if (Time.time - lastCloseTime > farTeleportDelay)
+                {
+                    lastCloseTime = Time.time; // 传送后重置计时
+                    yield return StartCoroutine(TeleportAttackCo());
+                    continue;
+                }
+            }
+            else
+            {
+                lastCloseTime = Time.time; // 近距离：刷新计时基准
+            }
+
+            // 中远距离：大跳从远处扑过来（冷却控制频率，不高频）
+            if (distToPlayer > bigJumpMinRange && Time.time - lastBigJumpTime > bigJumpCooldown)
+            {
+                lastBigJumpTime = Time.time;
+                yield return StartCoroutine(BigJumpCo());
                 continue;
             }
 
-            // 动作选择：远距离优先大跳逼近（大跳水平可达 jumpHorizSpeedCap*滞空）；近距离随机
+            // 近距离随机：原地跳(主) / 冲刺 / 召唤
             float roll = Random.value;
-            if (distToPlayer > teleportRange * 0.7f)
-                yield return StartCoroutine(JumpTouchCo()); // 远：跳跃逼近
-            else if (roll < 0.5f)
-                yield return StartCoroutine(JumpTouchCo());
+            if (roll < 0.5f)
+                yield return StartCoroutine(JumpInPlaceCo());
             else if (roll < 0.75f)
                 yield return StartCoroutine(DashCo());
             else
@@ -326,33 +352,84 @@ public class Boss_SlimeKing : Enemy
         }
     }
 
-    // ==================== 动作 ① 大跳触碰 ====================
+    // ==================== 动作 ① 普通攻击·原地起跳落下 ====================
 
-    // 前摇 → 落点预告 → 弧线起跳 → 落地 AoE + 后摇（惩罚窗口）
-    private IEnumerator JumpTouchCo()
+    // 前摇 → 原地小跳 → 落点 AoE + 后摇（惩罚窗口）；近距离高频主攻
+    private IEnumerator JumpInPlaceCo()
     {
         // 前摇（收缩）
-        yield return new WaitForSeconds(jumpChargeTime);
+        yield return new WaitForSeconds(normalJumpChargeTime);
 
-        Transform t = playerTarget != null ? playerTarget : GetPlayerReference();
-        Vector2 landing = t != null ? (Vector2)t.position : (Vector2)transform.position;
+        // 落点 = 原地（起跳落下，不追击）
+        Vector2 landing = (Vector2)transform.position;
 
-        // 落点预告（投影阴影，提前可见）
+        // 落地预告（原地投影，提前可见）
         if (telegraphPrefab != null)
         {
             var tel = Instantiate(telegraphPrefab, landing, Quaternion.identity);
             Destroy(tel, telegraphTime);
         }
 
-        // 起跳弧线（水平朝落点 + 垂直起跳）——用真实重力算滞空，确保水平能飞到落点
-        float distX = landing.x - transform.position.x;
-        float gravity = Mathf.Abs(Physics2D.gravity.y) * rb.gravityScale; // 实际重力加速度（默认 9.81 * 倍率）
-        float airTime = gravity > 0.01f ? 2f * jumpHeight / gravity : 1.5f;
-        rb.linearVelocity = new Vector2(Mathf.Clamp(distX / airTime, -jumpHorizSpeedCap, jumpHorizSpeedCap), jumpHeight);
+        // 原地小跳：垂直起跳，无水平位移
+        float gravity = Mathf.Abs(Physics2D.gravity.y) * rb.gravityScale; // 实际重力加速度
+        rb.linearVelocity = new Vector2(0f, normalJumpHeight);
 
         // 等落地（超时防御）
         bool leftGround = false;
-        float timeout = 3f;
+        float timeout = 2f;
+        while (timeout > 0f && !IsDead)
+        {
+            if (isOnGround == false)
+                leftGround = true;
+            else if (leftGround)
+                break;
+            yield return null;
+            timeout -= Time.deltaTime;
+        }
+        rb.linearVelocity = Vector2.zero;
+
+        // 落点 AoE 伤害（原地范围，可躲）
+        Transform t = playerTarget != null ? playerTarget : GetPlayerReference();
+        if (t != null && Vector2.Distance(transform.position, t.position) <= landingRadius)
+        {
+            var h = t.GetComponent<Entity_Health>();
+            if (h != null)
+                h.TakeDamage(h.GetMaxHP() * landingDamagePercent, 0f, ElementType.None, transform);
+        }
+
+        // 落地后摇（惩罚窗口）：关接触伤害，玩家可输出
+        contactEnabled = false;
+        yield return new WaitForSeconds(landingRecovery);
+        contactEnabled = true;
+    }
+
+    // ==================== 动作 ② 大跳·从远处扑过来 ====================
+
+    // 前摇 → 高弧线长滞空（给反应）→ 落点 AoE → 落地后摇
+    private IEnumerator BigJumpCo()
+    {
+        // 前摇（更长，可读）
+        yield return new WaitForSeconds(bigJumpChargeTime);
+
+        Transform t = playerTarget != null ? playerTarget : GetPlayerReference();
+        Vector2 landing = t != null ? (Vector2)t.position : (Vector2)transform.position;
+
+        // 落地预告（投影阴影，停留到落地，给足反应时间）
+        if (telegraphPrefab != null)
+        {
+            var tel = Instantiate(telegraphPrefab, landing, Quaternion.identity);
+            Destroy(tel, 2f);
+        }
+
+        // 高弧线：垂直起跳高 + 水平速度被上限限制（落地不会太远）
+        float distX = landing.x - transform.position.x;
+        float gravity = Mathf.Abs(Physics2D.gravity.y) * rb.gravityScale; // 实际重力加速度
+        float airTime = gravity > 0.01f ? 2f * bigJumpHeight / gravity : 1.5f;
+        rb.linearVelocity = new Vector2(Mathf.Clamp(distX / airTime, -jumpHorizSpeedCap, jumpHorizSpeedCap), bigJumpHeight);
+
+        // 等落地（超时防御，滞空≈1.5s）
+        bool leftGround = false;
+        float timeout = 3.5f;
         while (timeout > 0f && !IsDead)
         {
             if (isOnGround == false)
@@ -372,13 +449,13 @@ public class Boss_SlimeKing : Enemy
                 h.TakeDamage(h.GetMaxHP() * landingDamagePercent, 0f, ElementType.None, transform);
         }
 
-        // 落地后摇（惩罚窗口）：关接触伤害，玩家可输出
+        // 落地后摇（惩罚窗口）：关接触伤害，玩家可安全输出
         contactEnabled = false;
         yield return new WaitForSeconds(landingRecovery);
         contactEnabled = true;
     }
 
-    // ==================== 动作 ② 冲刺 ====================
+    // ==================== 动作 ③ 冲刺 ====================
 
     // 无提示，锁定方向横冲；接触伤害关闭改由冲刺自身判定
     private IEnumerator DashCo()
@@ -415,7 +492,7 @@ public class Boss_SlimeKing : Enemy
         yield return new WaitForSeconds(0.4f); // 冲刺后停顿
     }
 
-    // ==================== 动作 ③ 传送攻击 ====================
+    // ==================== 动作 ④ 传送攻击 ====================
 
     // 超距 → 头顶落下（原地闪光预告 + 传送到玩家头顶下落触碰）
     private IEnumerator TeleportAttackCo()
@@ -442,7 +519,7 @@ public class Boss_SlimeKing : Enemy
         yield return new WaitForSeconds(0.5f); // 落地停顿
     }
 
-    // ==================== 动作 ④ 召唤普通史莱姆 ====================
+    // ==================== 动作 ⑤ 召唤普通史莱姆 ====================
 
     private float lastSummonTime; // 上次召唤时间
 
