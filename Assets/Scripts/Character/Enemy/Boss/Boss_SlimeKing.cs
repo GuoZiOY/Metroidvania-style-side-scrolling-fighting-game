@@ -99,7 +99,7 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private float splitChargeTime = 2f;        // 分裂前 2s 静默（无敌预告）
     [SerializeField] private float splitLaunchSpeed = 9f;       // 分裂体左右发射水平速度
     [SerializeField] private float splitLaunchHeight = 16f;     // 分裂体左右发射垂直起跳速度
-    [SerializeField] private float survivorHealPercent = 0.29f; // 子体死后本体回血值
+    [SerializeField] private float splitHpPercent = 0.3f;       // 分裂后本体/子体血量（最高上限的 30%）
     [SerializeField] private float staggerDuration = 1.5f;      // 僵直时长
 
     [Header("狂暴冲刺")]
@@ -229,9 +229,9 @@ public class Boss_SlimeKing : Enemy
         clone.schedulerCo = null;
         clone.currentActionCo = null;
         clone.stealthCo = null;
-        float half = health.GetCurrentHP() / 2f;
-        health.SetCurrentHP(half);
-        clone.health.SetCurrentHP(half);
+        // 本体和子体都设为最高上限的 30%
+        health.SetCurrentHP(health.GetMaxHP() * splitHpPercent);
+        clone.health.SetCurrentHP(clone.health.GetMaxHP() * splitHpPercent);
 
         // 各朝左右抛物线发射（水平 + 垂直起跳，靠重力成弧线）：本体朝左，子体朝右
         rb.linearVelocity = new Vector2(-splitLaunchSpeed, splitLaunchHeight);
@@ -269,8 +269,7 @@ public class Boss_SlimeKing : Enemy
         {
             isPrimary = true; // 晋升主实例（血条重绑已由死亡实例的 OnPrimaryChanged 事件完成）
         }
-        // 回血到 29%
-        health.SetCurrentHP(health.GetMaxHP() * survivorHealPercent);
+        // 本体在护盾期间保持 30%（无敌不掉血），无需回血
         // 僵直（可被打）
         phase = BossPhase.Stagger;
         StartCoroutine(StaggerThenDashCo());
