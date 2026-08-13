@@ -332,7 +332,7 @@ public class Boss_SlimeKing : Enemy
                     for (int i = 0; i < stealthSummonCount; i++)
                     {
                         Vector2 pos = (Vector2)transform.position + Random.insideUnitCircle * 1.5f;
-                        stealthSlimes.Add(Instantiate(slimePrefab, pos, Quaternion.identity));
+                        stealthSlimes.Add(SpawnSlime(pos)); // 隐身召唤同样半级
                     }
                 }
             }
@@ -673,8 +673,19 @@ public class Boss_SlimeKing : Enemy
         for (int i = 0; i < 2; i++)
         {
             Vector2 pos = (Vector2)transform.position + Random.insideUnitCircle * 1.5f;
-            Instantiate(slimePrefab, pos, Quaternion.identity);
+            SpawnSlime(pos); // 召唤等级 = Boss 等级一半
             yield return new WaitForSeconds(0.2f);
         }
+    }
+
+    // 召唤一只史莱姆并设等级为 Boss 等级一半（向下取整，最低 1）
+    private GameObject SpawnSlime(Vector2 pos)
+    {
+        if (slimePrefab == null) return null;
+        var go = Instantiate(slimePrefab, pos, Quaternion.identity);
+        var slime = go.GetComponent<Enemy>();
+        if (slime != null)
+            slime.ApplyLevelBonus(Mathf.Max(1, Mathf.FloorToInt(GetEnemyLevel() / 2f)));
+        return go;
     }
 }
