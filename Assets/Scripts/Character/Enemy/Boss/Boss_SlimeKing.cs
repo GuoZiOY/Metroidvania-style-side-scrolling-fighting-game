@@ -9,9 +9,15 @@ using Random = UnityEngine.Random; // 消除 System.Random / UnityEngine.Random 
 public class Boss_SlimeKing : Enemy
 {
     // === 动作参数 ===
+    [Header("追击（常态）")]
+    [SerializeField] private float chaseSpeed = 3.5f;       // 追击速度（比玩家慢，接触伤害=威胁）
+    [SerializeField] private float chaseDuration = 1f;      // 每次追击持续时长（秒）
+
     [Header("普通攻击·原地起跳落下")]
     [SerializeField] private float normalJumpChargeTime = 0.4f; // 前摇
     [SerializeField] private float normalJumpHeight = 14f;      // 起跳速度（原地小跳，顶点≈2.9单位/滞空≈0.8s）
+    [SerializeField] private float closeJumpRange = 4f;         // 贴身触发距离（<此值原地跳逼开）
+    [SerializeField] private float closeJumpCooldown = 3f;      // 原地跳冷却
 
     [Header("大跳·从远处扑过来")]
     [SerializeField] private float bigJumpChargeTime = 0.6f;    // 前摇（更长，可读）
@@ -30,10 +36,16 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private float dashSpeed = 26f;         // 冲刺速度（待手动调）
     [SerializeField] private float dashDistance = 20f;      // 冲刺距离（待手动调）
     [SerializeField] private float dashDamagePercent = 0.18f; // 1.5x
+    [SerializeField] private float dashRangeMin = 3f;       // 冲刺触发最近距离
+    [SerializeField] private float dashRangeMax = 10f;      // 冲刺触发最远距离
+    [SerializeField] private float dashCooldown = 5f;       // 冲刺冷却
 
     [Header("传送攻击")]
     [SerializeField] private float teleportRange = 15f;     // 超距触发
-    [SerializeField] private float farTeleportDelay = 4f;   // 超距持续多久才传送（先跳跃逼近，最后一招）
+    [SerializeField] private float farTeleportDelay = 4f;   // 超距持续多久才传送（先追击逼近，最后一招）
+    [SerializeField] private float teleportTelegraph = 1f;  // 原地闪光预告（加长，可读）
+    [SerializeField] private float teleportLandMark = 0.8f; // 头顶落点标记预告（砸落前）
+    [SerializeField] private float teleportHeight = 6f;     // 头顶传送高度（砸落起点）
     [SerializeField] private float teleportSlamDamagePercent = 0.24f; // 2x
 
     [Header("召唤")]
@@ -47,6 +59,8 @@ public class Boss_SlimeKing : Enemy
     private bool isFighting;        // 战斗标志
     private Transform playerTarget; // 锁定的玩家
     private float lastBigJumpTime;  // 上次大跳时间（冷却控制）
+    private float lastDashTime;     // 上次冲刺时间（冷却控制）
+    private float lastCloseJumpTime;// 上次原地跳时间（冷却控制）
     private float lastCloseTime;    // 玩家最近一次近距离时间（超距计时基准）
 
     // === 身体接触伤害（内置，v4：不单独组件）===
@@ -290,7 +304,7 @@ public class Boss_SlimeKing : Enemy
 
     // ==================== 调度器 ====================
 
-    // 每轮按状态选动作：超距传送 / 随机（大跳主攻/冲刺/召唤）
+    // 每轮按优先级选行为：超距传送 / 召唤 / 大跳 / 冲刺 / 原地跳 / 追击（默认常态）
     private IEnumerator SchedulerLoop()
     {
         while (!IsDead && isFighting)
@@ -315,7 +329,7 @@ public class Boss_SlimeKing : Enemy
                 HandleFlip(t.position.x > transform.position.x ? 1 : -1);
             }
 
-            // 超距计时（真实时间）：持续超距才传送（最后一招）；中途给大跳逼近机会
+            // 超距计时（真实时间）：持续超距才传送（最后一招），中途给追击/大跳逼近机会
             float distToPlayer = t != null ? Vector2.Distance(transform.position, t.position) : 0f;
             if (distToPlayer > teleportRange)
             {
@@ -333,7 +347,15 @@ public class Boss_SlimeKing : Enemy
                 lastCloseTime = Time.time; // 近距离：刷新计时基准
             }
 
-            // 中远距离：大跳从远处扑过来（冷却控制频率，不高频）
+            // 召唤（冷却，周期性干扰）
+            if (Time.time - lastSummonTime > summonCooldown)
+            {
+                lastSummonTime = Time.time;
+                yield return StartCoroutine(SummonCo());
+                continue;
+            }
+
+            // 大跳：中远距离扑过来（冷却）
             if (distToPlayer > bigJumpMinRange && Time.time - lastBigJumpTime > bigJumpCooldown)
             {
                 lastBigJumpTime = Time.time;
@@ -341,15 +363,48 @@ public class Boss_SlimeKing : Enemy
                 continue;
             }
 
-            // 近距离随机：原地跳(主) / 冲刺 / 召唤
-            float roll = Random.value;
-            if (roll < 0.5f)
-                yield return StartCoroutine(JumpInPlaceCo());
-            else if (roll < 0.75f)
+            // 冲刺：中距离带横冲（冷却）
+            if (distToPlayer > dashRangeMin && distToPlayer < dashRangeMax && Time.time - lastDashTime > dashCooldown)
+            {
+                lastDashTime = Time.time;
                 yield return StartCoroutine(DashCo());
-            else
-                yield return StartCoroutine(SummonCo());
+                continue;
+            }
+
+            // 原地跳：贴身逼开（冷却）
+            if (distToPlayer < closeJumpRange && Time.time - lastCloseJumpTime > closeJumpCooldown)
+            {
+                lastCloseJumpTime = Time.time;
+                yield return StartCoroutine(JumpInPlaceCo());
+                continue;
+            }
+
+            // 默认：追击（接触伤害=威胁）——没招可放就往玩家脸上走
+            yield return StartCoroutine(ChaseCo());
         }
+    }
+
+    // ==================== 追击（常态） ====================
+
+    // 朝玩家方向移动（接触伤害常开 → 追上即威胁）；每帧刷新朝向
+    private IEnumerator ChaseCo()
+    {
+        Transform t = playerTarget != null ? playerTarget : GetPlayerReference();
+        if (t == null)
+            yield break;
+
+        int dir = t.position.x > transform.position.x ? 1 : -1;
+        float timer = 0f;
+        while (timer < chaseDuration && !IsDead)
+        {
+            // 玩家位移时跟着转
+            if (t != null)
+                dir = t.position.x > transform.position.x ? 1 : -1;
+            rb.linearVelocity = new Vector2(dir * chaseSpeed, rb.linearVelocity.y);
+            yield return null;
+            timer += Time.deltaTime;
+        }
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
     }
 
     // ==================== 动作 ① 普通攻击·原地起跳落下 ====================
@@ -494,22 +549,44 @@ public class Boss_SlimeKing : Enemy
 
     // ==================== 动作 ④ 传送攻击 ====================
 
-    // 超距 → 头顶落下（原地闪光预告 + 传送到玩家头顶下落触碰）
+    // 超距 → 加长预告三阶段：原地闪光(可读) → 消失 → 头顶落点标记 → 砸落触碰
     private IEnumerator TeleportAttackCo()
     {
         Transform t = playerTarget != null ? playerTarget : GetPlayerReference();
         if (t == null)
             yield break;
 
-        // 传送闪光预告
+        // ① 原地闪光预告（明显可读，玩家看到它要传送）
         if (telegraphPrefab != null)
             Instantiate(telegraphPrefab, transform.position, Quaternion.identity);
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(teleportTelegraph);
 
-        // 传送到玩家头顶，落下触碰
-        transform.position = (Vector2)t.position + Vector2.up * 6f;
-        yield return new WaitForSeconds(0.6f); // 落下
+        // ② 消失（隐藏渲染+碰撞，GameObject 保持 active 让协程继续）
+        SetVisible(false);
 
+        // ③ 玩家头顶落点标记（预告砸落位置，给反应时间）
+        Vector2 overhead = (Vector2)t.position + Vector2.up * teleportHeight;
+        if (telegraphPrefab != null)
+            Instantiate(telegraphPrefab, overhead, Quaternion.identity);
+        yield return new WaitForSeconds(teleportLandMark);
+
+        // ④ 传送到头顶 + 自由落体砸落
+        transform.position = overhead;
+        SetVisible(true);
+        bool fell = false;
+        float fallTimeout = 1.2f;
+        while (fallTimeout > 0f && !IsDead)
+        {
+            if (isOnGround == false)
+                fell = true;
+            else if (fell)
+                break;
+            yield return null;
+            fallTimeout -= Time.deltaTime;
+        }
+        rb.linearVelocity = Vector2.zero;
+
+        // 砸落触碰（头顶近身判定）
         if (t != null && Vector2.Distance(transform.position, t.position) < 2f)
         {
             var h = t.GetComponent<Entity_Health>();
@@ -519,24 +596,29 @@ public class Boss_SlimeKing : Enemy
         yield return new WaitForSeconds(0.5f); // 落地停顿
     }
 
+    // 隐藏/显示：禁用/启用渲染+碰撞（保持 GameObject active，让协程继续运行）
+    private void SetVisible(bool visible)
+    {
+        foreach (var r in GetComponentsInChildren<Renderer>(true))
+            r.enabled = visible;
+        foreach (var c in GetComponentsInChildren<Collider2D>(true))
+            c.enabled = visible;
+    }
+
     // ==================== 动作 ⑤ 召唤普通史莱姆 ====================
 
-    private float lastSummonTime; // 上次召唤时间
+    private float lastSummonTime; // 上次召唤时间（冷却由调度器维护）
 
     private IEnumerator SummonCo()
     {
-        if (Time.time - lastSummonTime < summonCooldown)
+        if (slimePrefab == null)
             yield break;
-        lastSummonTime = Time.time;
 
-        if (slimePrefab != null)
+        for (int i = 0; i < 2; i++)
         {
-            for (int i = 0; i < 2; i++)
-            {
-                Vector2 pos = (Vector2)transform.position + Random.insideUnitCircle * 1.5f;
-                Instantiate(slimePrefab, pos, Quaternion.identity);
-                yield return new WaitForSeconds(0.2f);
-            }
+            Vector2 pos = (Vector2)transform.position + Random.insideUnitCircle * 1.5f;
+            Instantiate(slimePrefab, pos, Quaternion.identity);
+            yield return new WaitForSeconds(0.2f);
         }
     }
 }
