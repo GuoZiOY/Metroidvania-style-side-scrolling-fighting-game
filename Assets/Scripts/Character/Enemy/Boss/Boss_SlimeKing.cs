@@ -67,21 +67,16 @@ public class Boss_SlimeKing : Enemy
     // === 身体接触伤害（内置，v4：不单独组件）===
     [Header("身体接触伤害")]
     [SerializeField] private float contactDamageMult = 1f;   // 接触伤害倍率（基于攻击力）
-    [SerializeField] private float contactCooldown = 1f;     // 每源冷却（秒）
-    private float lastContactHitTime; // 上次接触伤害时间
     private bool contactEnabled = true; // 落地后摇期间关闭
 
-    // 身体 Trigger 接触玩家 → 每源冷却内造成一次接触伤害
+    // 身体 Trigger 接触玩家 → 接触即伤害（玩家自身 0.7s 无敌帧控频，无需 Boss 侧冷却）
     private void OnTriggerStay2D(Collider2D other)
     {
         if (contactEnabled == false)
             return;
-        if (Time.time - lastContactHitTime < contactCooldown)
-            return; // 冷却内不重复触发
         if (other.CompareTag("Player") == false)
             return; // 只伤玩家
-        combat?.DealDamageTo(other, contactDamageMult); // 接触伤害走 Entity_Combat 标准管线（攻击力/暴击/护甲）
-        lastContactHitTime = Time.time;
+        combat?.DealDamageTo(other, contactDamageMult); // 接触伤害走 Boss_SlimeCombat 标准管线（攻击力/暴击/护甲）
     }
 
     // === 阶段状态机（常态/分裂狂暴/濒死隐身）===
