@@ -101,17 +101,20 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private float survivorHealPercent = 0.29f; // 存活者回血值
     [SerializeField] private float staggerDuration = 1.5f;      // 僵直时长
 
-    [Header("濒死隐身")]
-    [SerializeField] private float stealthThreshold = 0.01f;     // 濒死阈值
+    [Header("濒死隐身·一次性保命")]
+    [SerializeField] private float stealthThreshold = 0.01f;     // 致命伤后强制保留血量（1%）
     [SerializeField] private float stealthHealRate = 0.02f;      // 隐身回血速度（%/s）
     [SerializeField] private float stealthHealCap = 0.29f;       // 回血封顶（<分裂阈值）
-    [SerializeField] private float stealthSummonInterval = 4f;   // 隐身召唤间隔
+    [SerializeField] private float stealthSummonInterval = 3f;   // 隐身召唤间隔（频繁）
     [SerializeField] private int stealthSummonCount = 1;         // 每次召唤数量
+    [SerializeField] private int stealthMaxSummons = 5;          // 隐身总召唤次数上限（防无限刷）
+    [SerializeField] private int stealthMaxAlive = 4;            // 隐身同时存活史莱姆上限
 
     private Entity_Health health;                       // 自身生命缓存
     private Coroutine stealthCo;                        // 隐身协程
+    private Coroutine currentActionCo;                  // 当前动作协程（隐身/死亡时停掉，防残留移动）
     private readonly List<GameObject> stealthSlimes = new(); // 隐身期间召唤的史莱姆
-    private bool stealthSpawnedAny;                     // 隐身是否召唤过史莱姆
+    private bool stealthUsed;                           // 濒死保命是否已用（一次性）
 
     protected override void Awake()
     {
@@ -143,14 +146,29 @@ public class Boss_SlimeKing : Enemy
         schedulerCo = StartCoroutine(SchedulerLoop());
     }
 
-    // 死亡优先：停调度器/隐身 → 解冻 FSM → 分裂体存亡分流（存活者晋升 vs 最后实例胜利）
+    // 死亡处理：濒死保命（一次性）→ 停调度器/隐身/动作 → 解冻 FSM → 分裂体存亡分流
     public override void EntityDead()
     {
+        // 濒死保命：受致命伤害时（health 已置 isDead）强制保留 1% 血进入隐身回血+召唤，不死
+        if (stealthUsed == false)
+        {
+            stealthUsed = true;
+            health.Revive(); // 清除 isDead，否则后续无法受伤/回血
+            health.SetCurrentHP(health.GetMaxHP() * stealthThreshold); // 强制保留 1% 血
+            StartStealth();
+            return;
+        }
+
         isFighting = false;
         if (schedulerCo != null)
             StopCoroutine(schedulerCo);
         if (stealthCo != null)
             StopCoroutine(stealthCo);
+        if (currentActionCo != null)
+        {
+            StopCoroutine(currentActionCo); // 停掉被打断时正在跑的动作（防残留移动）
+            currentActionCo = null;
+        }
         stateMachine.canChangeSate = true; // 解冻，否则 ChangeState(deadState) 被吞
 
         // 兄弟存活 → 存活者晋升（回血/僵直/3段冲刺）；本实例正常死亡（播死亡+销毁，不留尸体）
@@ -168,22 +186,14 @@ public class Boss_SlimeKing : Enemy
 
     // ==================== 阶段状态机 ====================
 
-    // 每轮阶段检查：濒死隐身优先 → 分裂狂暴（<30% 未分裂）
+    // 每轮阶段检查：分裂狂暴（<30% 未分裂）。濒死隐身改由 EntityDead 受致命伤害时触发（一次性保命）
     private void UpdatePhase()
     {
         if (IsDead || phase == BossPhase.Stealth)
             return;
 
-        float pct = health.GetHealthPercent();
-
-        // 濒死隐身（<1%）
-        if (pct < stealthThreshold)
-        {
-            StartStealth();
-            return;
-        }
         // 分裂狂暴（<30%，未分裂）
-        if (pct < splitThreshold && hasSplit == false)
+        if (health.GetHealthPercent() < splitThreshold && hasSplit == false)
         {
             Split();
         }
@@ -234,21 +244,28 @@ public class Boss_SlimeKing : Enemy
         // 连续 3 段快速冲刺（DashCo 死亡自终止）
         for (int i = 0; i < 3; i++)
         {
-            yield return StartCoroutine(DashCo());
+            yield return RunAction(DashCo());
         }
         phase = BossPhase.Normal; // 恢复常态（不再分裂）
     }
 
-    // 濒死隐身：半透明、无法移动攻击、召唤史莱姆、缓慢回血
+    // 濒死隐身：半透明、无法移动攻击、频繁召唤史莱姆、缓慢回血；一次性保命
     private void StartStealth()
     {
         phase = BossPhase.Stealth;
         hasSplit = true; // 隐身封顶 29% < 分裂阈值，杜绝退出后重新分裂
         if (schedulerCo != null)
             StopCoroutine(schedulerCo);
+        if (currentActionCo != null)
+        {
+            StopCoroutine(currentActionCo); // 停掉被打断时正在跑的动作（防隐身期间残留移动）
+            currentActionCo = null;
+        }
         stealthCo = StartCoroutine(StealthCo());
     }
 
+    // 隐身协程：半透明、缓慢回血、频繁召唤（总次数+存活上限）；
+    // 退出条件：召唤的史莱姆全部死亡（玩家清场） 或 回血封顶 29%
     private IEnumerator StealthCo()
     {
         // 半透明
@@ -257,35 +274,37 @@ public class Boss_SlimeKing : Enemy
         sr.color = new Color(c.r, c.g, c.b, 0.3f);
         contactEnabled = false; // 隐身不攻击
         stealthSlimes.Clear();  // 清空上一轮隐身残留
-        stealthSpawnedAny = false;
+        int summonsUsed = 0;    // 已召唤次数（预算）
         float summonTimer = 0f;
 
-        // 回血（封顶 29%）+ 周期召唤史莱姆；杀光史莱姆或回满提前退出
         while (!IsDead)
         {
-            // 缓慢回血（按 %MaxHP/s）
+            // 缓慢回血（封顶 29%）
             health.IncreaseHP(health.GetMaxHP() * stealthHealRate * Time.deltaTime);
 
-            // 周期召唤史莱姆（slimePrefab 为空则跳过召唤，仅回血）
+            // 频繁召唤：未达总次数上限 且 未达存活上限 → 召唤
             summonTimer += Time.deltaTime;
-            if (summonTimer >= stealthSummonInterval && slimePrefab != null)
+            if (summonTimer >= stealthSummonInterval)
             {
                 summonTimer = 0f;
-                stealthSpawnedAny = true;
-                for (int i = 0; i < stealthSummonCount; i++)
+                stealthSlimes.RemoveAll(s => s == null); // 清掉已死史莱姆引用
+                if (summonsUsed < stealthMaxSummons && stealthSlimes.Count < stealthMaxAlive && slimePrefab != null)
                 {
-                    Vector2 pos = (Vector2)transform.position + Random.insideUnitCircle * 1.5f;
-                    stealthSlimes.Add(Instantiate(slimePrefab, pos, Quaternion.identity));
+                    summonsUsed++;
+                    for (int i = 0; i < stealthSummonCount; i++)
+                    {
+                        Vector2 pos = (Vector2)transform.position + Random.insideUnitCircle * 1.5f;
+                        stealthSlimes.Add(Instantiate(slimePrefab, pos, Quaternion.identity));
+                    }
                 }
             }
-            // 掉出被销毁的史莱姆引用
-            stealthSlimes.RemoveAll(s => s == null);
+            stealthSlimes.RemoveAll(s => s == null); // 掉出被销毁的史莱姆引用
 
-            // 回血封顶 → 退出隐身
-            if (health.GetHealthPercent() >= stealthHealCap)
+            // 退出①：召唤预算已尽 且 召唤的史莱姆全部死亡 → 玩家清场，退出隐身
+            if (summonsUsed >= stealthMaxSummons && stealthSlimes.Count == 0)
                 break;
-            // 史莱姆杀光 → 提前退出隐身
-            if (stealthSpawnedAny && stealthSlimes.Count == 0)
+            // 退出②：回血封顶 → 退出隐身（防玩家不清场导致战斗卡住）
+            if (health.GetHealthPercent() >= stealthHealCap)
                 break;
 
             yield return null;
@@ -338,7 +357,7 @@ public class Boss_SlimeKing : Enemy
                 if (Time.time - lastCloseTime > farTeleportDelay)
                 {
                     lastCloseTime = Time.time; // 传送后重置计时
-                    yield return StartCoroutine(TeleportAttackCo());
+                    yield return RunAction(TeleportAttackCo());
                     continue;
                 }
             }
@@ -351,7 +370,7 @@ public class Boss_SlimeKing : Enemy
             if (Time.time - lastSummonTime > summonCooldown)
             {
                 lastSummonTime = Time.time;
-                yield return StartCoroutine(SummonCo());
+                yield return RunAction(SummonCo());
                 continue;
             }
 
@@ -359,7 +378,7 @@ public class Boss_SlimeKing : Enemy
             if (distToPlayer > bigJumpMinRange && Time.time - lastBigJumpTime > bigJumpCooldown)
             {
                 lastBigJumpTime = Time.time;
-                yield return StartCoroutine(BigJumpCo());
+                yield return RunAction(BigJumpCo());
                 continue;
             }
 
@@ -367,7 +386,7 @@ public class Boss_SlimeKing : Enemy
             if (distToPlayer > dashRangeMin && distToPlayer < dashRangeMax && Time.time - lastDashTime > dashCooldown)
             {
                 lastDashTime = Time.time;
-                yield return StartCoroutine(DashCo());
+                yield return RunAction(DashCo());
                 continue;
             }
 
@@ -375,13 +394,21 @@ public class Boss_SlimeKing : Enemy
             if (distToPlayer < closeJumpRange && Time.time - lastCloseJumpTime > closeJumpCooldown)
             {
                 lastCloseJumpTime = Time.time;
-                yield return StartCoroutine(JumpInPlaceCo());
+                yield return RunAction(JumpInPlaceCo());
                 continue;
             }
 
             // 默认：追击（接触伤害=威胁）——没招可放就往玩家脸上走
-            yield return StartCoroutine(ChaseCo());
+            yield return RunAction(ChaseCo());
         }
+    }
+
+    // 统一包装：记录当前动作协程（隐身/死亡时停掉，防残留移动）+ 等待动作完成
+    private IEnumerator RunAction(IEnumerator action)
+    {
+        currentActionCo = StartCoroutine(action);
+        yield return currentActionCo;
+        currentActionCo = null;
     }
 
     // ==================== 追击（常态） ====================

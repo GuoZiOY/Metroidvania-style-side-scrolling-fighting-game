@@ -139,8 +139,10 @@ MonoBehaviour:
   stealthThreshold: 0.01
   stealthHealRate: 0.02
   stealthHealCap: 0.29
-  stealthSummonInterval: 4
+  stealthSummonInterval: 3
   stealthSummonCount: 1
+  stealthMaxSummons: 5
+  stealthMaxAlive: 4
 --- !u!114 &8312034395329814189
 MonoBehaviour:
   m_ObjectHideFlags: 0
