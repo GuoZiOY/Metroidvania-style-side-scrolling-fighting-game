@@ -11,8 +11,8 @@ public class Boss_SlimeKing : Enemy
     // === 动作参数 ===
     [Header("大跳")]
     [SerializeField] private float jumpChargeTime = 0.5f;   // 前摇
-    [SerializeField] private float jumpHeight = 9f;         // 起跳速度（越高弧线越夸张/滞空越久）
-    [SerializeField] private float jumpHorizSpeedCap = 18f; // 水平起跳速度上限（远距离追击可达距离）
+    [SerializeField] private float jumpHeight = 20f;        // 起跳速度（刚体重力 3.5 需按比例拉大；20≈弧线顶点5.8单位/滞空1.17s）
+    [SerializeField] private float jumpHorizSpeedCap = 24f; // 水平起跳速度上限（远距离追击可达距离；24×滞空≈28单位）
     [SerializeField] private float landingRadius = 2f;      // 落点 AoE 半径
     [SerializeField] private float landingDamagePercent = 0.2f; // 落点伤害
     [SerializeField] private float landingRecovery = 1f;    // 落地后摇（惩罚窗口）
@@ -344,9 +344,9 @@ public class Boss_SlimeKing : Enemy
             Destroy(tel, telegraphTime);
         }
 
-        // 起跳弧线（水平朝落点 + 垂直起跳）
+        // 起跳弧线（水平朝落点 + 垂直起跳）——用真实重力算滞空，确保水平能飞到落点
         float distX = landing.x - transform.position.x;
-        float gravity = rb.gravityScale;
+        float gravity = Mathf.Abs(Physics2D.gravity.y) * rb.gravityScale; // 实际重力加速度（默认 9.81 * 倍率）
         float airTime = gravity > 0.01f ? 2f * jumpHeight / gravity : 1.5f;
         rb.linearVelocity = new Vector2(Mathf.Clamp(distX / airTime, -jumpHorizSpeedCap, jumpHorizSpeedCap), jumpHeight);
 
