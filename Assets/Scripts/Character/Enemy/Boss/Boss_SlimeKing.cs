@@ -28,8 +28,6 @@ public class Boss_SlimeKing : Enemy
     [SerializeField] private float bigJumpMinRange = 7f;        // 距玩家超此值才大跳（中远距离）
 
     [Header("落地")]
-    [SerializeField] private float landingRadius = 2f;      // 落点 AoE 半径
-    [SerializeField] private float landingDamageMult = 1f;  // 落点伤害倍率（基于攻击力）
     [SerializeField] private float landingRecovery = 1f;    // 落地后摇（惩罚窗口）
     [SerializeField] private float telegraphTime = 0.8f;    // 落点预告停留时长
 
@@ -68,15 +66,16 @@ public class Boss_SlimeKing : Enemy
     [Header("身体接触伤害")]
     [SerializeField] private float contactDamageMult = 1f;   // 接触伤害倍率（基于攻击力）
     private bool contactEnabled = true; // 落地后摇期间关闭
+    private float activeContactMult = 1f; // 当前接触倍率（冲刺 1.5x/传送 2x 攻击期临时改，每轮调度器重置）
 
-    // 身体 Trigger 接触玩家 → 接触即伤害（玩家自身受击无敌帧控频，无需 Boss 侧冷却）
+    // 身体 Trigger 接触玩家 → 接触即伤害（所有攻击命中都靠自身碰撞体，无需额外范围检测；玩家无敌帧控频）
     private void OnTriggerStay2D(Collider2D other)
     {
         if (contactEnabled == false)
             return;
         if (other.CompareTag("Player") == false)
             return; // 只伤玩家
-        combat?.DealDamageTo(other, contactDamageMult); // 接触伤害走 Boss_SlimeCombat 标准管线（攻击力/暴击/护甲）
+        combat?.DealDamageTo(other, contactDamageMult * activeContactMult); // 接触伤害走标准管线（攻击倍率生效）
     }
 
     // === 阶段状态机（常态/分裂狂暴/濒死隐身）===
@@ -369,6 +368,7 @@ public class Boss_SlimeKing : Enemy
     {
         while (!IsDead && isFighting)
         {
+            activeContactMult = 1f; // 每轮重置接触倍率（防上次动作被打断残留 1.5x/2x）
             // 隐身期间不执行动作（防残留一帧出招）
             if (phase == BossPhase.Stealth)
                 break;
@@ -516,13 +516,7 @@ public class Boss_SlimeKing : Enemy
         }
         rb.linearVelocity = Vector2.zero;
 
-        // 落点 AoE 伤害（原地范围，可躲）
-        Transform t = playerTarget != null ? playerTarget : GetPlayerReference();
-        if (t != null && Vector2.Distance(transform.position, t.position) <= landingRadius)
-        {
-            combat?.DealDamageTo(t.GetComponent<Collider2D>(), landingDamageMult); // 落点伤害走标准管线
-        }
-
+        // 落地伤害靠自身碰撞体接触（OnTriggerStay2D），无需额外范围检测
         // 落地后摇（惩罚窗口）：关接触伤害，玩家可输出
         contactEnabled = false;
         yield return new WaitForSeconds(landingRecovery);
@@ -574,12 +568,7 @@ public class Boss_SlimeKing : Enemy
         rb.gravityScale = baseGravity; // 恢复重力
         rb.linearVelocity = Vector2.zero;
 
-        // 落点 AoE 伤害（可躲，靠预告）
-        if (Vector2.Distance(transform.position, landing) <= landingRadius && t != null)
-        {
-            combat?.DealDamageTo(t.GetComponent<Collider2D>(), landingDamageMult); // 落点伤害走标准管线
-        }
-
+        // 落地伤害靠自身碰撞体接触（OnTriggerStay2D），无需额外范围检测
         // 落地后摇（惩罚窗口）：关接触伤害，玩家可安全输出
         contactEnabled = false;
         yield return new WaitForSeconds(landingRecovery);
@@ -601,6 +590,9 @@ public class Boss_SlimeKing : Enemy
         HandleFlip(dir); // 修复：冲刺时面向与冲刺方向一致
         yield return new WaitForSeconds(0.2f);
 
+        // 冲刺伤害靠自身碰撞体接触（OnTriggerStay2D），冲刺期间接触倍率 = 冲刺 1.5x
+        activeContactMult = dashDamageMult;
+
         // 快速横冲
         float traveled = 0f;
         float speed = dashSpeed * speedMult;
@@ -612,15 +604,8 @@ public class Boss_SlimeKing : Enemy
         }
         rb.linearVelocity = Vector2.zero;
 
-        // 冲刺碰撞伤害（触碰）
-        contactEnabled = false; // 冲刺期间接触伤害关闭，改由冲刺自身判定
-        // 冲刺路径上的玩家判定（简化：终点近身判定）
-        if (t != null && Vector2.Distance(transform.position, t.position) < 2f)
-        {
-            combat?.DealDamageTo(t.GetComponent<Collider2D>(), dashDamageMult); // 冲刺 1.5x 走标准管线
-        }
-        contactEnabled = true;
         yield return new WaitForSeconds(0.4f); // 冲刺后停顿
+        activeContactMult = 1f; // 恢复普通接触倍率
     }
 
     // ==================== 动作 ④ 传送攻击 ====================
@@ -646,9 +631,10 @@ public class Boss_SlimeKing : Enemy
             Instantiate(telegraphPrefab, overhead, Quaternion.identity);
         yield return new WaitForSeconds(teleportLandMark);
 
-        // ④ 传送到头顶 + 自由落体砸落
+        // ④ 传送到头顶 + 自由落体砸落（砸落期接触倍率 = 传送 2x，靠碰撞体接触判定）
         transform.position = overhead;
         SetVisible(true);
+        activeContactMult = teleportDamageMult; // 传送 2x
         bool fell = false;
         float fallTimeout = 1.2f;
         while (fallTimeout > 0f && !IsDead)
@@ -662,12 +648,8 @@ public class Boss_SlimeKing : Enemy
         }
         rb.linearVelocity = Vector2.zero;
 
-        // 砸落触碰（头顶近身判定）
-        if (t != null && Vector2.Distance(transform.position, t.position) < 2f)
-        {
-            combat?.DealDamageTo(t.GetComponent<Collider2D>(), teleportDamageMult); // 传送 2x 走标准管线
-        }
         yield return new WaitForSeconds(0.5f); // 落地停顿
+        activeContactMult = 1f; // 恢复普通接触倍率
     }
 
     // 隐藏/显示：禁用/启用渲染+碰撞（保持 GameObject active，让协程继续运行）
