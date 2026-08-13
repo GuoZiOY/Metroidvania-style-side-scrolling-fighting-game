@@ -206,7 +206,7 @@ public class Boss_SlimeKing : Enemy
             if (health != null)
                 health.TakeDamage(health.GetMaxHP() * landingDamagePercent, 0f, ElementType.None, transform);
         }
-        OnLanded?.Invoke(); // BossEncounter 订阅 → 震屏（事件驱动，非定时器）
+        // 注意：跳砸落地不触发 OnLanded 震屏——相机震动只在 Boss 入场那次（EntryJump）震一次
 
         // 落地后摇（惩罚窗口）：接触伤害关闭（contactArea 禁用）+ 玩家可安全输出
         if (contactArea != null) contactArea.enabled = false;
