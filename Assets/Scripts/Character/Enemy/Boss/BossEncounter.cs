@@ -13,7 +13,6 @@ public class BossEncounter : MonoBehaviour
     [SerializeField] private Transform spawnPoint;              // Boss 生成位置
     [SerializeField] private Portal arrivalPortal;              // 到达传送门（锁定）
     [SerializeField] private GameObject exitPortal;             // 出口传送门（胜利激活）
-    [SerializeField] private AudioClip bossBgm;                 // Boss 曲
     [SerializeField] private UI_BossHealthBar healthBar;        // 顶部血条
 
     public EncounterState State { get; private set; } = EncounterState.Idle;
@@ -49,8 +48,8 @@ public class BossEncounter : MonoBehaviour
         if (arrivalPortal != null)
             arrivalPortal.SetLocked(true);
 
-        // 切 Boss BGM
-        AudioManager.Instance?.PushBgm(bossBgm, 0.5f);
+        // 切 Boss BGM（曲目集中配置在 AudioManager，这里只触发开战）
+        AudioManager.Instance?.PushBossBgm(0.5f);
 
         // 生成 Boss + 绑血条 + 开战
         boss = Instantiate(bossPrefab, spawnPoint.position, spawnPoint.rotation).GetComponent<Boss_SlimeKing>();

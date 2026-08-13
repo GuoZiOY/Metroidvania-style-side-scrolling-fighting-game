@@ -11,8 +11,9 @@ public class AudioManager : MonoBehaviour
     [System.Serializable]
     public class BgmGroup
     {
-        public AudioClip bgmClip;
-        [Range(0, 1)] public float bgmVolume = 0.5f;
+        public AudioClip bgmClip;      // 区域/常驻 BGM
+        [Range(0, 1)] public float bgmVolume = 0.5f; // BGM 音量
+        public AudioClip bossBgmClip;  // Boss 战 BGM（集中配置，BossEncounter 只触发开/关）
     }
 
     [System.Serializable]
@@ -210,6 +211,17 @@ public class AudioManager : MonoBehaviour
         if (currentCrossfadeCo != null)
             StopCoroutine(currentCrossfadeCo); // 停旧协程，防并发 crossfade 竞态
         currentCrossfadeCo = StartCoroutine(CrossfadeTo(clip, crossfade));
+    }
+
+    // 推入 Boss 曲（曲目集中配置在 BGM.bossBgmClip，BossEncounter 开战调用；未配置则静默）
+    public void PushBossBgm(float crossfade = 1f)
+    {
+        if (BGM.bossBgmClip == null)
+        {
+            Debug.LogWarning("[AudioManager] 未配置 Boss 曲 BGM.bossBgmClip");
+            return;
+        }
+        PushBgm(BGM.bossBgmClip, crossfade);
     }
 
     // 弹出恢复上一曲（Boss 战结束/玩家死亡）
