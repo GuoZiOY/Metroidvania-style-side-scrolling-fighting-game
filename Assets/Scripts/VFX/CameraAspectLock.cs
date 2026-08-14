@@ -14,6 +14,7 @@ public class CameraAspectLock : MonoBehaviour
     private CinemachineVirtualCamera vcam;    // 当前场景激活 vcam
     private float designOrtho;                // 当前场景设计正交尺寸（首次捕获）
     private CinemachineVirtualCamera capturedVcam; // 已捕获的 vcam（切场景重捕）
+    private bool logged;                      // 是否已打印生效日志
 
     // 游戏启动自动创建持久对象（打包/编辑器 Play 都生效）
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -55,7 +56,8 @@ public class CameraAspectLock : MonoBehaviour
             return;
 
         // 保持水平视野 = 设计值：targetOrtho = designOrtho × designAspect / actualAspect
-        float targetOrtho = designOrtho * designAspect / actualAspect;
+        // 只缩不放（Mathf.Min）：宽屏缩正交保持水平不溢出；窄屏保持设计正交（横向少看），绝不放大避免纵向溢出
+        float targetOrtho = Mathf.Min(designOrtho * designAspect / actualAspect, designOrtho);
         if (Mathf.Abs(targetOrtho - designOrtho) < 0.01f)
             return; // 宽高比等于设计 → 不调整（不干扰设计比例下的相机缩放/死亡聚焦）
 
@@ -63,6 +65,12 @@ public class CameraAspectLock : MonoBehaviour
             vcam.m_Lens.OrthographicSize = targetOrtho;
         else
             cam.orthographicSize = targetOrtho;
+
+        if (!logged)
+        {
+            logged = true;
+            Debug.Log($"[CameraAspectLock] 生效 设计宽高比={designAspect:F2} 当前={Screen.width}x{Screen.height} ortho={designOrtho:F1}->{targetOrtho:F1}");
+        }
     }
 
     // 找场景激活 vcam（Priority>0 优先；没有则第一个）
