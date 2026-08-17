@@ -10149,7 +10149,11 @@ PrefabInstance:
       objectReference: {fileID: 1421064316176223977}
     - target: {fileID: 4892735148660798501, guid: 9568e0d075f822742bf88b4bbe3dfc9b, type: 3}
       propertyPath: targetPortalId
-      value: 002
+      value: 001
+      objectReference: {fileID: 0}
+    - target: {fileID: 4892735148660798501, guid: 9568e0d075f822742bf88b4bbe3dfc9b, type: 3}
+      propertyPath: saveBeforeTeleport
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7695140697848021076, guid: 9568e0d075f822742bf88b4bbe3dfc9b, type: 3}
       propertyPath: m_Name

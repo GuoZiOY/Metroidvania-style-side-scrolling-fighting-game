@@ -46,3 +46,13 @@ Thumbs.db
 *.log
 *.tmp
 [Tt]emp/
+
+# Claude Code / 本地工具配置（不属于游戏资源）
+.claude/
+.agents/
+_ccgs_install/
+design/
+Assets/Scripts/.claude/
+docs/
+production/
+temp_ccgs/

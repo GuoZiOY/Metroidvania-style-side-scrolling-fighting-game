@@ -221,6 +221,7 @@ MonoBehaviour:
   canRegenerateHP: 0
   canKnockbacked: 1
   knockbackDuration: 0.2
+  invincibleDuration: 0
   onDamageKnockback: {x: 1.5, y: 2.5}
   heavyKnockThreshold: 0.3
   heavyKnockbackDuration: 0.5
@@ -280,7 +281,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lootTables:
-  - {fileID: 11400000, guid: 6c45ce86d3cc28d4b9b5d705d84a5939, type: 2}
+  - {fileID: 11400000, guid: dffffb57d05c6ab4dbfb763ba8c1f168, type: 2}
   dropOffset: {x: 0, y: 0, z: 0}
 --- !u!50 &1399052401595346723
 Rigidbody2D:

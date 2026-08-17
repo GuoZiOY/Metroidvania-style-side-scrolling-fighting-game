@@ -47,6 +47,7 @@ MonoBehaviour:
   BGM:
     bgmClip: {fileID: 8300000, guid: 371d9206692e67a4bb246db330bff3ef, type: 3}
     bgmVolume: 1
+    bossBgmClip: {fileID: 8300000, guid: 25331e9f98eb3064189d07b244b21e4d, type: 3}
   "\u73AF\u5883":
     chestSfxClip: {fileID: 8300000, guid: 2ddb822e27eced24b93b2d9062269b3e, type: 3}
     chestVolume: 1
