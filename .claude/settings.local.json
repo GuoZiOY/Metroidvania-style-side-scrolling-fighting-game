@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(cmd.exe *)",
+      "Bash(subst Z: *)"
+    ]
+  }
+}

@@ -1,0 +1,271 @@
+# Game World Entity Registry
+#
+# PURPOSE: Single source of truth for all named game-world facts that appear
+# in more than one document. Skills check this before writing new content to
+# detect cross-doc inconsistencies at authoring time.
+#
+# RULES:
+#   - Only register facts that cross system boundaries. Internal-only facts
+#     (a formula used in one GDD only) do NOT need to be registered.
+#   - Never delete entries — set status: deprecated instead.
+#   - When a value changes: update the value, set revised: to today's date,
+#     and add a comment with the old value and which GDD changed it.
+#   - source: is the authoritative GDD — the one that "owns" this fact.
+#     Other GDDs that reference it list themselves in referenced_by.
+#   - When a new GDD references an existing entry, append its path to
+#     referenced_by. Do not create a duplicate entry.
+#
+# WRITTEN BY: /design-system (Phase 5 — after GDD sections are approved)
+#             /consistency-check (when resolving conflicts)
+# READ BY:    /design-system (Phase 2 — before authoring begins, and after
+#               Section C/D writes to conflict-check new entities/formulas)
+#             /consistency-check (primary input — grep-first, GDD-second)
+#             /review-all-gdds (Phase 1 — baseline for Phase 2 checks)
+#             /architecture-review (data structure and interface validation)
+#
+# SEARCH PATTERNS (for skills using Grep):
+#   All entity names:        Grep pattern="^  - name:" path="design/registry/entities.yaml"
+#   Specific entity:         Grep pattern="  - name: goblin" path="design/registry/entities.yaml"
+#   All items:               Grep pattern="^  - name:" path="design/registry/entities.yaml" (items section)
+#   What combat.md owns:     Grep pattern="source: design/gdd/combat.md"
+#   What inventory.md uses:  Grep pattern="referenced_by.*inventory"
+#   All gold values:          Grep pattern="value_gold:"
+#   Deprecated entries:      Grep pattern="status: deprecated"
+#
+# FORMAT: YAML. Consistent indentation is critical for grep reliability.
+#   Sections: entities | items | formulas | constants
+#   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
+
+version: 1
+last_updated: "2026-08-14"
+
+# ─── ENTITIES ────────────────────────────────────────────────────────────────
+# Named game-world objects: enemies, NPCs, characters, factions, bosses.
+# Register an entity here when it appears in more than one GDD — e.g., an
+# enemy defined in combat.md that also drops items listed in inventory.md.
+#
+# Required fields: name, status, source, referenced_by, added
+# Attribute fields: any key stats that could appear in another GDD
+#   (health, damage, drops, faction, etc.)
+
+entities:
+  - name: slime_king
+    status: active
+    source: design/gdd/boss-slime-king.md
+    referenced_by:
+      - design/gdd/boss-system.md
+      - design/gdd/boss-tracking.md
+      - design/gdd/area-design.md
+      - design/gdd/enemy-system-v2.md
+    boss_phases: [normal, split_rage, deathbed_stealth]
+    split_threshold: 0.3          # HP<30% 分裂狂暴
+    stealth_threshold: 0.01       # HP<1% 濒死隐身
+    damage_budget: [0.12, 0.18, 0.24]  # 大跳/冲刺(1.5x)/传送(2x) — 占玩家 MaxHP
+    summon: enemy_slime
+    added: 2026-08-14
+    revised: ""
+
+  - name: enemy_slime
+    status: active
+    source: design/gdd/enemy-system.md
+    referenced_by:
+      - design/gdd/enemy-system-v2.md
+      - design/gdd/boss-slime-king.md   # 史莱姆王召唤物/分裂子体
+      - design/gdd/area-design.md
+    can_split: true               # 死亡随机分裂 2-5 子体，缩放 0.6
+    added: 2026-08-14
+    revised: ""
+
+  - name: enemy_skeleton
+    status: active
+    source: design/gdd/enemy-system.md
+    referenced_by:
+      - design/gdd/enemy-system-v2.md
+      - design/gdd/area-design.md
+    added: 2026-08-14
+    revised: ""
+
+  - name: hub_npc_blacksmith
+    status: active
+    source: design/gdd/hub-town.md
+    referenced_by:
+      - design/gdd/crafting-system.md    # 铁匠工作台（制作/分解/合成入口）
+      - design/gdd/quest-system.md       # 任务发放 NPC
+    services: [crafting, dismantle, combine, quests]
+    added: 2026-08-14
+    revised: ""
+
+# ─── ITEMS ───────────────────────────────────────────────────────────────────
+# Named collectables, equipment, consumables, crafting materials, currency.
+# Register an item when its name or value appears in more than one GDD.
+#
+# Required fields: name, status, source, referenced_by, added
+# Attribute fields: value_gold, weight, stackable, category, and any stat
+#   modifiers that another system (e.g., economy, crafting) might reference.
+
+items:
+  - name: copper_ore
+    status: active
+    source: design/gdd/crafting-system.md
+    referenced_by:
+      - design/gdd/item-loot.md
+      - design/gdd/item-backpack.md
+    category: crafting_material
+    stackable: true
+    added: 2026-08-14
+    revised: ""
+
+  - name: gold
+    status: active
+    source: design/gdd/item-shop.md
+    referenced_by:
+      - design/gdd/crafting-system.md
+      - design/gdd/item-system.md
+    category: currency
+    stackable: true
+    added: 2026-08-14
+    revised: ""
+
+# ─── FORMULAS ────────────────────────────────────────────────────────────────
+# Named calculations with defined variables and output ranges.
+# Register a formula when its output feeds into another system's input,
+# or when another GDD references it by name.
+#
+# Required fields: name, status, source, referenced_by, variables[],
+#   output_range[min, max], added
+# Optional: expression (the actual formula), notes
+
+formulas:
+  - name: final_damage
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/player-system.md
+      - design/gdd/enemy-system.md
+      - design/gdd/item-equipment.md   # 词缀伤害加成输入
+    variables: [physical_damage, elemental_damage, skill_multiplier, crit_multiplier]
+    output_range: [0, null]
+    expression: "(physical + elemental) × skill_multiplier × crit_multiplier"
+    notes: "物理=属性+力量×0.5；元素=主元素+次元素+智力加成+元素之心加成；暴击率=基础+敏捷×0.5。元素 Build 有元素精通因子，物理 Build 无对等加成（B-1 已解决：移除 50% 惩罚）"
+    added: 2026-08-14
+    revised: ""
+
+  - name: armor_mitigation
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/enemy-system.md
+      - design/gdd/item-equipment.md
+    variables: [effective_armor]
+    output_range: [0, 0.75]
+    expression: "effective_armor / (effective_armor + 100)，上限 75%"
+    notes: "W-7：75% 闪避 + 75% 护甲双上限独立叠加风险未定义组合上限（建议衰减或组合上限）"
+    added: 2026-08-14
+    revised: ""
+
+  - name: rarity_multiplier
+    status: active
+    source: design/gdd/item-rarity.md
+    referenced_by:
+      - design/gdd/item-equipment.md
+      - design/gdd/item-loot.md
+      - design/gdd/elite-affix.md       # 掉落稀有度加成
+    variables: [rarity]
+    output_range: [1.0, 3.0]
+    expression: "普通1.0 / 精良1.5 / 优秀2.0 / 史诗2.5 / 传说3.0（几何倍率，每级+0.5）"
+    notes: "⚠️ W-3：词缀生成与 GetModifiedValue 两条路径是否双应用倍率未验证（传说可能 3.0²=9.0），见 review/item.md M-3"
+    added: 2026-08-14
+    revised: ""
+
+  - name: level_exp_curve
+    status: active
+    source: design/gdd/experience-system.md
+    referenced_by:
+      - design/gdd/player-system.md
+      - design/gdd/enemy-system.md
+      - design/gdd/world-conditions.md
+    variables: [level, phase]
+    output_range: [0, 50]
+    expression: "Phase1(0-9): base×(level+1) 线性；Phase2(10-29): ×1.5^((level-9)/10)；Phase3(30-49): ×2.0^((level-29)/20)；max 50"
+    notes: "代码实测：LevelCalculator 分段点 phase1MaxLevel=10/phase2MaxLevel=30/maxLevel=50；GetTotalExpRequired 循环已含 Lv0→1（BUG-0006 修复）"
+    added: 2026-08-14
+    revised: ""
+
+  - name: boss_damage_budget
+    status: active
+    source: design/gdd/boss-slime-king.md
+    referenced_by:
+      - design/gdd/boss-system.md
+      - design/gdd/combat-system.md
+    variables: [player_max_hp]
+    output_range: [0.12, 0.24]
+    expression: "大跳 12% / 冲刺 18%（1.5x）/ 传送 24%（2x）MaxHP；一次失误最多吃一下（无敌帧 0.7s）"
+    notes: "分裂: HP<30% 爆 2 个各 15%；存活者回血到 29%；濒死: HP<1% 隐身回血最多 29%"
+    added: 2026-08-14
+    revised: ""
+
+# ─── CONSTANTS ───────────────────────────────────────────────────────────────
+# Named numerical values referenced across multiple systems.
+# Register a constant when it is defined in one GDD but another GDD must
+# agree with it (e.g., gold carry limit defined in economy but checked in
+# inventory, or base inventory slots defined in inventory but displayed in HUD).
+#
+# Required fields: name, status, source, referenced_by, value, unit, added
+
+constants:
+  - name: evasion_cap
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/player-system.md
+      - design/gdd/item-equipment.md
+    value: 75
+    unit: "%"
+    notes: "W-7：与 armor_cap 独立叠加风险"
+    added: 2026-08-14
+    revised: ""
+
+  - name: armor_cap
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/player-system.md
+    value: 75
+    unit: "%"
+    notes: "护甲减伤上限（见 armor_mitigation 公式）"
+    added: 2026-08-14
+    revised: ""
+
+  - name: max_level
+    status: active
+    source: design/gdd/experience-system.md
+    referenced_by:
+      - design/gdd/player-system.md
+      - design/gdd/enemy-system.md
+      - design/gdd/world-conditions.md
+    value: 50
+    unit: "level"
+    added: 2026-08-14
+    revised: ""
+
+  - name: inventory_stack_max
+    status: active
+    source: design/gdd/item-backpack.md
+    referenced_by:
+      - design/gdd/item-loot.md
+      - design/gdd/item-system.md
+    value: 99
+    unit: "stack"
+    added: 2026-08-14
+    revised: ""
+
+  - name: shop_buyback_rate
+    status: active
+    source: design/gdd/item-shop.md
+    referenced_by:
+      - design/gdd/item-system.md
+    value: 0.5
+    unit: "ratio"
+    notes: "出售回购率 50%；MVP 金币 sink 问题（B-2）待核验商店补货机制"
+    added: 2026-08-14
+    revised: ""
