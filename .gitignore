@@ -108,3 +108,6 @@ InitTestScene*.unity*
 
 # archify visual-check 产物（可重复生成的验证工件，不进版本库）
 diagrams/*.visual-check.*
+
+# 工具残留的嵌套 git 仓库
+temp_ccgs/
