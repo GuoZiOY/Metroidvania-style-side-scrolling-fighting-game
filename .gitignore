@@ -105,3 +105,6 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# archify visual-check 产物（可重复生成的验证工件，不进版本库）
+diagrams/*.visual-check.*
