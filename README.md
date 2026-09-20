@@ -100,7 +100,7 @@
 1. 克隆仓库
 
    ```bash
-   git clone https://github.com/GuoZiOY/LeiYin.git
+   git clone https://github.com/GuoZiOY/Metroidvania-style-side-scrolling-fighting-game.git
    ```
 
 2. 本项目使用 **Git LFS** 管理美术、音频等二进制资源，克隆前请确保已安装：
