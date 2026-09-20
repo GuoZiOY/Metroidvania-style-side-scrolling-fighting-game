@@ -15,8 +15,17 @@
 
 ---
 
+## 演示视频
+
+[**点击观看游戏展示视频（Bilibili）**](https://www.bilibili.com/video/BV1Tbeh6WEMj)
+
+https://www.bilibili.com/video/BV1Tbeh6WEMj
+
+---
+
 ## 目录
 
+- [演示视频](#演示视频)
 - [核心玩法](#核心玩法)
 - [技术要点](#技术要点)
 - [运行方式](#运行方式)
